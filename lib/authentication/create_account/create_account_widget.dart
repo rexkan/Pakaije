@@ -26,7 +26,6 @@ class CreateAccountWidget extends StatefulWidget {
 
 class _CreateAccountWidgetState extends State<CreateAccountWidget> {
   late CreateAccountModel _model;
-
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
