@@ -148,7 +148,7 @@ final kTranslationsMap = <Map<String, Map<String, String>>>[
   {
     '3qdzok6f': {
       'zh_Hans': 'Admin Dashboard',
-      'en': '',
+      'en': 'Admin Dashboard',
     },
     'omqirzhm': {
       'zh_Hans': '1214',
@@ -156,75 +156,75 @@ final kTranslationsMap = <Map<String, Map<String, String>>>[
     },
     '2deva6hz': {
       'zh_Hans': 'Active Users',
-      'en': '',
+      'en': 'Active Users',
     },
     'vwsd282b': {
       'zh_Hans': '2000',
-      'en': '',
+      'en': '2000',
     },
     'zwczaws4': {
-      'zh_Hans': 'Items Upload',
-      'en': '',
+      'zh_Hans': 'Active Vendors',
+      'en': 'Active Vendors',
     },
     'pectxchd': {
       'zh_Hans': 'Quick Actions',
-      'en': '',
+      'en': 'Quick Actions',
     },
     'rd5vfxnm': {
       'zh_Hans': 'Manage Accounts',
-      'en': '',
+      'en': 'Manage Accounts',
     },
     'm7qdayui': {
       'zh_Hans': 'Moderate Contents',
-      'en': '',
+      'en': 'Moderate Contents',
     },
     'odjggdup': {
       'zh_Hans': 'Tune Suggestions',
-      'en': '',
+      'en': 'Tune Suggestions',
     },
     '3m9lh9cz': {
       'zh_Hans': 'Reports & Insights',
-      'en': '',
+      'en': 'Reports & Insights',
     },
     'kuspfn4p': {
       'zh_Hans': 'Recent Activity',
-      'en': '',
+      'en': 'Recent Activity',
     },
     'r84r7dd0': {
       'zh_Hans': 'New item uploaded by User #123',
-      'en': '',
+      'en': 'New item uploaded by User #123',
     },
     'ezfmqmhw': {
       'zh_Hans': '2 minutes ago',
-      'en': '',
+      'en': '2 minutes ago',
     },
     '080bxwqk': {
       'zh_Hans': 'New item uploaded by User #123',
-      'en': '',
+      'en': 'New item uploaded by User #123',
     },
     'zesjss5w': {
       'zh_Hans': '2 minutes ago',
-      'en': '',
+      'en': '2 minutes ago',
     },
     '1xkv7vyr': {
       'zh_Hans': 'New item uploaded by User #123',
-      'en': '',
+      'en': 'New item uploaded by User #123',
     },
     'x5vi9anh': {
       'zh_Hans': '2 minutes ago',
-      'en': '',
+      'en': '2 minutes ago',
     },
     'w2g0g2i4': {
       'zh_Hans': 'New item uploaded by User #123',
-      'en': '',
+      'en': 'New item uploaded by User #123',
     },
     'oqtmdkzg': {
       'zh_Hans': '2 minutes ago',
-      'en': '',
+      'en': '2 minutes ago',
     },
     'e672oaec': {
       'zh_Hans': 'Home',
-      'en': '',
+      'en': 'Home',
     },
   },
   // VendorDashboard
