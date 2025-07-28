@@ -152,7 +152,7 @@ final kTranslationsMap = <Map<String, Map<String, String>>>[
     },
     'omqirzhm': {
       'zh_Hans': '1214',
-      'en': '',
+      'en': '1214',
     },
     '2deva6hz': {
       'zh_Hans': 'Active Users',
@@ -1346,35 +1346,35 @@ final kTranslationsMap = <Map<String, Map<String, String>>>[
   {
     'a3lp1r00': {
       'zh_Hans': 'Welcome Back',
-      'en': '',
+      'en': 'Welcome Back',
     },
     'v5n4f0wb': {
       'zh_Hans': 'Let\'s get started by filling your details',
-      'en': '',
+      'en': 'Let\'s get started by filling your details',
     },
     'c04owza0': {
       'zh_Hans': 'Email',
-      'en': '',
+      'en': 'Email',
     },
     'c30wh58y': {
       'zh_Hans': 'Password',
-      'en': '',
+      'en': 'Password',
     },
     'fkuuvpdn': {
       'zh_Hans': 'Sign In',
-      'en': '',
+      'en': 'Sign In',
     },
     '005e5ab3': {
       'zh_Hans': 'Don\'t have an account? ',
-      'en': '',
+      'en': 'Don\'t have an account?',
     },
     'q4cp642g': {
       'zh_Hans': 'Sign Up here',
-      'en': '',
+      'en': 'Sign Up here',
     },
     '70133uxl': {
       'zh_Hans': 'Home',
-      'en': '',
+      'en': 'Home',
     },
   },
   // CreateAccount
@@ -1773,50 +1773,53 @@ final kTranslationsMap = <Map<String, Map<String, String>>>[
   {
     'yyq0zs37': {
       'zh_Hans': 'Welcome to PakaiJe',
-      'en': '',
+      'en': 'Welcome to PakaiJe',
     },
     '0u3a7jag': {
       'zh_Hans':
           'Pakaije helps you organize, match, and elevate your wardrobe—all in one app.',
-      'en': '',
+      'en':
+          'Pakaije helps you organize, match, and elevate your wardrobe—all in one app.',
     },
     '2ak7aw59': {
       'zh_Hans': 'Snap and Save Your Outfits',
-      'en': '',
+      'en': 'Snap and Save Your Outfits',
     },
     '5yephrea': {
       'zh_Hans':
           'Easily upload your clothes and tag them by type, color, and brand.',
-      'en': '',
+      'en':
+          'Easily upload your clothes and tag them by type, color, and brand.',
     },
     'tf24is8o': {
       'zh_Hans': 'Create Perfect Outfits',
-      'en': '',
+      'en': 'Create Perfect Outfits',
     },
     'ysjl0g50': {
       'zh_Hans':
           'Try different combinations and get suggestions based on your wardrobe.',
-      'en': '',
+      'en':
+          'Try different combinations and get suggestions based on your wardrobe.',
     },
     'rhwyc9ka': {
       'zh_Hans': 'Stay Stylish with Famous Brands',
-      'en': '',
+      'en': 'Stay Stylish with Famous Brands',
     },
     '7pifj4yo': {
       'zh_Hans': 'Explore trending outfits from Uniqlo, Padini, Zara & more.',
-      'en': '',
+      'en': 'Explore trending outfits from Uniqlo, Padini, Zara & more.',
     },
     'qvsmo5i3': {
       'zh_Hans': 'Sign In',
-      'en': '',
+      'en': 'Sign In',
     },
     '9k0e1xqc': {
       'zh_Hans': 'Sign Up',
-      'en': '',
+      'en': 'Sign Up',
     },
     'c8nhkdl0': {
       'zh_Hans': 'Home',
-      'en': '',
+      'en': 'Home',
     },
   },
   // RedirectPage
