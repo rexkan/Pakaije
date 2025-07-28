@@ -315,23 +315,29 @@ class _CreateAccountWidgetState extends State<CreateAccountWidget> {
                         shape: BoxShape.circle,
                         color: Colors.grey[300],
                       ),
-                      child: _model.uploadedFileUrl.isNotEmpty
-                          ? ClipOval(
-                              child: Image.network(
+                      child: ClipOval(
+                        child: (_model.uploadedFileUrl.isNotEmpty)
+                            ? Image.network(
                                 _model.uploadedFileUrl,
                                 width: 100,
                                 height: 100,
                                 fit: BoxFit.cover,
-                              ),
-                            )
-                          : ClipOval(
-                              child: Image.asset(
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Image.asset(
+                                    'assets/images/default_profile.png',
+                                    width: 100,
+                                    height: 100,
+                                    fit: BoxFit.cover,
+                                  );
+                                },
+                              )
+                            : Image.asset(
                                 'assets/images/default_profile.png',
                                 width: 100,
                                 height: 100,
                                 fit: BoxFit.cover,
                               ),
-                            ),
+                      ),
                     ),
                   ),
                 ),
