@@ -1583,99 +1583,99 @@ final kTranslationsMap = <Map<String, Map<String, String>>>[
   {
     '5ppbgqhi': {
       'zh_Hans': 'Home',
-      'en': '',
+      'en': 'Home',
     },
     'ljy2dica': {
       'zh_Hans': 'Welcome back,',
-      'en': '',
+      'en': 'Welcome back,',
     },
     '7ylrldap': {
       'zh_Hans': 'hope you enjoy the virtual wardrobe.',
-      'en': '',
+      'en': 'hope you enjoy the virtual wardrobe.',
     },
     'z7zma923': {
       'zh_Hans': 'Date',
-      'en': '',
+      'en': 'Date',
     },
     'a3rgpvwx': {
       'zh_Hans': '18/6',
-      'en': '',
+      'en': '18/6',
     },
     '7l2m0dmr': {
       'zh_Hans': 'Temperature',
-      'en': '',
+      'en': 'Temperature',
     },
     'omhhl9gx': {
       'zh_Hans': '27',
-      'en': '',
+      'en': '27',
     },
     '8nn2q56u': {
       'zh_Hans': 'Outfit Suggest',
-      'en': '',
+      'en': 'Outfit Suggest',
     },
     '9rqy3n49': {
-      'zh_Hans': '',
-      'en': '',
+      'zh_Hans': 'Today is cold day, wear a warmer jacket',
+      'en': 'Today is cold day, wear a warmer jacket',
     },
     'fca3pt0z': {
       'zh_Hans': 'Quick Action',
-      'en': '',
+      'en': 'Quick Action',
     },
     '9aptqlfu': {
       'zh_Hans': 'Add Item',
-      'en': '',
+      'en': 'Add Item',
     },
     'coav3yn9': {
       'zh_Hans': 'Match Outfit',
-      'en': '',
+      'en': 'Match Outfit',
     },
     'hi7i3b2j': {
       'zh_Hans': 'Trending Items',
-      'en': '',
+      'en': 'Trending Items',
     },
     '5tcd6ojt': {
       'zh_Hans': 'Basic tee',
-      'en': '',
+      'en': 'Basic tee',
     },
     'p2v94voy': {
       'zh_Hans': 'A wonderfully delicious 2 patty melt that melts into your...',
-      'en': '',
+      'en': 'A wonderfully delicious 2 patty melt that melts into your...',
     },
     'pzoni9ux': {
       'zh_Hans': 'Long pands',
-      'en': '',
+      'en': 'Long pands',
     },
     '4wwcnrjk': {
       'zh_Hans': 'Learn how to brew a delicious pourover every morning.',
-      'en': '',
+      'en': 'Learn how to brew a delicious pourover every morning.',
     },
     'syg4oh76': {
       'zh_Hans': 'Home',
-      'en': '',
+      'en': 'Home',
     },
     '8pv8eu1d': {
       'zh_Hans': 'Wardrobe',
-      'en': '',
+      'en': 'Wardrobe',
     },
     'p35nqmcv': {
       'zh_Hans': 'Match',
-      'en': '',
+      'en': 'Match',
     },
     'egb8i29n': {
       'zh_Hans': 'Shop',
-      'en': '',
+      'en': 'Shop',
     },
     'bzj3zlzq': {
       'zh_Hans': 'Calander',
-      'en': '',
+      'en': 'Calander',
     },
     'zbeaamf9': {
       'zh_Hans': 'Profile',
-      'en': '',
+      'en': 'Profile',
     },
     'wtb0bf9n': {
       'zh_Hans': 'Home',
-      'en': '',
+      'en': 'Home',
     },
   },
   // OutfitPlanner2

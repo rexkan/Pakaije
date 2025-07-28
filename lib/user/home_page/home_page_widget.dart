@@ -891,7 +891,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
               alignment: AlignmentDirectional(-1.0, 1.0),
               child: Container(
                 width: double.infinity,
-                height: 60.0,
+                height: 75.0,
                 decoration: BoxDecoration(
                   color: FlutterFlowTheme.of(context).underground,
                 ),
