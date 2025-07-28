@@ -618,31 +618,31 @@ final kTranslationsMap = <Map<String, Map<String, String>>>[
   {
     'lje39ygt': {
       'zh_Hans': 'User',
-      'en': '',
+      'en': 'User',
     },
     'ykuz0p52': {
       'zh_Hans': 'Accounts',
-      'en': '',
+      'en': 'Accounts',
     },
     'zpml24qc': {
       'zh_Hans': 'Search user here',
-      'en': '',
+      'en': 'Search user here',
     },
     '5v79c0kn': {
       'zh_Hans': 'Abby',
-      'en': '',
+      'en': 'Abby',
     },
     '95flk64i': {
       'zh_Hans': 'Joined since 1/1/2024',
-      'en': '',
+      'en': 'Joined since 1/1/2024',
     },
     '7sqi7e8s': {
       'zh_Hans': 'Suspend',
-      'en': '',
+      'en': 'Suspend',
     },
     '8u8xgpp9': {
       'zh_Hans': 'Alice',
-      'en': '',
+      'en': 'Alice',
     },
     'gsan4iwo': {
       'zh_Hans': 'Joined since 1/1/2024',
