@@ -488,16 +488,35 @@ class _LoginPageWidgetState extends State<LoginPageWidget> {
                                               GoRouter.of(context)
                                                   .prepareAuthEvent();
 
+                                              final email = _model
+                                                  .emailAddressTextController
+                                                  .text
+                                                  .trim();
+                                              final password = _model
+                                                  .passwordTextController.text;
+
+                                              if (email.isEmpty ||
+                                                  password.isEmpty) {
+                                                ScaffoldMessenger.of(context)
+                                                    .showSnackBar(
+                                                  SnackBar(
+                                                      content: Text(
+                                                          'Please enter both email and password')),
+                                                );
+                                                return;
+                                              }
+
                                               final user = await authManager
                                                   .signInWithEmail(
-                                                context,
-                                                _model
-                                                    .emailAddressTextController
-                                                    .text,
-                                                _model.passwordTextController
-                                                    .text,
-                                              );
+                                                      context, email, password);
+
                                               if (user == null) {
+                                                ScaffoldMessenger.of(context)
+                                                    .showSnackBar(
+                                                  SnackBar(
+                                                      content: Text(
+                                                          'Invalid email or password')),
+                                                );
                                                 return;
                                               }
 
@@ -505,25 +524,42 @@ class _LoginPageWidgetState extends State<LoginPageWidget> {
                                                   await UsersRecord
                                                       .getDocumentOnce(
                                                           currentUserReference!);
-                                              if (_model.currentUserDoc?.role ==
-                                                  'admin') {
+
+                                              if (_model.currentUserDoc ==
+                                                  null) {
+                                                ScaffoldMessenger.of(context)
+                                                    .showSnackBar(
+                                                  SnackBar(
+                                                      content: Text(
+                                                          'User record not found in database')),
+                                                );
+                                                return;
+                                              }
+
+                                              // Navigate based on role
+                                              final role =
+                                                  _model.currentUserDoc?.role;
+                                              if (role == 'Admin') {
                                                 context.pushNamedAuth(
                                                     AdminDashboardWidget
                                                         .routeName,
                                                     context.mounted);
-                                              } else if (_model
-                                                      .currentUserDoc?.role ==
-                                                  'vendor') {
+                                              } else if (role == 'Vendor') {
                                                 context.pushNamedAuth(
                                                     VendorDashboardWidget
                                                         .routeName,
                                                     context.mounted);
-                                              } else if (_model
-                                                      .currentUserDoc?.role ==
-                                                  'user') {
+                                              } else if (role == 'User') {
                                                 context.pushNamedAuth(
                                                     HomePageWidget.routeName,
                                                     context.mounted);
+                                              } else {
+                                                ScaffoldMessenger.of(context)
+                                                    .showSnackBar(
+                                                  SnackBar(
+                                                      content: Text(
+                                                          'No role assigned for this account')),
+                                                );
                                               }
 
                                               safeSetState(() {});
@@ -618,6 +654,9 @@ class _LoginPageWidgetState extends State<LoginPageWidget> {
                                                         font: GoogleFonts.inter(
                                                           fontWeight:
                                                               FontWeight.w600,
+                                                          decoration:
+                                                              TextDecoration
+                                                                  .underline,
                                                           fontStyle:
                                                               FlutterFlowTheme.of(
                                                                       context)

@@ -379,7 +379,9 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
                                                             .labelLarge
                                                             .fontStyle,
                                                   ),
-                                                  color: Color(0xA0D1A07F),
+                                                  color: FlutterFlowTheme.of(
+                                                          context)
+                                                      .tastyCrust,
                                                   fontSize: 16.0,
                                                   letterSpacing: 0.0,
                                                   fontWeight: FontWeight.w500,
@@ -454,7 +456,9 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
                                                             .labelLarge
                                                             .fontStyle,
                                                   ),
-                                                  color: Color(0xA0D1A07F),
+                                                  color: FlutterFlowTheme.of(
+                                                          context)
+                                                      .tastyCrust,
                                                   fontSize: 16.0,
                                                   letterSpacing: 0.0,
                                                   fontWeight: FontWeight.w500,
@@ -529,7 +533,9 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
                                                             .labelLarge
                                                             .fontStyle,
                                                   ),
-                                                  color: Color(0xA0D1A07F),
+                                                  color: FlutterFlowTheme.of(
+                                                          context)
+                                                      .tastyCrust,
                                                   fontSize: 16.0,
                                                   letterSpacing: 0.0,
                                                   fontWeight: FontWeight.w500,
@@ -614,8 +620,9 @@ class _OnboardingPageWidgetState extends State<OnboardingPageWidget>
                                                                     .labelLarge
                                                                     .fontStyle,
                                                           ),
-                                                          color:
-                                                              Color(0xA0D1A07F),
+                                                          color: FlutterFlowTheme
+                                                                  .of(context)
+                                                              .tastyCrust,
                                                           fontSize: 16.0,
                                                           letterSpacing: 0.0,
                                                           fontWeight:
