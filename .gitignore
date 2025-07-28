@@ -1,0 +1,4 @@
+# Flutter build files
+build/
+*.apkbuild/
+*.apk
