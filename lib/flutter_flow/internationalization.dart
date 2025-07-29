@@ -1614,8 +1614,10 @@ final kTranslationsMap = <Map<String, Map<String, String>>>[
       'en': 'Outfit Suggest',
     },
     '9rqy3n49': {
-      'zh_Hans': 'Today is cold day, wear a warmer jacket',
-      'en': 'Today is cold day, wear a warmer jacket',
+      'zh_Hans':
+          'Today is a hot day, wear light and breathable clothes to stay cool',
+      'en':
+          'Today is a hot day, wear light and breathable clothes to stay cool',
     },
     'fca3pt0z': {
       'zh_Hans': 'Quick Action',

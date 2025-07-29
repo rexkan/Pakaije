@@ -4,6 +4,10 @@ import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/flutter_flow/form_field_controller.dart';
+import '/flutter_flow/upload_data.dart';
+import '/backend/backend.dart';
+import '/auth/firebase_auth/auth_util.dart';
+import '/backend/firebase_storage/storage.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'add_new_item_model.dart';
@@ -29,28 +33,13 @@ class _AddNewItemWidgetState extends State<AddNewItemWidget> {
     super.initState();
     _model = createModel(context, () => AddNewItemModel());
 
-    _model.itemNameTextController1 ??= TextEditingController();
-    _model.itemNameFocusNode1 ??= FocusNode();
-
-    _model.itemNameTextController2 ??= TextEditingController();
-    _model.itemNameFocusNode2 ??= FocusNode();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) => safeSetState(() {
-          _model.itemNameTextController1?.text =
-              FFLocalizations.of(context).getText(
-            '2q3gtuqn' /* Exp: Uniqlo basic tee */,
-          );
-          _model.itemNameTextController2?.text =
-              FFLocalizations.of(context).getText(
-            'nr7uasfe' /* XXX */,
-          );
-        }));
+    _model.itemNameTextController ??= TextEditingController();
+    _model.itemNameFocusNode ??= FocusNode();
   }
 
   @override
   void dispose() {
     _model.dispose();
-
     super.dispose();
   }
 
@@ -124,12 +113,19 @@ class _AddNewItemWidgetState extends State<AddNewItemWidget> {
                                 0.0, 15.0, 0.0, 0.0),
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(8.0),
-                              child: Image.network(
-                                'https://picsum.photos/seed/710/600',
-                                width: 250.0,
-                                height: 250.0,
-                                fit: BoxFit.cover,
-                              ),
+                              child: _model.uploadedFileUrl.isNotEmpty
+                                  ? Image.network(
+                                      _model.uploadedFileUrl,
+                                      width: 250.0,
+                                      height: 250.0,
+                                      fit: BoxFit.cover,
+                                    )
+                                  : Image.network(
+                                      'https://picsum.photos/seed/710/600',
+                                      width: 250.0,
+                                      height: 250.0,
+                                      fit: BoxFit.cover,
+                                    ),
                             ),
                           ),
                         ),
@@ -139,8 +135,76 @@ class _AddNewItemWidgetState extends State<AddNewItemWidget> {
                             padding: EdgeInsetsDirectional.fromSTEB(
                                 0.0, 10.0, 0.0, 0.0),
                             child: FFButtonWidget(
-                              onPressed: () {
-                                print('Button pressed ...');
+                              onPressed: () async {
+                                final selectedMedia =
+                                    await selectMediaWithSourceBottomSheet(
+                                  context: context,
+                                  allowPhoto: true,
+                                  backgroundColor: FlutterFlowTheme.of(context)
+                                      .secondaryBackground,
+                                  textColor:
+                                      FlutterFlowTheme.of(context).primaryText,
+                                  pickerFontFamily: 'Inter',
+                                );
+                                if (selectedMedia != null &&
+                                    selectedMedia.every((m) =>
+                                        validateFileFormat(
+                                            m.storagePath, context))) {
+                                  safeSetState(
+                                      () => _model.isDataUploading = true);
+                                  var selectedUploadedFiles =
+                                      <FFUploadedFile>[];
+
+                                  var downloadUrls = <String>[];
+                                  try {
+                                    showUploadMessage(
+                                      context,
+                                      'Uploading file...',
+                                      showLoading: true,
+                                    );
+                                    selectedUploadedFiles = selectedMedia
+                                        .map((m) => FFUploadedFile(
+                                              name:
+                                                  m.storagePath.split('/').last,
+                                              bytes: m.bytes,
+                                              height: m.dimensions?.height,
+                                              width: m.dimensions?.width,
+                                              blurHash: m.blurHash,
+                                            ))
+                                        .toList();
+
+                                    downloadUrls = (await Future.wait(
+                                      selectedMedia.map(
+                                        (m) async => await uploadData(
+                                            m.storagePath, m.bytes),
+                                      ),
+                                    ))
+                                        .where((u) => u != null)
+                                        .map((u) => u!)
+                                        .toList();
+                                  } finally {
+                                    ScaffoldMessenger.of(context)
+                                        .hideCurrentSnackBar();
+                                    _model.isDataUploading = false;
+                                  }
+                                  if (selectedUploadedFiles.length ==
+                                          selectedMedia.length &&
+                                      downloadUrls.length ==
+                                          selectedMedia.length) {
+                                    safeSetState(() {
+                                      _model.uploadedLocalFile =
+                                          selectedUploadedFiles.first;
+                                      _model.uploadedFileUrl =
+                                          downloadUrls.first;
+                                    });
+                                    showUploadMessage(context, 'Success!');
+                                  } else {
+                                    safeSetState(() {});
+                                    showUploadMessage(
+                                        context, 'Failed to upload data');
+                                    return;
+                                  }
+                                }
                               },
                               text: FFLocalizations.of(context).getText(
                                 'cc859zez' /* Upload from library */,
@@ -191,6 +255,7 @@ class _AddNewItemWidgetState extends State<AddNewItemWidget> {
                             child: Column(
                               mainAxisSize: MainAxisSize.max,
                               children: [
+                                // Item Name Field
                                 Align(
                                   alignment: AlignmentDirectional(-1.0, 0.0),
                                   child: Padding(
@@ -231,8 +296,8 @@ class _AddNewItemWidgetState extends State<AddNewItemWidget> {
                                       width: 330.0,
                                       child: TextFormField(
                                         controller:
-                                            _model.itemNameTextController1,
-                                        focusNode: _model.itemNameFocusNode1,
+                                            _model.itemNameTextController,
+                                        focusNode: _model.itemNameFocusNode,
                                         autofocus: false,
                                         obscureText: false,
                                         decoration: InputDecoration(
@@ -263,10 +328,7 @@ class _AddNewItemWidgetState extends State<AddNewItemWidget> {
                                                         .labelMedium
                                                         .fontStyle,
                                               ),
-                                          hintText: FFLocalizations.of(context)
-                                              .getText(
-                                            'e14u07za' /* TextField */,
-                                          ),
+                                          hintText: 'Exp: Uniqlo basic tee',
                                           hintStyle: FlutterFlowTheme.of(
                                                   context)
                                               .labelMedium
@@ -362,12 +424,14 @@ class _AddNewItemWidgetState extends State<AddNewItemWidget> {
                                             FlutterFlowTheme.of(context)
                                                 .primaryText,
                                         validator: _model
-                                            .itemNameTextController1Validator
+                                            .itemNameTextControllerValidator
                                             .asValidator(context),
                                       ),
                                     ),
                                   ),
                                 ),
+
+                                // Category Dropdown
                                 Align(
                                   alignment: AlignmentDirectional(-1.0, 0.0),
                                   child: Padding(
@@ -404,128 +468,24 @@ class _AddNewItemWidgetState extends State<AddNewItemWidget> {
                                   child: Padding(
                                     padding: EdgeInsetsDirectional.fromSTEB(
                                         0.0, 0.0, 0.0, 15.0),
-                                    child: Container(
+                                    child: FlutterFlowDropDown<String>(
+                                      controller: _model
+                                              .categoryDropDownValueController ??=
+                                          FormFieldController<String>(null),
+                                      options: [
+                                        'Tops',
+                                        'Bottoms',
+                                        'Skirts',
+                                        'Shoes'
+                                      ],
+                                      onChanged: (val) => safeSetState(() =>
+                                          _model.categoryDropDownValue = val),
                                       width: 330.0,
-                                      child: TextFormField(
-                                        controller:
-                                            _model.itemNameTextController2,
-                                        focusNode: _model.itemNameFocusNode2,
-                                        autofocus: false,
-                                        obscureText: false,
-                                        decoration: InputDecoration(
-                                          isDense: true,
-                                          labelStyle: FlutterFlowTheme.of(
-                                                  context)
-                                              .labelMedium
-                                              .override(
-                                                font: GoogleFonts.inter(
-                                                  fontWeight:
-                                                      FlutterFlowTheme.of(
-                                                              context)
-                                                          .labelMedium
-                                                          .fontWeight,
-                                                  fontStyle:
-                                                      FlutterFlowTheme.of(
-                                                              context)
-                                                          .labelMedium
-                                                          .fontStyle,
-                                                ),
-                                                letterSpacing: 0.0,
-                                                fontWeight:
-                                                    FlutterFlowTheme.of(context)
-                                                        .labelMedium
-                                                        .fontWeight,
-                                                fontStyle:
-                                                    FlutterFlowTheme.of(context)
-                                                        .labelMedium
-                                                        .fontStyle,
-                                              ),
-                                          hintText: FFLocalizations.of(context)
-                                              .getText(
-                                            '3oum1l5g' /* TextField */,
-                                          ),
-                                          hintStyle: FlutterFlowTheme.of(
-                                                  context)
-                                              .labelMedium
-                                              .override(
-                                                font: GoogleFonts.inter(
-                                                  fontWeight:
-                                                      FlutterFlowTheme.of(
-                                                              context)
-                                                          .labelMedium
-                                                          .fontWeight,
-                                                  fontStyle:
-                                                      FlutterFlowTheme.of(
-                                                              context)
-                                                          .labelMedium
-                                                          .fontStyle,
-                                                ),
-                                                letterSpacing: 0.0,
-                                                fontWeight:
-                                                    FlutterFlowTheme.of(context)
-                                                        .labelMedium
-                                                        .fontWeight,
-                                                fontStyle:
-                                                    FlutterFlowTheme.of(context)
-                                                        .labelMedium
-                                                        .fontStyle,
-                                              ),
-                                          enabledBorder: OutlineInputBorder(
-                                            borderSide: BorderSide(
-                                              color: Color(0x00000000),
-                                              width: 1.0,
-                                            ),
-                                            borderRadius:
-                                                BorderRadius.circular(8.0),
-                                          ),
-                                          focusedBorder: OutlineInputBorder(
-                                            borderSide: BorderSide(
-                                              color: Color(0x00000000),
-                                              width: 1.0,
-                                            ),
-                                            borderRadius:
-                                                BorderRadius.circular(8.0),
-                                          ),
-                                          errorBorder: OutlineInputBorder(
-                                            borderSide: BorderSide(
-                                              color:
-                                                  FlutterFlowTheme.of(context)
-                                                      .error,
-                                              width: 1.0,
-                                            ),
-                                            borderRadius:
-                                                BorderRadius.circular(8.0),
-                                          ),
-                                          focusedErrorBorder:
-                                              OutlineInputBorder(
-                                            borderSide: BorderSide(
-                                              color:
-                                                  FlutterFlowTheme.of(context)
-                                                      .error,
-                                              width: 1.0,
-                                            ),
-                                            borderRadius:
-                                                BorderRadius.circular(8.0),
-                                          ),
-                                          filled: true,
-                                          fillColor:
-                                              FlutterFlowTheme.of(context)
-                                                  .secondaryBackground,
-                                        ),
-                                        style: FlutterFlowTheme.of(context)
-                                            .bodyMedium
-                                            .override(
-                                              font: GoogleFonts.inter(
-                                                fontWeight:
-                                                    FlutterFlowTheme.of(context)
-                                                        .bodyMedium
-                                                        .fontWeight,
-                                                fontStyle:
-                                                    FlutterFlowTheme.of(context)
-                                                        .bodyMedium
-                                                        .fontStyle,
-                                              ),
-                                              letterSpacing: 0.0,
+                                      height: 50.0,
+                                      textStyle: FlutterFlowTheme.of(context)
+                                          .bodyMedium
+                                          .override(
+                                            font: GoogleFonts.inter(
                                               fontWeight:
                                                   FlutterFlowTheme.of(context)
                                                       .bodyMedium
@@ -535,16 +495,42 @@ class _AddNewItemWidgetState extends State<AddNewItemWidget> {
                                                       .bodyMedium
                                                       .fontStyle,
                                             ),
-                                        cursorColor:
-                                            FlutterFlowTheme.of(context)
+                                            color: FlutterFlowTheme.of(context)
                                                 .primaryText,
-                                        validator: _model
-                                            .itemNameTextController2Validator
-                                            .asValidator(context),
+                                            letterSpacing: 0.0,
+                                            fontWeight:
+                                                FlutterFlowTheme.of(context)
+                                                    .bodyMedium
+                                                    .fontWeight,
+                                            fontStyle:
+                                                FlutterFlowTheme.of(context)
+                                                    .bodyMedium
+                                                    .fontStyle,
+                                          ),
+                                      hintText: 'Select Category...',
+                                      icon: Icon(
+                                        Icons.keyboard_arrow_down_rounded,
+                                        color: FlutterFlowTheme.of(context)
+                                            .secondaryText,
+                                        size: 24.0,
                                       ),
+                                      fillColor: FlutterFlowTheme.of(context)
+                                          .secondaryBackground,
+                                      elevation: 2.0,
+                                      borderColor: Colors.transparent,
+                                      borderWidth: 0.0,
+                                      borderRadius: 8.0,
+                                      margin: EdgeInsetsDirectional.fromSTEB(
+                                          12.0, 0.0, 12.0, 0.0),
+                                      hidesUnderline: true,
+                                      isOverButton: false,
+                                      isSearchable: false,
+                                      isMultiSelect: false,
                                     ),
                                   ),
                                 ),
+
+                                // Color Dropdown
                                 Align(
                                   alignment: AlignmentDirectional(-1.0, 0.0),
                                   child: Padding(
@@ -582,9 +568,9 @@ class _AddNewItemWidgetState extends State<AddNewItemWidget> {
                                     padding: EdgeInsetsDirectional.fromSTEB(
                                         0.0, 0.0, 0.0, 15.0),
                                     child: FlutterFlowDropDown<String>(
-                                      controller:
-                                          _model.dropDownValueController ??=
-                                              FormFieldController<String>(null),
+                                      controller: _model
+                                              .colorDropDownValueController ??=
+                                          FormFieldController<String>(null),
                                       options: [
                                         FFLocalizations.of(context).getText(
                                           '32t7j0ox' /* Black */,
@@ -623,10 +609,10 @@ class _AddNewItemWidgetState extends State<AddNewItemWidget> {
                                           '8f82kzvh' /* Brown */,
                                         )
                                       ],
-                                      onChanged: (val) => safeSetState(
-                                          () => _model.dropDownValue = val),
-                                      width: 200.0,
-                                      height: 30.0,
+                                      onChanged: (val) => safeSetState(() =>
+                                          _model.colorDropDownValue = val),
+                                      width: 330.0,
+                                      height: 50.0,
                                       textStyle: FlutterFlowTheme.of(context)
                                           .bodyMedium
                                           .override(
@@ -641,7 +627,7 @@ class _AddNewItemWidgetState extends State<AddNewItemWidget> {
                                                       .fontStyle,
                                             ),
                                             color: FlutterFlowTheme.of(context)
-                                                .underground,
+                                                .primaryText,
                                             letterSpacing: 0.0,
                                             fontWeight:
                                                 FlutterFlowTheme.of(context)
@@ -677,15 +663,110 @@ class _AddNewItemWidgetState extends State<AddNewItemWidget> {
                                     ),
                                   ),
                                 ),
+
+                                // Weather Suitability Dropdown
                                 Align(
                                   alignment: AlignmentDirectional(-1.0, 0.0),
                                   child: Padding(
                                     padding: EdgeInsetsDirectional.fromSTEB(
                                         0.0, 0.0, 0.0, 5.0),
                                     child: Text(
-                                      FFLocalizations.of(context).getText(
-                                        'wm5lcswo' /* Category */,
+                                      'Weather Suitability',
+                                      style: FlutterFlowTheme.of(context)
+                                          .bodyMedium
+                                          .override(
+                                            font: GoogleFonts.inter(
+                                              fontWeight: FontWeight.bold,
+                                              fontStyle:
+                                                  FlutterFlowTheme.of(context)
+                                                      .bodyMedium
+                                                      .fontStyle,
+                                            ),
+                                            color: FlutterFlowTheme.of(context)
+                                                .underground,
+                                            letterSpacing: 0.0,
+                                            fontWeight: FontWeight.bold,
+                                            fontStyle:
+                                                FlutterFlowTheme.of(context)
+                                                    .bodyMedium
+                                                    .fontStyle,
+                                          ),
+                                    ),
+                                  ),
+                                ),
+                                Align(
+                                  alignment: AlignmentDirectional(-1.0, 0.0),
+                                  child: Padding(
+                                    padding: EdgeInsetsDirectional.fromSTEB(
+                                        0.0, 0.0, 0.0, 15.0),
+                                    child: FlutterFlowDropDown<String>(
+                                      controller: _model
+                                              .weatherDropDownValueController ??=
+                                          FormFieldController<String>(null),
+                                      options: [
+                                        'Hot weather',
+                                        'Cold weather'
+                                      ],
+                                      onChanged: (val) => safeSetState(() =>
+                                          _model.weatherDropDownValue = val),
+                                      width: 330.0,
+                                      height: 50.0,
+                                      textStyle: FlutterFlowTheme.of(context)
+                                          .bodyMedium
+                                          .override(
+                                            font: GoogleFonts.inter(
+                                              fontWeight:
+                                                  FlutterFlowTheme.of(context)
+                                                      .bodyMedium
+                                                      .fontWeight,
+                                              fontStyle:
+                                                  FlutterFlowTheme.of(context)
+                                                      .bodyMedium
+                                                      .fontStyle,
+                                            ),
+                                            color: FlutterFlowTheme.of(context)
+                                                .primaryText,
+                                            letterSpacing: 0.0,
+                                            fontWeight:
+                                                FlutterFlowTheme.of(context)
+                                                    .bodyMedium
+                                                    .fontWeight,
+                                            fontStyle:
+                                                FlutterFlowTheme.of(context)
+                                                    .bodyMedium
+                                                    .fontStyle,
+                                          ),
+                                      hintText: 'Select Weather...',
+                                      icon: Icon(
+                                        Icons.keyboard_arrow_down_rounded,
+                                        color: FlutterFlowTheme.of(context)
+                                            .secondaryText,
+                                        size: 24.0,
                                       ),
+                                      fillColor: FlutterFlowTheme.of(context)
+                                          .secondaryBackground,
+                                      elevation: 2.0,
+                                      borderColor: Colors.transparent,
+                                      borderWidth: 0.0,
+                                      borderRadius: 8.0,
+                                      margin: EdgeInsetsDirectional.fromSTEB(
+                                          12.0, 0.0, 12.0, 0.0),
+                                      hidesUnderline: true,
+                                      isOverButton: false,
+                                      isSearchable: false,
+                                      isMultiSelect: false,
+                                    ),
+                                  ),
+                                ),
+
+                                // Style Category Buttons
+                                Align(
+                                  alignment: AlignmentDirectional(-1.0, 0.0),
+                                  child: Padding(
+                                    padding: EdgeInsetsDirectional.fromSTEB(
+                                        0.0, 0.0, 0.0, 5.0),
+                                    child: Text(
+                                      'Style Category',
                                       style: FlutterFlowTheme.of(context)
                                           .bodyMedium
                                           .override(
@@ -723,7 +804,10 @@ class _AddNewItemWidgetState extends State<AddNewItemWidget> {
                                                   0.0, 0.0, 5.0, 0.0),
                                           child: FFButtonWidget(
                                             onPressed: () {
-                                              print('Button pressed ...');
+                                              safeSetState(() {
+                                                _model.setSelectedStyleTag(
+                                                    'Casual');
+                                              });
                                             },
                                             text: FFLocalizations.of(context)
                                                 .getText(
@@ -736,9 +820,12 @@ class _AddNewItemWidgetState extends State<AddNewItemWidget> {
                                                       16.0, 0.0, 16.0, 0.0),
                                               iconPadding: EdgeInsetsDirectional
                                                   .fromSTEB(0.0, 0.0, 0.0, 0.0),
-                                              color:
-                                                  FlutterFlowTheme.of(context)
-                                                      .underground,
+                                              color: _model.selectedStyleTag ==
+                                                      'Casual'
+                                                  ? FlutterFlowTheme.of(context)
+                                                      .underground
+                                                  : FlutterFlowTheme.of(context)
+                                                      .blankCanvas,
                                               textStyle: FlutterFlowTheme.of(
                                                       context)
                                                   .titleSmall
@@ -756,7 +843,13 @@ class _AddNewItemWidgetState extends State<AddNewItemWidget> {
                                                               .titleSmall
                                                               .fontStyle,
                                                     ),
-                                                    color: Colors.white,
+                                                    color:
+                                                        _model.selectedStyleTag ==
+                                                                'Casual'
+                                                            ? Colors.white
+                                                            : FlutterFlowTheme
+                                                                    .of(context)
+                                                                .underground,
                                                     letterSpacing: 0.0,
                                                     fontWeight:
                                                         FlutterFlowTheme.of(
@@ -770,6 +863,12 @@ class _AddNewItemWidgetState extends State<AddNewItemWidget> {
                                                             .fontStyle,
                                                   ),
                                               elevation: 0.0,
+                                              borderSide: BorderSide(
+                                                color:
+                                                    FlutterFlowTheme.of(context)
+                                                        .underground,
+                                                width: 1.0,
+                                              ),
                                               borderRadius:
                                                   BorderRadius.circular(10.0),
                                             ),
@@ -785,7 +884,10 @@ class _AddNewItemWidgetState extends State<AddNewItemWidget> {
                                                   0.0, 0.0, 5.0, 0.0),
                                           child: FFButtonWidget(
                                             onPressed: () {
-                                              print('Button pressed ...');
+                                              safeSetState(() {
+                                                _model.setSelectedStyleTag(
+                                                    'Formal');
+                                              });
                                             },
                                             text: FFLocalizations.of(context)
                                                 .getText(
@@ -798,9 +900,12 @@ class _AddNewItemWidgetState extends State<AddNewItemWidget> {
                                                       16.0, 0.0, 16.0, 0.0),
                                               iconPadding: EdgeInsetsDirectional
                                                   .fromSTEB(0.0, 0.0, 0.0, 0.0),
-                                              color:
-                                                  FlutterFlowTheme.of(context)
-                                                      .underground,
+                                              color: _model.selectedStyleTag ==
+                                                      'Formal'
+                                                  ? FlutterFlowTheme.of(context)
+                                                      .underground
+                                                  : FlutterFlowTheme.of(context)
+                                                      .blankCanvas,
                                               textStyle: FlutterFlowTheme.of(
                                                       context)
                                                   .titleSmall
@@ -818,7 +923,13 @@ class _AddNewItemWidgetState extends State<AddNewItemWidget> {
                                                               .titleSmall
                                                               .fontStyle,
                                                     ),
-                                                    color: Colors.white,
+                                                    color:
+                                                        _model.selectedStyleTag ==
+                                                                'Formal'
+                                                            ? Colors.white
+                                                            : FlutterFlowTheme
+                                                                    .of(context)
+                                                                .underground,
                                                     letterSpacing: 0.0,
                                                     fontWeight:
                                                         FlutterFlowTheme.of(
@@ -832,6 +943,12 @@ class _AddNewItemWidgetState extends State<AddNewItemWidget> {
                                                             .fontStyle,
                                                   ),
                                               elevation: 0.0,
+                                              borderSide: BorderSide(
+                                                color:
+                                                    FlutterFlowTheme.of(context)
+                                                        .underground,
+                                                width: 1.0,
+                                              ),
                                               borderRadius:
                                                   BorderRadius.circular(10.0),
                                             ),
@@ -847,7 +964,10 @@ class _AddNewItemWidgetState extends State<AddNewItemWidget> {
                                                   0.0, 0.0, 5.0, 0.0),
                                           child: FFButtonWidget(
                                             onPressed: () {
-                                              print('Button pressed ...');
+                                              safeSetState(() {
+                                                _model.setSelectedStyleTag(
+                                                    'Party');
+                                              });
                                             },
                                             text: FFLocalizations.of(context)
                                                 .getText(
@@ -860,9 +980,12 @@ class _AddNewItemWidgetState extends State<AddNewItemWidget> {
                                                       16.0, 0.0, 16.0, 0.0),
                                               iconPadding: EdgeInsetsDirectional
                                                   .fromSTEB(0.0, 0.0, 0.0, 0.0),
-                                              color:
-                                                  FlutterFlowTheme.of(context)
-                                                      .underground,
+                                              color: _model.selectedStyleTag ==
+                                                      'Party'
+                                                  ? FlutterFlowTheme.of(context)
+                                                      .underground
+                                                  : FlutterFlowTheme.of(context)
+                                                      .blankCanvas,
                                               textStyle: FlutterFlowTheme.of(
                                                       context)
                                                   .titleSmall
@@ -880,7 +1003,13 @@ class _AddNewItemWidgetState extends State<AddNewItemWidget> {
                                                               .titleSmall
                                                               .fontStyle,
                                                     ),
-                                                    color: Colors.white,
+                                                    color:
+                                                        _model.selectedStyleTag ==
+                                                                'Party'
+                                                            ? Colors.white
+                                                            : FlutterFlowTheme
+                                                                    .of(context)
+                                                                .underground,
                                                     letterSpacing: 0.0,
                                                     fontWeight:
                                                         FlutterFlowTheme.of(
@@ -894,6 +1023,12 @@ class _AddNewItemWidgetState extends State<AddNewItemWidget> {
                                                             .fontStyle,
                                                   ),
                                               elevation: 0.0,
+                                              borderSide: BorderSide(
+                                                color:
+                                                    FlutterFlowTheme.of(context)
+                                                        .underground,
+                                                width: 1.0,
+                                              ),
                                               borderRadius:
                                                   BorderRadius.circular(10.0),
                                             ),
@@ -903,14 +1038,139 @@ class _AddNewItemWidgetState extends State<AddNewItemWidget> {
                                     ],
                                   ),
                                 ),
+
+                                // Save Button
                                 Align(
                                   alignment: AlignmentDirectional(0.0, 0.0),
                                   child: Padding(
                                     padding: EdgeInsetsDirectional.fromSTEB(
                                         0.0, 20.0, 0.0, 0.0),
                                     child: FFButtonWidget(
-                                      onPressed: () {
-                                        print('Button pressed ...');
+                                      onPressed: () async {
+                                        // Validation
+                                        if (_model.itemNameTextController.text
+                                            .isEmpty) {
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            SnackBar(
+                                              content: Text(
+                                                  'Please enter an item name'),
+                                              backgroundColor:
+                                                  FlutterFlowTheme.of(context)
+                                                      .error,
+                                            ),
+                                          );
+                                          return;
+                                        }
+
+                                        if (_model.categoryDropDownValue ==
+                                            null) {
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            SnackBar(
+                                              content: Text(
+                                                  'Please select a category'),
+                                              backgroundColor:
+                                                  FlutterFlowTheme.of(context)
+                                                      .error,
+                                            ),
+                                          );
+                                          return;
+                                        }
+
+                                        if (_model.colorDropDownValue == null) {
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            SnackBar(
+                                              content:
+                                                  Text('Please select a color'),
+                                              backgroundColor:
+                                                  FlutterFlowTheme.of(context)
+                                                      .error,
+                                            ),
+                                          );
+                                          return;
+                                        }
+
+                                        if (_model.weatherDropDownValue == null) {
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            SnackBar(
+                                              content:
+                                                  Text('Please select weather suitability'),
+                                              backgroundColor:
+                                                  FlutterFlowTheme.of(context)
+                                                      .error,
+                                            ),
+                                          );
+                                          return;
+                                        }
+
+                                        if (_model.uploadedFileUrl.isEmpty) {
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            SnackBar(
+                                              content: Text(
+                                                  'Please upload an image'),
+                                              backgroundColor:
+                                                  FlutterFlowTheme.of(context)
+                                                      .error,
+                                            ),
+                                          );
+                                          return;
+                                        }
+
+                                        // Create the wardrobe item
+                                        try {
+                                          // Prepare occasion list (style category)
+                                          List<String> occasionList = [];
+                                          if (_model.selectedStyleTag != null) {
+                                            occasionList.add(_model.selectedStyleTag!);
+                                          }
+
+                                          // Prepare weather suitability list
+                                          List<String> weatherList = [];
+                                          if (_model.weatherDropDownValue != null) {
+                                            weatherList.add(_model.weatherDropDownValue!);
+                                          }
+
+                                          await WardrobeItemsRecord.collection
+                                              .add({
+                                            'user_id': currentUserUid,
+                                            'image_url': _model.uploadedFileUrl,
+                                            'name': _model.itemNameTextController.text,
+                                            'category': _model.categoryDropDownValue!,
+                                            'color': _model.colorDropDownValue!,
+                                            'occasion': occasionList,
+                                            'weather_suitability': weatherList,
+                                            'date_added': getCurrentTimestamp,
+                                            'is_favourite': false,
+                                          });
+
+                                          // Show success message
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            SnackBar(
+                                              content: Text(
+                                                  'Item added successfully!'),
+                                              backgroundColor: Colors.green,
+                                            ),
+                                          );
+
+                                          // Navigate back
+                                          context.safePop();
+                                        } catch (e) {
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            SnackBar(
+                                              content:
+                                                  Text('Error adding item: $e'),
+                                              backgroundColor:
+                                                  FlutterFlowTheme.of(context)
+                                                      .error,
+                                            ),
+                                          );
+                                        }
                                       },
                                       text: FFLocalizations.of(context).getText(
                                         'zjj4rmpz' /* Save */,
