@@ -294,55 +294,55 @@ final kTranslationsMap = <Map<String, Map<String, String>>>[
   {
     'zwwzyv36': {
       'zh_Hans': 'User Profile',
-      'en': '',
+      'en': 'User Profile',
     },
     'kzujog58': {
       'zh_Hans': 'Information',
-      'en': '',
+      'en': 'Information',
     },
     'yy7glkn6': {
       'zh_Hans': 'Username:',
-      'en': '',
+      'en': 'Username:',
     },
     'qkmkxzuj': {
       'zh_Hans': 'REX',
-      'en': '',
+      'en': 'REX',
     },
     'ylpfyxj0': {
       'zh_Hans': 'Gender:',
-      'en': '',
+      'en': 'Gender:',
     },
     '5f57qp0r': {
       'zh_Hans': 'Man',
-      'en': '',
+      'en': 'Man',
     },
     'f825olxn': {
       'zh_Hans': 'Email:',
-      'en': '',
+      'en': 'Email:',
     },
     'iuzwtrmj': {
       'zh_Hans': 'Rex@gmail.com',
-      'en': '',
+      'en': 'Rex@gmail.com',
     },
     'ki7tg1yu': {
       'zh_Hans': 'Body View:',
-      'en': '',
+      'en': 'Body View:',
     },
     'om941oto': {
       'zh_Hans': 'Upload',
-      'en': '',
+      'en': 'Upload',
     },
     'eu6fuvgb': {
       'zh_Hans': 'Update Profile Details:',
-      'en': '',
+      'en': 'Update Profile Details:',
     },
     'qbj7ohxv': {
       'zh_Hans': 'TextField',
-      'en': '',
+      'en': 'TextField',
     },
     'p1qrzh2e': {
       'zh_Hans': 'Email Address',
-      'en': '',
+      'en': 'Email Address',
     },
     'wj3f1imp': {
       'zh_Hans': '',
@@ -350,7 +350,7 @@ final kTranslationsMap = <Map<String, Map<String, String>>>[
     },
     'g3761ypm': {
       'zh_Hans': 'Password',
-      'en': '',
+      'en': 'Password',
     },
     'ge9pbfs8': {
       'zh_Hans': 'Update',
@@ -358,38 +358,38 @@ final kTranslationsMap = <Map<String, Map<String, String>>>[
     },
     'hk89n3i3': {
       'zh_Hans': 'Home',
-      'en': '',
+      'en': 'Home',
     },
     '6zqt65w8': {
       'zh_Hans': 'Wardrobe',
-      'en': '',
+      'en': 'Wardrobe',
     },
     'lro74946': {
       'zh_Hans': 'Match',
-      'en': '',
+      'en': 'Match',
     },
     'zb5cyhgc': {
       'zh_Hans': 'Shop',
-      'en': '',
+      'en': 'Shop',
     },
     '3odu0pvd': {
       'zh_Hans': 'Calander',
-      'en': '',
+      'en': 'Calendar',
     },
     '120dmwbn': {
       'zh_Hans': 'Profile',
-      'en': '',
+      'en': 'Profile',
     },
     '4t90wynl': {
       'zh_Hans': 'Home',
-      'en': '',
+      'en': 'Home',
     },
   },
   // UploadBodyView
   {
     'qe0737ot': {
       'zh_Hans': 'Your Body View',
-      'en': '',
+      'en': 'Your Body View',
     },
     'cs2lmymo': {
       'zh_Hans': 'Front',
@@ -397,221 +397,221 @@ final kTranslationsMap = <Map<String, Map<String, String>>>[
     },
     'mbdmag96': {
       'zh_Hans': 'Back',
-      'en': '',
+      'en': 'Front',
     },
     'bz6944ea': {
       'zh_Hans': 'Upload',
-      'en': '',
+      'en': 'Upload',
     },
     '7gfp5xrd': {
       'zh_Hans': 'Upload',
-      'en': '',
+      'en': 'Upload',
     },
     'pbap9nym': {
       'zh_Hans': 'Upload Body View',
-      'en': '',
+      'en': 'Upload Body View',
     },
     'zglkyapq': {
       'zh_Hans': 'Home',
-      'en': '',
+      'en': 'Home',
     },
   },
   // MyWardrode
   {
     'cc9n9pk0': {
       'zh_Hans': 'My Wardrode',
-      'en': '',
+      'en': 'My Wardrode',
     },
     'xx8781di': {
       'zh_Hans': 'Your Virtual Wardrobe',
-      'en': '',
+      'en': 'Your Virtual Wardrobe',
     },
     '0k6okwgq': {
       'zh_Hans': 'Add Item',
-      'en': '',
+      'en': 'Add Item',
     },
     'h95v1vtg': {
       'zh_Hans': 'Sort by:',
-      'en': '',
+      'en': 'Sort by:',
     },
     '7d4ufn4n': {
       'zh_Hans': 'Select',
-      'en': '',
+      'en': 'Select',
     },
     'fz3fb6g2': {
       'zh_Hans': 'Search...',
-      'en': '',
+      'en': 'Search...',
     },
     'cpq9du9v': {
       'zh_Hans': 'Tops',
-      'en': '',
+      'en': 'Tops',
     },
     'eo25c4tp': {
       'zh_Hans': 'Buttoms',
-      'en': '',
+      'en': 'Bottoms',
     },
     'ead0ezpk': {
       'zh_Hans': 'Skirts',
-      'en': '',
+      'en': 'Skirts',
     },
     'wxdpmikr': {
       'zh_Hans': 'Shoes',
-      'en': '',
+      'en': 'Shoes',
     },
     'xo4uesmp': {
       'zh_Hans': 'All Clothes',
-      'en': '',
+      'en': 'All Clothes',
     },
     'yveetctd': {
       'zh_Hans': 'Match New Outfit',
-      'en': '',
+      'en': 'Match New Outfit',
     },
     'l1ne2qaz': {
       'zh_Hans': 'Home',
-      'en': '',
+      'en': 'Home',
     },
     'zg10biwv': {
       'zh_Hans': 'Wardrobe',
-      'en': '',
+      'en': 'Wardrobe',
     },
     '53fiy14s': {
       'zh_Hans': 'Match',
-      'en': '',
+      'en': 'Match',
     },
     'fe3q2shz': {
       'zh_Hans': 'Shop',
-      'en': '',
+      'en': 'Shop',
     },
     'un7ew6mp': {
       'zh_Hans': 'Calander',
-      'en': '',
+      'en': 'Calendar',
     },
     'dme19kzg': {
       'zh_Hans': 'Profile',
-      'en': '',
+      'en': 'Profile',
     },
     '9arxitgu': {
       'zh_Hans': 'Home',
-      'en': '',
+      'en': 'Home',
     },
   },
   // AddNewItem
   {
     'ow3qma8g': {
       'zh_Hans': 'Add New Item',
-      'en': '',
+      'en': 'Add New Item',
     },
     'cc859zez': {
       'zh_Hans': 'Upload from library',
-      'en': '',
+      'en': 'Upload from library',
     },
     'vuv90gs2': {
       'zh_Hans': 'Item Name',
-      'en': '',
+      'en': 'Item Name',
     },
     'e14u07za': {
       'zh_Hans': 'TextField',
-      'en': '',
+      'en': 'TextField',
     },
     '2q3gtuqn': {
       'zh_Hans': 'Exp: Uniqlo basic tee',
-      'en': '',
+      'en': 'Exp: Uniqlo basic tee',
     },
     'nirmg1m7': {
       'zh_Hans': 'Category',
-      'en': '',
+      'en': 'Category',
     },
     '3oum1l5g': {
       'zh_Hans': 'TextField',
-      'en': '',
+      'en': 'TextField',
     },
     'nr7uasfe': {
       'zh_Hans': 'XXX',
-      'en': '',
+      'en': 'XXX',
     },
     'czrqfq2i': {
       'zh_Hans': 'Colour',
-      'en': '',
+      'en': 'Colour',
     },
     'z50xfu04': {
       'zh_Hans': 'Select...',
-      'en': '',
+      'en': 'Select...',
     },
     'p55qp45r': {
       'zh_Hans': 'Search...',
-      'en': '',
+      'en': 'Search...',
     },
     '32t7j0ox': {
       'zh_Hans': 'Black',
-      'en': '',
+      'en': 'Black',
     },
     'sb5a4mym': {
       'zh_Hans': 'Grey',
-      'en': '',
+      'en': 'Grey',
     },
     'oq9hrk71': {
       'zh_Hans': 'White',
-      'en': '',
+      'en': 'White',
     },
     'uqwch6z9': {
       'zh_Hans': 'Red',
-      'en': '',
+      'en': 'Red',
     },
     'rljgfv19': {
       'zh_Hans': 'Orange',
-      'en': '',
+      'en': 'Orange',
     },
     'pxt893ag': {
       'zh_Hans': 'Yellow',
-      'en': '',
+      'en': 'Yellow',
     },
     '27budk5s': {
       'zh_Hans': 'Green',
-      'en': '',
+      'en': 'Green',
     },
     'x0ecz6xg': {
       'zh_Hans': 'Blue',
-      'en': '',
+      'en': 'Blue',
     },
     '2lxbi12e': {
       'zh_Hans': 'Indigo',
-      'en': '',
+      'en': 'Indigo',
     },
     'bl5lnthq': {
       'zh_Hans': 'Violet',
-      'en': '',
+      'en': 'Violet',
     },
     'ojtqxeu8': {
       'zh_Hans': 'Pink',
-      'en': '',
+      'en': 'Pink',
     },
     '8f82kzvh': {
       'zh_Hans': 'Brown',
-      'en': '',
+      'en': 'Brown',
     },
     'wm5lcswo': {
       'zh_Hans': 'Category',
-      'en': '',
+      'en': 'Category',
     },
     'awsfuuvq': {
       'zh_Hans': 'Casual',
-      'en': '',
+      'en': 'Casual',
     },
     '24lwqrct': {
       'zh_Hans': 'Formal',
-      'en': '',
+      'en': 'Formal',
     },
     'l2gip9up': {
       'zh_Hans': 'Party',
-      'en': '',
+      'en': 'Party',
     },
     'zjj4rmpz': {
       'zh_Hans': 'Save',
-      'en': '',
+      'en': 'Save',
     },
     'ter5cnpd': {
       'zh_Hans': 'Home',
-      'en': '',
+      'en': 'Home',
     },
   },
   // AccountManagement
@@ -1267,79 +1267,79 @@ final kTranslationsMap = <Map<String, Map<String, String>>>[
   {
     '5dhiappa': {
       'zh_Hans': 'Virtual Try On',
-      'en': '',
+      'en': 'Virtual Try On',
     },
     'g4u9xixw': {
       'zh_Hans': 'Name:',
-      'en': '',
+      'en': 'Name:',
     },
     'lbkrfgsv': {
       'zh_Hans': 'Exp: Formal Look 1',
-      'en': '',
+      'en': 'Exp: Formal Look 1',
     },
     'a3xnhq5c': {
       'zh_Hans': 'Body Image View',
-      'en': '',
+      'en': 'Body Image View',
     },
     'mei3jpkb': {
       'zh_Hans': 'Current Outfit',
-      'en': '',
+      'en': 'Current Outfit',
     },
     'ukv9i4qw': {
       'zh_Hans': 'Top',
-      'en': '',
+      'en': 'Top',
     },
     'rwunccy8': {
       'zh_Hans': 'Add',
-      'en': '',
+      'en': 'Add',
     },
     'hsdd5kux': {
       'zh_Hans': 'Bottom',
-      'en': '',
+      'en': 'Bottom',
     },
     'jpps5g3t': {
       'zh_Hans': 'Add',
-      'en': '',
+      'en': 'Add',
     },
     'b9bs4kez': {
       'zh_Hans': 'Shoes',
-      'en': '',
+      'en': 'Shoes',
     },
     'i9rlpddc': {
       'zh_Hans': 'Add',
-      'en': '',
+      'en': 'Add',
     },
     'mk70q9xz': {
       'zh_Hans': 'Save',
-      'en': '',
+      'en': 'Save',
     },
     'gxiqwln6': {
       'zh_Hans': 'Home',
-      'en': '',
+      'en': 'Home',
     },
     'v9tq8h9e': {
       'zh_Hans': 'Wardrobe',
-      'en': '',
+      'en': 'Wardrobe',
     },
     's0c3e49b': {
       'zh_Hans': 'Match',
-      'en': '',
+      'en': 'Match',
     },
     '957557to': {
       'zh_Hans': 'Shop',
-      'en': '',
+      'en': 'Shop',
     },
     'rccz29xa': {
       'zh_Hans': 'Calander',
-      'en': '',
+      'en': 'Calander',
     },
     '06sx6hcx': {
       'zh_Hans': 'Profile',
-      'en': '',
+      'en': 'Profile',
     },
     'buuyitvb': {
       'zh_Hans': 'Home',
-      'en': '',
+      'en': 'Home',
     },
   },
   // LoginPage
@@ -1464,119 +1464,119 @@ final kTranslationsMap = <Map<String, Map<String, String>>>[
   {
     'w55wjj9s': {
       'zh_Hans': 'Trending Item',
-      'en': '',
+      'en': 'Trending Item',
     },
     'hs58xf8k': {
       'zh_Hans': 'Basic tee',
-      'en': '',
+      'en': 'Basic tee',
     },
     '9tihb0xl': {
       'zh_Hans': 'black, Oversized',
-      'en': '',
+      'en': 'black, Oversized',
     },
     'h24sp7lh': {
       'zh_Hans': '\$11.00',
-      'en': '',
+      'en': '\$11.00',
     },
     'z4bvdrc9': {
       'zh_Hans': 'Basic tee',
-      'en': '',
+      'en': 'Basic tee',
     },
     '4e5yftz1': {
       'zh_Hans': 'black, Oversized',
-      'en': '',
+      'en': 'black, Oversized',
     },
     'cgys3n0e': {
       'zh_Hans': '\$11.00',
-      'en': '',
+      'en': '\$11.00',
     },
     'kct65ez9': {
       'zh_Hans': 'Basic tee',
-      'en': '',
+      'en': 'Basic tee',
     },
     'b9gv3suz': {
       'zh_Hans': 'black, Oversized',
-      'en': '',
+      'en': 'black, Oversized',
     },
     '9x9lhwld': {
       'zh_Hans': '\$11.00',
-      'en': '',
+      'en': '\$11.00',
     },
     'suhbn0j2': {
       'zh_Hans': 'Basic tee',
-      'en': '',
+      'en': 'Basic tee',
     },
     '5r1e69ik': {
       'zh_Hans': 'black, Oversized',
-      'en': '',
+      'en': 'black, Oversized',
     },
     'yr195bd2': {
       'zh_Hans': '\$11.00',
-      'en': '',
+      'en': '\$11.00',
     },
     'n3q30sf4': {
       'zh_Hans': 'Basic tee',
-      'en': '',
+      'en': 'Basic tee',
     },
     'jamznb8a': {
       'zh_Hans': 'black, Oversized',
-      'en': '',
+      'en': 'black, Oversized',
     },
     'vrdmqyuk': {
       'zh_Hans': '\$11.00',
-      'en': '',
+      'en': '\$11.00',
     },
     'ub5liqsx': {
       'zh_Hans': 'Basic tee',
-      'en': '',
+      'en': 'Basic tee',
     },
     '1nbds7up': {
       'zh_Hans': 'black, Oversized',
-      'en': '',
+      'en': 'black, Oversized',
     },
     '52xd1l7n': {
       'zh_Hans': '\$11.00',
-      'en': '',
+      'en': '\$11.00',
     },
     '6gy8wi1k': {
       'zh_Hans': 'Basic tee',
-      'en': '',
+      'en': 'Basic tee',
     },
     '7coce3tk': {
       'zh_Hans': 'black, Oversized',
-      'en': '',
+      'en': 'black, Oversized',
     },
     'f5axp05j': {
       'zh_Hans': '\$11.00',
-      'en': '',
+      'en': '\$11.00',
     },
     'k2zguh04': {
       'zh_Hans': 'Home',
-      'en': '',
+      'en': 'Home',
     },
     'ytjey4nz': {
       'zh_Hans': 'Wardrobe',
-      'en': '',
+      'en': 'Wardrobe',
     },
     'sb84rzww': {
       'zh_Hans': 'Match',
-      'en': '',
+      'en': 'Match',
     },
     'cgqaozjc': {
       'zh_Hans': 'Shop',
-      'en': '',
+      'en': 'Shop',
     },
     'mweqp94u': {
       'zh_Hans': 'Calander',
-      'en': '',
+      'en': 'Calander',
     },
     'yaat7jcy': {
       'zh_Hans': 'Profile',
-      'en': '',
+      'en': 'Profile',
     },
     'hd7cqguf': {
       'zh_Hans': 'Home',
-      'en': '',
+      'en': 'Home',
     },
   },
   // HomePage
@@ -1682,91 +1682,91 @@ final kTranslationsMap = <Map<String, Map<String, String>>>[
   {
     'f672pt78': {
       'zh_Hans': 'Month',
-      'en': '',
+      'en': 'Month',
     },
     'yvs9q8r4': {
       'zh_Hans': 'Coming Outfit',
-      'en': '',
+      'en': 'Coming Outfit',
     },
     'fws7opjh': {
       'zh_Hans': 'Casual Look 1',
-      'en': '',
+      'en': 'Casual Look 1',
     },
     'ghshq8v3': {
       'zh_Hans': '21/7/2025',
-      'en': '',
+      'en': '21/7/2025',
     },
     'w1frybzr': {
       'zh_Hans': 'Formal Look 1',
-      'en': '',
+      'en': 'Formal Look 1',
     },
     'wsqwby5x': {
       'zh_Hans': '19/7/2025',
-      'en': '',
+      'en': '19/7/2025',
     },
     'cn07med3': {
       'zh_Hans': 'Week',
-      'en': '',
+      'en': 'Week',
     },
     'y1nw7258': {
       'zh_Hans': 'Coming outfit',
-      'en': '',
+      'en': 'Coming outfit',
     },
     '2gkeuncv': {
       'zh_Hans': 'Doctors Check In',
-      'en': '',
+      'en': 'Doctors Check In',
     },
     'wsszbsco': {
       'zh_Hans': '2:20pm',
-      'en': '',
+      'en': '2:20pm',
     },
     'gtjrmgr9': {
       'zh_Hans': 'Wed, 03/08/2022',
-      'en': '',
+      'en': 'Wed, 03/08/2022',
     },
     '8rkkp3im': {
       'zh_Hans': 'Doctors Check In',
-      'en': '',
+      'en': 'Doctors Check In',
     },
     'wj0kzcrc': {
       'zh_Hans': '2:20pm',
-      'en': '',
+      'en': '2:20pm',
     },
     'a6guz6gn': {
       'zh_Hans': 'Wed, 03/08/2022',
-      'en': '',
+      'en': 'Wed, 03/08/2022',
     },
     'juu7t29n': {
       'zh_Hans': 'Home',
-      'en': '',
+      'en': 'Home',
     },
     'j10f5yzy': {
       'zh_Hans': 'Wardrobe',
-      'en': '',
+      'en': 'Wardrobe',
     },
     'rud9dgwq': {
       'zh_Hans': 'Match',
-      'en': '',
+      'en': 'Match',
     },
     'addqz4ow': {
       'zh_Hans': 'Shop',
-      'en': '',
+      'en': 'Shop',
     },
     '4sm6nxfd': {
       'zh_Hans': 'Calander',
-      'en': '',
+      'en': 'Calander',
     },
     'lswy1ody': {
       'zh_Hans': 'Profile',
-      'en': '',
+      'en': 'Profile',
     },
     'nb7yeaja': {
       'zh_Hans': 'Outfit Planner',
-      'en': '',
+      'en': 'Outfit Planner',
     },
     '67hx1n15': {
       'zh_Hans': 'Home',
-      'en': '',
+      'en': 'Home',
     },
   },
   // OnboardingPage
@@ -2309,11 +2309,11 @@ final kTranslationsMap = <Map<String, Map<String, String>>>[
   {
     'e1sx93uq': {
       'zh_Hans': 'Basic Tees',
-      'en': '',
+      'en': 'Basic Tees',
     },
     'hngxe2rz': {
       'zh_Hans': '100% Suprima Cotton, 260gsm, Easy Care',
-      'en': '',
+      'en': '100% Suprima Cotton, 260gsm, Easy Care',
     },
     'rfkb0i6i': {
       'zh_Hans': '\$50.00',
@@ -2321,15 +2321,15 @@ final kTranslationsMap = <Map<String, Map<String, String>>>[
     },
     'iqapzjta': {
       'zh_Hans': 'Copy Link',
-      'en': '',
+      'en': 'Copy PromoLink',
     },
     'poeqw8p8': {
       'zh_Hans': 'Product Details',
-      'en': '',
+      'en': 'Product Details',
     },
     'mnbrvhd6': {
       'zh_Hans': 'Home',
-      'en': '',
+      'en': 'Home',
     },
   },
   // Miscellaneous

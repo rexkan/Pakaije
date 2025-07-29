@@ -481,7 +481,7 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
                 alignment: AlignmentDirectional(-1.0, 1.11),
                 child: Container(
                   width: double.infinity,
-                  height: 60.0,
+                  height: 90.0,
                   decoration: BoxDecoration(
                     color: FlutterFlowTheme.of(context).underground,
                   ),

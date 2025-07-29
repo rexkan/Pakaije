@@ -791,7 +791,7 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
                 alignment: AlignmentDirectional(-1.0, 1.12),
                 child: Container(
                   width: double.infinity,
-                  height: 60.0,
+                  height: 93.0,
                   decoration: BoxDecoration(
                     color: FlutterFlowTheme.of(context).underground,
                   ),

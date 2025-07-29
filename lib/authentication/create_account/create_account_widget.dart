@@ -27,8 +27,6 @@ class CreateAccountWidget extends StatefulWidget {
 
   static const String routeName = 'CreateAccount';
   static const String routePath = '/createAccount';
-  static const String routeName = 'CreateAccount';
-  static const String routePath = '/createAccount';
 
   @override
   State<CreateAccountWidget> createState() => _CreateAccountWidgetState();
