@@ -488,35 +488,17 @@ class _LoginPageWidgetState extends State<LoginPageWidget> {
                                               GoRouter.of(context)
                                                   .prepareAuthEvent();
 
-                                              final email = _model
-                                                  .emailAddressTextController
-                                                  .text
-                                                  .trim();
-                                              final password = _model
-                                                  .passwordTextController.text;
-
-                                              if (email.isEmpty ||
-                                                  password.isEmpty) {
-                                                ScaffoldMessenger.of(context)
-                                                    .showSnackBar(
-                                                  SnackBar(
-                                                      content: Text(
-                                                          'Please enter both email and password')),
-                                                );
-                                                return;
-                                              }
-
                                               final user = await authManager
                                                   .signInWithEmail(
-                                                      context, email, password);
+                                                context,
+                                                _model
+                                                    .emailAddressTextController
+                                                    .text,
+                                                _model.passwordTextController
+                                                    .text,
+                                              );
 
                                               if (user == null) {
-                                                ScaffoldMessenger.of(context)
-                                                    .showSnackBar(
-                                                  SnackBar(
-                                                      content: Text(
-                                                          'Invalid email or password')),
-                                                );
                                                 return;
                                               }
 
@@ -531,25 +513,48 @@ class _LoginPageWidgetState extends State<LoginPageWidget> {
                                                     .showSnackBar(
                                                   SnackBar(
                                                       content: Text(
-                                                          'User record not found in database')),
+                                                          'User record not found in Firestore')),
                                                 );
                                                 return;
                                               }
 
-                                              // Navigate based on role
-                                              final role =
-                                                  _model.currentUserDoc?.role;
-                                              if (role == 'Admin') {
+                                              final role = _model
+                                                  .currentUserDoc?.role
+                                                  ?.toLowerCase();
+                                              final isApproved = _model
+                                                      .currentUserDoc
+                                                      ?.isApproved ??
+                                                  false;
+
+                                              if (role == 'admin') {
+                                                if (!isApproved) {
+                                                  ScaffoldMessenger.of(context)
+                                                      .showSnackBar(
+                                                    SnackBar(
+                                                        content: Text(
+                                                            'Admin account pending approval')),
+                                                  );
+                                                  return;
+                                                }
                                                 context.pushNamedAuth(
                                                     AdminDashboardWidget
                                                         .routeName,
                                                     context.mounted);
-                                              } else if (role == 'Vendor') {
+                                              } else if (role == 'vendor') {
+                                                if (!isApproved) {
+                                                  ScaffoldMessenger.of(context)
+                                                      .showSnackBar(
+                                                    SnackBar(
+                                                        content: Text(
+                                                            'Vendor account pending admin approval')),
+                                                  );
+                                                  return;
+                                                }
                                                 context.pushNamedAuth(
                                                     VendorDashboardWidget
                                                         .routeName,
                                                     context.mounted);
-                                              } else if (role == 'User') {
+                                              } else if (role == 'user') {
                                                 context.pushNamedAuth(
                                                     HomePageWidget.routeName,
                                                     context.mounted);
@@ -558,7 +563,7 @@ class _LoginPageWidgetState extends State<LoginPageWidget> {
                                                     .showSnackBar(
                                                   SnackBar(
                                                       content: Text(
-                                                          'No role assigned for this account')),
+                                                          'No role assigned for this account.')),
                                                 );
                                               }
 
