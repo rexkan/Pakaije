@@ -646,283 +646,283 @@ final kTranslationsMap = <Map<String, Map<String, String>>>[
     },
     'gsan4iwo': {
       'zh_Hans': 'Joined since 1/1/2024',
-      'en': '',
+      'en': 'Joined since 1/1/2024',
     },
     'nnbez7ip': {
       'zh_Hans': 'Suspend',
-      'en': '',
+      'en': 'Suspend',
     },
     '7jjzz6bf': {
       'zh_Hans': 'Benjamin',
-      'en': '',
+      'en': 'Benjamin',
     },
     'i0xhluv4': {
       'zh_Hans': 'Joined since 1/1/2024',
-      'en': '',
+      'en': 'Joined since 1/1/2024',
     },
     '9ml3wxag': {
       'zh_Hans': 'Suspend',
-      'en': '',
+      'en': 'Suspend',
     },
     'i10momu6': {
       'zh_Hans': 'Catherine',
-      'en': '',
+      'en': 'Catherine',
     },
     'sprak2dn': {
       'zh_Hans': 'Joined since 1/1/2024',
-      'en': '',
+      'en': 'Joined since 1/1/2024',
     },
     'dlwr5kio': {
       'zh_Hans': 'Suspend',
-      'en': '',
+      'en': 'Suspend',
     },
     'treq4e2e': {
       'zh_Hans': 'Derrick',
-      'en': '',
+      'en': 'Derrick',
     },
     'ix1lr12z': {
       'zh_Hans': 'Joined since 1/1/2024',
-      'en': '',
+      'en': 'Joined since 1/1/2024',
     },
     'nz4jwmyd': {
       'zh_Hans': 'Suspend',
-      'en': '',
+      'en': 'Suspend',
     },
     '7fesfdv4': {
       'zh_Hans': 'Esther',
-      'en': '',
+      'en': 'Esther',
     },
     '077q9gfj': {
       'zh_Hans': 'Joined since 1/1/2024',
-      'en': '',
+      'en': 'Joined since 1/1/2024',
     },
     'vr9jarp5': {
       'zh_Hans': 'Suspend',
-      'en': '',
+      'en': 'Suspend',
     },
     'khuplumb': {
       'zh_Hans': 'Gigi',
-      'en': '',
+      'en': 'Gigi',
     },
     'a80uyslo': {
       'zh_Hans': 'Joined since 1/1/2024',
-      'en': '',
+      'en': 'Joined since 1/1/2024',
     },
     'gpe5mz8x': {
       'zh_Hans': 'Suspend',
-      'en': '',
+      'en': 'Suspend',
     },
     'qt8za9ts': {
       'zh_Hans': 'Hayne',
-      'en': '',
+      'en': 'Hayne',
     },
     'w5114tcg': {
       'zh_Hans': 'Joined since 1/1/2024',
-      'en': '',
+      'en': 'Joined since 1/1/2024',
     },
     'mn86c4aq': {
       'zh_Hans': 'Suspend',
-      'en': '',
+      'en': 'Suspend',
     },
     'c66ekjfu': {
       'zh_Hans': 'Jestina',
-      'en': '',
+      'en': 'Jestina',
     },
     'n0lv7k57': {
       'zh_Hans': 'Joined since 1/1/2024',
-      'en': '',
+      'en': 'Joined since 1/1/2024',
     },
     '9b5wdr99': {
       'zh_Hans': 'Suspend',
-      'en': '',
+      'en': 'Suspend',
     },
     '4yvq011t': {
       'zh_Hans': 'Admin',
-      'en': '',
+      'en': 'Admin',
     },
     'yuxikj23': {
       'zh_Hans': 'Application',
-      'en': '',
+      'en': 'Application',
     },
     'wlvyfl8a': {
       'zh_Hans': 'Admin #123',
-      'en': '',
+      'en': 'Admin #123',
     },
     'uik52ehi': {
       'zh_Hans': '1/1/2025 10:00am',
-      'en': '',
+      'en': '1/1/2025 10:00am',
     },
     'ayv1hqq0': {
       'zh_Hans': 'Approve',
-      'en': '',
+      'en': 'Approve',
     },
     '293x4v5p': {
       'zh_Hans': 'Decline',
-      'en': '',
+      'en': 'Decline',
     },
     '6h6ypwt8': {
       'zh_Hans': 'Admin #456',
-      'en': '',
+      'en': 'Admin #456',
     },
     'c6dcat4r': {
       'zh_Hans': '1/1/2025 10:00am',
-      'en': '',
+      'en': '1/1/2025 10:00am',
     },
     'brzuvzk2': {
       'zh_Hans': 'Approve',
-      'en': '',
+      'en': 'Approve',
     },
     'bc74iehy': {
       'zh_Hans': 'Decline',
-      'en': '',
+      'en': 'Decline',
     },
     'imkmi4fg': {
       'zh_Hans': 'Accounts',
-      'en': '',
+      'en': 'Accounts',
     },
     'y6kk42fl': {
       'zh_Hans': 'Search user here',
-      'en': '',
+      'en': 'Search user here',
     },
     'rx3nvea9': {
       'zh_Hans': 'Admin #001',
-      'en': '',
+      'en': 'Admin #001',
     },
     'ehze79y5': {
       'zh_Hans': 'Joined since 1/1/2024',
-      'en': '',
+      'en': 'Joined since 1/1/2024',
     },
     'guu9kfqs': {
       'zh_Hans': 'Suspend',
-      'en': '',
+      'en': 'Suspend',
     },
     'cquxrq4u': {
       'zh_Hans': 'Admin #002',
-      'en': '',
+      'en': 'Admin #002',
     },
     'avg9xxir': {
       'zh_Hans': 'Joined since 1/1/2024',
-      'en': '',
+      'en': 'Joined since 1/1/2024',
     },
     'ygbyx121': {
       'zh_Hans': 'Suspend',
-      'en': '',
+      'en': 'Suspend',
     },
     's19sqlet': {
       'zh_Hans': 'Admin #003',
-      'en': '',
+      'en': 'Admin #003',
     },
     '729gk9l4': {
       'zh_Hans': 'Joined since 1/1/2024',
-      'en': '',
+      'en': 'Joined since 1/1/2024',
     },
     'uzyvzb3y': {
       'zh_Hans': 'Suspend',
-      'en': '',
+      'en': 'Suspend',
     },
     'bokabnjs': {
       'zh_Hans': 'Admin #004',
-      'en': '',
+      'en': 'Admin #004',
     },
     'ir9mt3a0': {
       'zh_Hans': 'Joined since 1/1/2024',
-      'en': '',
+      'en': 'Joined since 1/1/2024',
     },
     'ul42fglt': {
       'zh_Hans': 'Suspend',
-      'en': '',
+      'en': 'Suspend',
     },
     '559ql3s2': {
       'zh_Hans': 'Vendor',
-      'en': '',
+      'en': 'Vendor',
     },
     'he4jcb94': {
       'zh_Hans': 'Application',
-      'en': '',
+      'en': 'Application',
     },
     'dfz84zkl': {
       'zh_Hans': 'H&M',
-      'en': '',
+      'en': 'H&M',
     },
     'arizso25': {
       'zh_Hans': '1/1/2025 10:00am',
-      'en': '',
+      'en': '1/1/2025 10:00am',
     },
     'rokb7msg': {
       'zh_Hans': 'Approve',
-      'en': '',
+      'en': 'Approve',
     },
     '8demc7fe': {
       'zh_Hans': 'Decline',
-      'en': '',
+      'en': 'Decline',
     },
     '1lnmbchy': {
       'zh_Hans': 'Padini',
-      'en': '',
+      'en': 'Padini',
     },
     'emh1qlob': {
       'zh_Hans': '1/1/2025 10:00am',
-      'en': '',
+      'en': '1/1/2025 10:00am',
     },
     '0xaptwmx': {
       'zh_Hans': 'Approve',
-      'en': '',
+      'en': 'Approve',
     },
     '37sp9t1f': {
       'zh_Hans': 'Decline',
-      'en': '',
+      'en': 'Decline',
     },
     'nlpaqit2': {
       'zh_Hans': 'Accounts',
-      'en': '',
+      'en': 'Accounts',
     },
     'jw27th2m': {
       'zh_Hans': 'Search user here',
-      'en': '',
+      'en': 'Search user here',
     },
     'opmfcmtf': {
       'zh_Hans': 'Brands Outlet',
-      'en': '',
+      'en': 'Brands Outlet',
     },
     'gzz0wlw8': {
       'zh_Hans': 'Joined since 1/1/2024',
-      'en': '',
+      'en': 'Joined since 1/1/2024',
     },
     'si9bz8cd': {
       'zh_Hans': 'Suspend',
-      'en': '',
+      'en': 'Suspend',
     },
     'mxsm0f1b': {
       'zh_Hans': 'Cotton On',
-      'en': '',
+      'en': 'Cotton On',
     },
     '4fwv8zt7': {
       'zh_Hans': 'Joined since 1/1/2024',
-      'en': '',
+      'en': 'Joined since 1/1/2024',
     },
     'qq8yj5k4': {
       'zh_Hans': 'Suspend',
-      'en': '',
+      'en': 'Suspend',
     },
     'gwa25vz9': {
       'zh_Hans': 'Zara',
-      'en': '',
+      'en': 'Zara',
     },
     'pw0pkgxy': {
       'zh_Hans': 'Joined since 1/1/2024',
-      'en': '',
+      'en': 'Joined since 1/1/2024',
     },
     'yrxtlfwz': {
       'zh_Hans': 'Suspend',
-      'en': '',
+      'en': 'Suspend',
     },
     'uh4cjov9': {
       'zh_Hans': 'Account Management',
-      'en': '',
+      'en': 'Account Management',
     },
     '0iup9ncb': {
       'zh_Hans': 'Accounts',
-      'en': '',
+      'en': 'Accounts',
     },
   },
   // ModerateContent
