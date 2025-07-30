@@ -9,6 +9,7 @@ import '/auth/firebase_auth/auth_util.dart';
 import '/index.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'dart:async'; // Added missing import
 import 'my_wardrode_model.dart';
 export 'my_wardrode_model.dart';
 
@@ -101,19 +102,11 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
               'cc9n9pk0' /* My Wardrode */,
             ),
             style: FlutterFlowTheme.of(context).headlineMedium.override(
-                  font: GoogleFonts.interTight(
-                    fontWeight:
-                        FlutterFlowTheme.of(context).headlineMedium.fontWeight,
-                    fontStyle:
-                        FlutterFlowTheme.of(context).headlineMedium.fontStyle,
-                  ),
+                  fontFamily: GoogleFonts.interTight().fontFamily,
                   color: Colors.white,
                   fontSize: 22.0,
                   letterSpacing: 0.0,
-                  fontWeight:
-                      FlutterFlowTheme.of(context).headlineMedium.fontWeight,
-                  fontStyle:
-                      FlutterFlowTheme.of(context).headlineMedium.fontStyle,
+                  fontWeight: FontWeight.w500,
                 ),
           ),
           actions: [
@@ -160,20 +153,12 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
                             style: FlutterFlowTheme.of(context)
                                 .bodyMedium
                                 .override(
-                                  font: GoogleFonts.inter(
-                                    fontWeight: FontWeight.bold,
-                                    fontStyle: FlutterFlowTheme.of(context)
-                                        .bodyMedium
-                                        .fontStyle,
-                                  ),
+                                  fontFamily: GoogleFonts.inter().fontFamily,
                                   color:
                                       FlutterFlowTheme.of(context).underground,
                                   fontSize: 20.0,
                                   letterSpacing: 0.0,
                                   fontWeight: FontWeight.bold,
-                                  fontStyle: FlutterFlowTheme.of(context)
-                                      .bodyMedium
-                                      .fontStyle,
                                 ),
                           ),
                           Align(
@@ -181,7 +166,7 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
                             child: FFButtonWidget(
                               onPressed: () async {
                                 // Navigate to add item and refresh when returning
-                                final result = await context.pushNamed(AddNewItemWidget.routeName);
+                                final result = await context.pushNamed('AddNewItem'); // Fixed route name
                                 // Force refresh when returning from add item screen
                                 _forceRefresh();
                               },
@@ -198,22 +183,9 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
                                 textStyle: FlutterFlowTheme.of(context)
                                     .titleSmall
                                     .override(
-                                      font: GoogleFonts.interTight(
-                                        fontWeight: FlutterFlowTheme.of(context)
-                                            .titleSmall
-                                            .fontWeight,
-                                        fontStyle: FlutterFlowTheme.of(context)
-                                            .titleSmall
-                                            .fontStyle,
-                                      ),
+                                      fontFamily: GoogleFonts.interTight().fontFamily,
                                       color: Colors.white,
                                       letterSpacing: 0.0,
-                                      fontWeight: FlutterFlowTheme.of(context)
-                                          .titleSmall
-                                          .fontWeight,
-                                      fontStyle: FlutterFlowTheme.of(context)
-                                          .titleSmall
-                                          .fontStyle,
                                     ),
                                 elevation: 0.0,
                                 borderRadius: BorderRadius.circular(8.0),
@@ -248,19 +220,11 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
                               style: FlutterFlowTheme.of(context)
                                   .bodyMedium
                                   .override(
-                                    font: GoogleFonts.inter(
-                                      fontWeight: FontWeight.bold,
-                                      fontStyle: FlutterFlowTheme.of(context)
-                                          .bodyMedium
-                                          .fontStyle,
-                                    ),
+                                    fontFamily: GoogleFonts.inter().fontFamily,
                                     color: FlutterFlowTheme.of(context)
                                         .underground,
                                     letterSpacing: 0.0,
                                     fontWeight: FontWeight.bold,
-                                    fontStyle: FlutterFlowTheme.of(context)
-                                        .bodyMedium
-                                        .fontStyle,
                                   ),
                             ),
                           ),
@@ -288,19 +252,11 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
                               textStyle: FlutterFlowTheme.of(context)
                                   .bodyMedium
                                   .override(
-                                    font: GoogleFonts.inter(
-                                      fontWeight: FontWeight.bold,
-                                      fontStyle: FlutterFlowTheme.of(context)
-                                          .bodyMedium
-                                          .fontStyle,
-                                    ),
+                                    fontFamily: GoogleFonts.inter().fontFamily,
                                     color: FlutterFlowTheme.of(context)
                                         .underground,
                                     letterSpacing: 0.0,
                                     fontWeight: FontWeight.bold,
-                                    fontStyle: FlutterFlowTheme.of(context)
-                                        .bodyMedium
-                                        .fontStyle,
                                   ),
                               hintText: FFLocalizations.of(context).getText(
                                 '7d4ufn4n' /* Select */,
@@ -666,29 +622,58 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
                         ),
                       ),
                     ),
-                    // Removed the "Match New Outfit" button section completely
+                    Align(
+                      alignment: AlignmentDirectional(0.0, 1.0),
+                      child: Padding(
+                        padding: EdgeInsetsDirectional.fromSTEB(
+                            0.0, 15.0, 0.0, 15.0),
+                        child: FFButtonWidget(
+                          onPressed: () {
+                            print('View Matched Outfit button pressed ...');
+                          },
+                          text: FFLocalizations.of(context).getText(
+                            'yveetctd' /* View Matched Outfit */,
+                          ),
+                          options: FFButtonOptions(
+                            width: 200.0,
+                            height: 40.0,
+                            padding: EdgeInsetsDirectional.fromSTEB(
+                                16.0, 0.0, 16.0, 0.0),
+                            iconPadding: EdgeInsetsDirectional.fromSTEB(
+                                0.0, 0.0, 0.0, 0.0),
+                            color: FlutterFlowTheme.of(context).underground,
+                            textStyle: FlutterFlowTheme.of(context)
+                                .titleSmall
+                                .override(
+                                  fontFamily: GoogleFonts.interTight().fontFamily,
+                                  color: Colors.white,
+                                  fontSize: 16.0,
+                                  letterSpacing: 0.0,
+                                ),
+                            elevation: 0.0,
+                            borderRadius: BorderRadius.circular(16.0),
+                          ),
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
-              // Bottom navigation bar - Fixed to match home page structure
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
+              // Bottom navigation bar - Using OutfitMatch style
+              Align(
+                alignment: AlignmentDirectional(-1.0, 1.11),
                 child: Container(
                   width: double.infinity,
-                  height: 75.0,
+                  height: 90.0,
                   decoration: BoxDecoration(
                     color: FlutterFlowTheme.of(context).underground,
                   ),
-                  alignment: AlignmentDirectional(0.0, 1.0),
                   child: Column(
                     mainAxisSize: MainAxisSize.max,
                     children: [
                       Row(
                         mainAxisSize: MainAxisSize.max,
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           FlutterFlowIconButton(
                             borderRadius: 8.0,
@@ -699,7 +684,7 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
                               size: 24.0,
                             ),
                             onPressed: () async {
-                              context.pushNamed(HomePageWidget.routeName);
+                              context.pushNamed('HomePage');
                             },
                           ),
                           FlutterFlowIconButton(
@@ -724,7 +709,7 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
                               size: 24.0,
                             ),
                             onPressed: () async {
-                              context.pushNamed(OutfitMatchWidget.routeName);
+                              context.pushNamed('OutfitMatch');
                             },
                           ),
                           FlutterFlowIconButton(
@@ -736,7 +721,7 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
                               size: 24.0,
                             ),
                             onPressed: () async {
-                              context.pushNamed(BuyClothesWidget.routeName);
+                              context.pushNamed('BuyClothes');
                             },
                           ),
                           FlutterFlowIconButton(
@@ -748,7 +733,7 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
                               size: 24.0,
                             ),
                             onPressed: () async {
-                              context.pushNamed(OutfitPlanner2Widget.routeName);
+                              context.pushNamed('OutfitPlanner2');
                             },
                           ),
                           FlutterFlowIconButton(
@@ -760,7 +745,7 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
                               size: 24.0,
                             ),
                             onPressed: () async {
-                              context.pushNamed(UserProfileWidget.routeName);
+                              context.pushNamed('UserProfile');
                             },
                           ),
                         ],
@@ -770,7 +755,7 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
                         child: Row(
                           mainAxisSize: MainAxisSize.max,
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
                             Text(
                               FFLocalizations.of(context).getText(
@@ -779,19 +764,11 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
                               style: FlutterFlowTheme.of(context)
                                   .bodyMedium
                                   .override(
-                                    font: GoogleFonts.inter(
-                                      fontWeight: FontWeight.w500,
-                                      fontStyle: FlutterFlowTheme.of(context)
-                                          .bodyMedium
-                                          .fontStyle,
-                                    ),
+                                    fontFamily: GoogleFonts.inter().fontFamily,
                                     color: FlutterFlowTheme.of(context).white,
                                     fontSize: 12.0,
                                     letterSpacing: 0.0,
                                     fontWeight: FontWeight.w500,
-                                    fontStyle: FlutterFlowTheme.of(context)
-                                        .bodyMedium
-                                        .fontStyle,
                                   ),
                             ),
                             Text(
@@ -801,20 +778,11 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
                               style: FlutterFlowTheme.of(context)
                                   .bodyMedium
                                   .override(
-                                    font: GoogleFonts.inter(
-                                      fontWeight: FontWeight.w500,
-                                      fontStyle: FlutterFlowTheme.of(context)
-                                          .bodyMedium
-                                          .fontStyle,
-                                    ),
-                                    color:
-                                        FlutterFlowTheme.of(context).waxFlower,
+                                    fontFamily: GoogleFonts.inter().fontFamily,
+                                    color: FlutterFlowTheme.of(context).waxFlower,
                                     fontSize: 12.0,
                                     letterSpacing: 0.0,
                                     fontWeight: FontWeight.w500,
-                                    fontStyle: FlutterFlowTheme.of(context)
-                                        .bodyMedium
-                                        .fontStyle,
                                   ),
                             ),
                             Text(
@@ -824,19 +792,11 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
                               style: FlutterFlowTheme.of(context)
                                   .bodyMedium
                                   .override(
-                                    font: GoogleFonts.inter(
-                                      fontWeight: FontWeight.w500,
-                                      fontStyle: FlutterFlowTheme.of(context)
-                                          .bodyMedium
-                                          .fontStyle,
-                                    ),
+                                    fontFamily: GoogleFonts.inter().fontFamily,
                                     color: FlutterFlowTheme.of(context).white,
                                     fontSize: 12.0,
                                     letterSpacing: 0.0,
                                     fontWeight: FontWeight.w500,
-                                    fontStyle: FlutterFlowTheme.of(context)
-                                        .bodyMedium
-                                        .fontStyle,
                                   ),
                             ),
                             Text(
@@ -846,19 +806,11 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
                               style: FlutterFlowTheme.of(context)
                                   .bodyMedium
                                   .override(
-                                    font: GoogleFonts.inter(
-                                      fontWeight: FontWeight.w500,
-                                      fontStyle: FlutterFlowTheme.of(context)
-                                          .bodyMedium
-                                          .fontStyle,
-                                    ),
+                                    fontFamily: GoogleFonts.inter().fontFamily,
                                     color: FlutterFlowTheme.of(context).white,
                                     fontSize: 12.0,
                                     letterSpacing: 0.0,
                                     fontWeight: FontWeight.w500,
-                                    fontStyle: FlutterFlowTheme.of(context)
-                                        .bodyMedium
-                                        .fontStyle,
                                   ),
                             ),
                             Text(
@@ -868,19 +820,11 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
                               style: FlutterFlowTheme.of(context)
                                   .bodyMedium
                                   .override(
-                                    font: GoogleFonts.inter(
-                                      fontWeight: FontWeight.w500,
-                                      fontStyle: FlutterFlowTheme.of(context)
-                                          .bodyMedium
-                                          .fontStyle,
-                                    ),
+                                    fontFamily: GoogleFonts.inter().fontFamily,
                                     color: FlutterFlowTheme.of(context).white,
                                     fontSize: 12.0,
                                     letterSpacing: 0.0,
                                     fontWeight: FontWeight.w500,
-                                    fontStyle: FlutterFlowTheme.of(context)
-                                        .bodyMedium
-                                        .fontStyle,
                                   ),
                             ),
                             Text(
@@ -890,19 +834,11 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
                               style: FlutterFlowTheme.of(context)
                                   .bodyMedium
                                   .override(
-                                    font: GoogleFonts.inter(
-                                      fontWeight: FontWeight.w500,
-                                      fontStyle: FlutterFlowTheme.of(context)
-                                          .bodyMedium
-                                          .fontStyle,
-                                    ),
+                                    fontFamily: GoogleFonts.inter().fontFamily,
                                     color: FlutterFlowTheme.of(context).white,
                                     fontSize: 12.0,
                                     letterSpacing: 0.0,
                                     fontWeight: FontWeight.w500,
-                                    fontStyle: FlutterFlowTheme.of(context)
-                                        .bodyMedium
-                                        .fontStyle,
                                   ),
                             ),
                           ],
