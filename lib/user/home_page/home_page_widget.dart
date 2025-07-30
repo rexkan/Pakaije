@@ -10,6 +10,10 @@ import 'package:google_fonts/google_fonts.dart';
 import 'home_page_model.dart';
 export 'home_page_model.dart';
 
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
+
 class HomePageWidget extends StatefulWidget {
   const HomePageWidget({super.key});
 
@@ -24,11 +28,38 @@ class _HomePageWidgetState extends State<HomePageWidget> {
   late HomePageModel _model;
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
+  String? temperature;
+  late String currentDate;
 
   @override
   void initState() {
     super.initState();
     _model = createModel(context, () => HomePageModel());
+
+    currentDate = DateFormat('dd/MM').format(DateTime.now());
+    getTemperature();
+  }
+
+  Future<void> getTemperature() async {
+    final city = 'Kuala Lumpur'; // Change to any city
+    final apiKey =
+        'YOUR_API_KEY'; // 🔁 Replace with your OpenWeatherMap API key
+    final url =
+        'https://api.openweathermap.org/data/2.5/weather?q=$city&appid=$apiKey&units=metric';
+
+    try {
+      final response = await http.get(Uri.parse(url));
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        setState(() {
+          temperature = data['main']['temp'].toStringAsFixed(1);
+        });
+      } else {
+        print('Failed to load weather data');
+      }
+    } catch (e) {
+      print('Error fetching temperature: $e');
+    }
   }
 
   @override
@@ -231,9 +262,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                               ),
                                         ),
                                         Text(
-                                          FFLocalizations.of(context).getText(
-                                            'a3rgpvwx' /* 18/6 */,
-                                          ),
+                                          currentDate,
                                           style: FlutterFlowTheme.of(context)
                                               .displaySmall
                                               .override(
@@ -304,10 +333,10 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                               CrossAxisAlignment.center,
                                           children: [
                                             Text(
-                                              FFLocalizations.of(context)
-                                                  .getText(
-                                                'omhhl9gx' /* 27 */,
-                                              ),
+                                              /*27 */
+                                              temperature != null
+                                                  ? '$temperature°C'
+                                                  : '...',
                                               style: FlutterFlowTheme.of(
                                                       context)
                                                   .displaySmall
@@ -891,7 +920,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
               alignment: AlignmentDirectional(-1.0, 1.0),
               child: Container(
                 width: double.infinity,
-                height: 60.0,
+                height: 75.0,
                 decoration: BoxDecoration(
                   color: FlutterFlowTheme.of(context).underground,
                 ),

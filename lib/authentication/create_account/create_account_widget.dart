@@ -1,8 +1,18 @@
 import 'dart:io';
 import 'package:flutter/gestures.dart';
+import 'dart:io';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:pakaije/flutter_flow/flutter_flow_theme.dart';
+import 'package:pakaije/flutter_flow/flutter_flow_theme.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:pakaije/authentication/login_page/login_page_widget.dart';
+import 'package:pakaije/flutter_flow/flutter_flow_util.dart';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
@@ -31,19 +41,31 @@ class _CreateAccountWidgetState extends State<CreateAccountWidget> {
     super.initState();
     _model = CreateAccountModel();
     _model.initState(context);
+    _model = CreateAccountModel();
+    _model.initState(context);
 
+    _model.usernameTextController = TextEditingController();
+    _model.usernameFocusNode = FocusNode();
     _model.usernameTextController = TextEditingController();
     _model.usernameFocusNode = FocusNode();
 
     _model.phoneNumberTextController = TextEditingController();
     _model.phoneNumberFocusNode = FocusNode();
+    _model.phoneNumberTextController = TextEditingController();
+    _model.phoneNumberFocusNode = FocusNode();
 
+    _model.emailAddressTextController = TextEditingController();
+    _model.emailAddressFocusNode = FocusNode();
     _model.emailAddressTextController = TextEditingController();
     _model.emailAddressFocusNode = FocusNode();
 
     _model.passwordTextController = TextEditingController();
     _model.passwordFocusNode = FocusNode();
+    _model.passwordTextController = TextEditingController();
+    _model.passwordFocusNode = FocusNode();
 
+    _model.passwordConfirmTextController = TextEditingController();
+    _model.passwordConfirmFocusNode = FocusNode();
     _model.passwordConfirmTextController = TextEditingController();
     _model.passwordConfirmFocusNode = FocusNode();
   }
@@ -315,29 +337,23 @@ class _CreateAccountWidgetState extends State<CreateAccountWidget> {
                         shape: BoxShape.circle,
                         color: Colors.grey[300],
                       ),
-                      child: ClipOval(
-                        child: (_model.uploadedFileUrl.isNotEmpty)
-                            ? Image.network(
+                      child: _model.uploadedFileUrl.isNotEmpty
+                          ? ClipOval(
+                              child: Image.network(
                                 _model.uploadedFileUrl,
                                 width: 100,
                                 height: 100,
                                 fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return Image.asset(
-                                    'assets/images/default_profile.png',
-                                    width: 100,
-                                    height: 100,
-                                    fit: BoxFit.cover,
-                                  );
-                                },
-                              )
-                            : Image.asset(
+                              ),
+                            )
+                          : ClipOval(
+                              child: Image.asset(
                                 'assets/images/default_profile.png',
                                 width: 100,
                                 height: 100,
                                 fit: BoxFit.cover,
                               ),
-                      ),
+                            ),
                     ),
                   ),
                 ),

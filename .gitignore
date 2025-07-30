@@ -1,4 +1,8 @@
-# Flutter build files
+# Flutter build folders
 build/
-*.apkbuild/
+.dart_tool/
+.packages
 *.apk
+*.ipa
+*.so
+*.dill
