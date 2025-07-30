@@ -463,8 +463,8 @@ final kTranslationsMap = <Map<String, Map<String, String>>>[
       'en': 'All Clothes',
     },
     'yveetctd': {
-      'zh_Hans': 'Match New Outfit',
-      'en': 'Match New Outfit',
+      'zh_Hans': 'View Matched Outfit',
+      'en': 'View Matched Outfit',
     },
     'l1ne2qaz': {
       'zh_Hans': 'Home',
