@@ -484,22 +484,18 @@ class _AdminDashboardWidgetState extends State<AdminDashboardWidget>
                   ),
                 ),
                 Container(
-                  width: 410.1,
-                  height: 252.8,
+                  width: 422.5,
                   decoration: BoxDecoration(
                     color: FlutterFlowTheme.of(context).secondaryBackground,
                   ),
                   child: Column(
-                    mainAxisSize: MainAxisSize.max,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Padding(
                         padding: EdgeInsetsDirectional.fromSTEB(
                             16.0, 12.0, 0.0, 0.0),
                         child: Text(
-                          FFLocalizations.of(context).getText(
-                            'pectxchd' /* Quick Actions */,
-                          ),
+                          'Urgent Tasks',
                           style:
                               FlutterFlowTheme.of(context).titleMedium.override(
                                     font: GoogleFonts.interTight(
@@ -511,201 +507,94 @@ class _AdminDashboardWidgetState extends State<AdminDashboardWidget>
                                           .fontStyle,
                                     ),
                                     letterSpacing: 0.0,
-                                    fontWeight: FlutterFlowTheme.of(context)
-                                        .titleMedium
-                                        .fontWeight,
-                                    fontStyle: FlutterFlowTheme.of(context)
-                                        .titleMedium
-                                        .fontStyle,
                                   ),
                         ),
                       ),
-                      ListView(
-                        padding: EdgeInsets.zero,
-                        shrinkWrap: true,
-                        scrollDirection: Axis.vertical,
-                        children: [
-                          Padding(
-                            padding: EdgeInsetsDirectional.fromSTEB(
-                                16.0, 10.0, 16.0, 10.0),
-                            child: FFButtonWidget(
-                              onPressed: () async {
-                                context.pushNamed(
-                                    AccountManagementWidget.routeName);
-                              },
-                              text: FFLocalizations.of(context).getText(
-                                'rd5vfxnm' /* Manage Accounts */,
+                      const SizedBox(height: 12.0),
+
+                      // Urgent task list
+                      StreamBuilder<QuerySnapshot>(
+                        stream: FirebaseFirestore.instance
+                            .collection('users')
+                            .where('role', isEqualTo: 'Vendor')
+                            .where('is_approved', isEqualTo: false)
+                            .snapshots(),
+                        builder: (context, snapshot) {
+                          if (!snapshot.hasData) {
+                            return Center(child: CircularProgressIndicator());
+                          }
+
+                          final tasks = snapshot.data!.docs;
+
+                          if (tasks.isEmpty) {
+                            return Padding(
+                              padding: EdgeInsetsDirectional.fromSTEB(
+                                  16.0, 8.0, 0.0, 12.0),
+                              child: Text(
+                                'No urgent tasks right now.',
+                                style: FlutterFlowTheme.of(context).labelMedium,
                               ),
-                              options: FFButtonOptions(
-                                height: 40.0,
-                                padding: EdgeInsetsDirectional.fromSTEB(
-                                    16.0, 0.0, 16.0, 0.0),
-                                iconPadding: EdgeInsetsDirectional.fromSTEB(
-                                    16.0, 20.0, 0.0, 0.0),
-                                color: FlutterFlowTheme.of(context).underground,
-                                textStyle: FlutterFlowTheme.of(context)
-                                    .titleSmall
-                                    .override(
-                                      font: GoogleFonts.interTight(
-                                        fontWeight: FlutterFlowTheme.of(context)
-                                            .titleSmall
-                                            .fontWeight,
-                                        fontStyle: FlutterFlowTheme.of(context)
-                                            .titleSmall
-                                            .fontStyle,
-                                      ),
-                                      color: Colors.white,
-                                      letterSpacing: 0.0,
-                                      fontWeight: FlutterFlowTheme.of(context)
-                                          .titleSmall
-                                          .fontWeight,
-                                      fontStyle: FlutterFlowTheme.of(context)
-                                          .titleSmall
-                                          .fontStyle,
+                            );
+                          }
+
+                          return ListView.builder(
+                            shrinkWrap: true,
+                            physics: NeverScrollableScrollPhysics(),
+                            itemCount: tasks.length,
+                            itemBuilder: (context, index) {
+                              final task = tasks[index];
+                              final vendorName =
+                                  task['name'] ?? 'Unknown Vendor';
+
+                              return Padding(
+                                padding: const EdgeInsetsDirectional.fromSTEB(
+                                    16.0, 8.0, 16.0, 8.0),
+                                child: Card(
+                                  color:
+                                      FlutterFlowTheme.of(context).blankCanvas,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: ListTile(
+                                    leading: Icon(Icons.warning_amber,
+                                        color: Colors.redAccent, size: 28),
+                                    title: Text(
+                                      'Pending Vendor Approval',
+                                      style: FlutterFlowTheme.of(context)
+                                          .bodyLarge,
                                     ),
-                                elevation: 0.0,
-                                borderRadius: BorderRadius.circular(8.0),
-                                hoverColor:
-                                    FlutterFlowTheme.of(context).tastyCrust,
-                              ),
-                            ),
-                          ),
-                          Padding(
-                            padding: EdgeInsetsDirectional.fromSTEB(
-                                16.0, 0.0, 16.0, 10.0),
-                            child: FFButtonWidget(
-                              onPressed: () async {
-                                context
-                                    .pushNamed(ModerateContentWidget.routeName);
-                              },
-                              text: FFLocalizations.of(context).getText(
-                                'm7qdayui' /* Moderate Contents */,
-                              ),
-                              options: FFButtonOptions(
-                                height: 40.0,
-                                padding: EdgeInsetsDirectional.fromSTEB(
-                                    16.0, 0.0, 16.0, 0.0),
-                                iconPadding: EdgeInsetsDirectional.fromSTEB(
-                                    0.0, 0.0, 0.0, 0.0),
-                                color: FlutterFlowTheme.of(context).underground,
-                                textStyle: FlutterFlowTheme.of(context)
-                                    .titleSmall
-                                    .override(
-                                      font: GoogleFonts.interTight(
-                                        fontWeight: FlutterFlowTheme.of(context)
-                                            .titleSmall
-                                            .fontWeight,
-                                        fontStyle: FlutterFlowTheme.of(context)
-                                            .titleSmall
-                                            .fontStyle,
-                                      ),
-                                      color: Colors.white,
-                                      letterSpacing: 0.0,
-                                      fontWeight: FlutterFlowTheme.of(context)
-                                          .titleSmall
-                                          .fontWeight,
-                                      fontStyle: FlutterFlowTheme.of(context)
-                                          .titleSmall
-                                          .fontStyle,
+                                    subtitle: Text('Vendor: $vendorName'),
+                                    trailing: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        IconButton(
+                                          icon: Icon(Icons.check_circle,
+                                              color: Colors.green),
+                                          onPressed: () {
+                                            FirebaseFirestore.instance
+                                                .collection('users')
+                                                .doc(task.id)
+                                                .update({'is_approved': true});
+                                          },
+                                        ),
+                                        IconButton(
+                                          icon: Icon(Icons.cancel,
+                                              color: Colors.red),
+                                          onPressed: () {
+                                            FirebaseFirestore.instance
+                                                .collection('users')
+                                                .doc(task.id)
+                                                .delete();
+                                          },
+                                        ),
+                                      ],
                                     ),
-                                elevation: 0.0,
-                                borderRadius: BorderRadius.circular(8.0),
-                                hoverColor:
-                                    FlutterFlowTheme.of(context).tastyCrust,
-                              ),
-                            ),
-                          ),
-                          Padding(
-                            padding: EdgeInsetsDirectional.fromSTEB(
-                                16.0, 0.0, 16.0, 10.0),
-                            child: FFButtonWidget(
-                              onPressed: () async {
-                                context.pushNamed(
-                                    SmartSuggestionsWidget.routeName);
-                              },
-                              text: FFLocalizations.of(context).getText(
-                                'odjggdup' /* Tune Suggestions */,
-                              ),
-                              options: FFButtonOptions(
-                                height: 40.0,
-                                padding: EdgeInsetsDirectional.fromSTEB(
-                                    16.0, 0.0, 16.0, 0.0),
-                                iconPadding: EdgeInsetsDirectional.fromSTEB(
-                                    0.0, 0.0, 0.0, 0.0),
-                                color: FlutterFlowTheme.of(context).underground,
-                                textStyle: FlutterFlowTheme.of(context)
-                                    .titleSmall
-                                    .override(
-                                      font: GoogleFonts.interTight(
-                                        fontWeight: FlutterFlowTheme.of(context)
-                                            .titleSmall
-                                            .fontWeight,
-                                        fontStyle: FlutterFlowTheme.of(context)
-                                            .titleSmall
-                                            .fontStyle,
-                                      ),
-                                      color: Colors.white,
-                                      letterSpacing: 0.0,
-                                      fontWeight: FlutterFlowTheme.of(context)
-                                          .titleSmall
-                                          .fontWeight,
-                                      fontStyle: FlutterFlowTheme.of(context)
-                                          .titleSmall
-                                          .fontStyle,
-                                    ),
-                                elevation: 0.0,
-                                borderRadius: BorderRadius.circular(8.0),
-                                hoverColor:
-                                    FlutterFlowTheme.of(context).tastyCrust,
-                              ),
-                            ),
-                          ),
-                          Padding(
-                            padding: EdgeInsetsDirectional.fromSTEB(
-                                16.0, 0.0, 16.0, 0.0),
-                            child: FFButtonWidget(
-                              onPressed: () async {
-                                context
-                                    .pushNamed(ReportsInsightsWidget.routeName);
-                              },
-                              text: FFLocalizations.of(context).getText(
-                                '3m9lh9cz' /* Reports & Insights */,
-                              ),
-                              options: FFButtonOptions(
-                                height: 40.0,
-                                padding: EdgeInsetsDirectional.fromSTEB(
-                                    16.0, 0.0, 16.0, 0.0),
-                                iconPadding: EdgeInsetsDirectional.fromSTEB(
-                                    0.0, 0.0, 0.0, 0.0),
-                                color: FlutterFlowTheme.of(context).underground,
-                                textStyle: FlutterFlowTheme.of(context)
-                                    .titleSmall
-                                    .override(
-                                      font: GoogleFonts.interTight(
-                                        fontWeight: FlutterFlowTheme.of(context)
-                                            .titleSmall
-                                            .fontWeight,
-                                        fontStyle: FlutterFlowTheme.of(context)
-                                            .titleSmall
-                                            .fontStyle,
-                                      ),
-                                      color: Colors.white,
-                                      letterSpacing: 0.0,
-                                      fontWeight: FlutterFlowTheme.of(context)
-                                          .titleSmall
-                                          .fontWeight,
-                                      fontStyle: FlutterFlowTheme.of(context)
-                                          .titleSmall
-                                          .fontStyle,
-                                    ),
-                                elevation: 0.0,
-                                borderRadius: BorderRadius.circular(8.0),
-                                hoverColor:
-                                    FlutterFlowTheme.of(context).tastyCrust,
-                              ),
-                            ),
-                          ),
-                        ],
+                                  ),
+                                ),
+                              );
+                            },
+                          );
+                        },
                       ),
                     ],
                   ),
