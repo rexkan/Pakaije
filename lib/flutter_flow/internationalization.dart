@@ -980,172 +980,173 @@ final kTranslationsMap = <Map<String, Map<String, String>>>[
   {
     'un3s6v21': {
       'zh_Hans': 'Smart Suggestion Settings',
-      'en': '',
+      'en': 'Smart Suggestion Settings',
     },
     'xaw5szxi': {
       'zh_Hans': 'Fine tune the rules here!',
-      'en': '',
+      'en': 'Fine tune the rules here!',
     },
     'h48t29ci': {
       'zh_Hans': 'Style Weighting',
-      'en': '',
+      'en': 'Style Weighting',
     },
     'is3686yf': {
       'zh_Hans': 'Adjust the priority of style to suggest here',
-      'en': '',
+      'en': 'Adjust the priority of style to suggest here',
     },
     '8clhansy': {
       'zh_Hans': 'Minimalism',
-      'en': '',
+      'en': 'Minimalism',
     },
     'yr2njmjb': {
       'zh_Hans': 'Select level',
-      'en': '',
+      'en': 'Select level',
     },
     '5fyjpnnq': {
       'zh_Hans': 'Search...',
-      'en': '',
+      'en': 'Search...',
     },
     'knd0ii2y': {
       'zh_Hans': 'High',
-      'en': '',
+      'en': 'High',
     },
     'zfkghy4y': {
       'zh_Hans': 'Medium',
-      'en': '',
+      'en': 'Medium',
     },
     '8yn1w2rj': {
       'zh_Hans': 'Low',
-      'en': '',
+      'en': 'Low',
     },
     'igzyzqxz': {
       'zh_Hans': 'Streetwear',
-      'en': '',
+      'en': 'Streetwear',
     },
     'pa5uq1a1': {
       'zh_Hans': 'Select level',
-      'en': '',
+      'en': 'Select level',
     },
     'zwu5rs6q': {
       'zh_Hans': 'Search...',
-      'en': '',
+      'en': 'Search...',
     },
     'bcihz3hh': {
       'zh_Hans': 'High',
-      'en': '',
+      'en': 'High',
     },
     'fg6klzic': {
       'zh_Hans': 'Medium',
-      'en': '',
+      'en': 'Medium',
     },
     'mmru33ds': {
       'zh_Hans': 'Low',
-      'en': '',
+      'en': 'Low',
     },
     'bh9pz8o2': {
       'zh_Hans': 'Formal',
-      'en': '',
+      'en': 'Formal',
     },
     'f08upd3v': {
       'zh_Hans': 'Select level',
-      'en': '',
+      'en': 'Select level',
     },
     'ukzsd9ar': {
       'zh_Hans': 'Search...',
-      'en': '',
+      'en': 'Search...',
     },
     'kc8i0zz7': {
       'zh_Hans': 'High',
-      'en': '',
+      'en': 'High',
     },
     'qezx8fr4': {
       'zh_Hans': 'Medium',
-      'en': '',
+      'en': 'Medium',
     },
     'u1nn5xot': {
       'zh_Hans': 'Low',
-      'en': '',
+      'en': 'Low',
     },
     'mlirp01v': {
       'zh_Hans': 'Seasonal Adjustments',
-      'en': '',
+      'en': 'Seasonal Adjustments',
     },
     'zarbns34': {
       'zh_Hans': 'Adjust the weather parameter of suggestion here',
-      'en': '',
+      'en': 'Adjust the weather parameter of suggestion here',
     },
     '43yztk3g': {
       'zh_Hans': 'When temperature',
-      'en': '',
+      'en': 'When temperature',
     },
     '9nrmlok4': {
       'zh_Hans': 'More / Less than',
-      'en': '',
+      'en': 'More / Less than',
     },
     'ba7h5kwm': {
       'zh_Hans': 'Search...',
-      'en': '',
+      'en': 'Search...',
     },
     'gzl4aqmk': {
       'zh_Hans': 'More than',
-      'en': '',
+      'en': 'More than',
     },
     '89t13o63': {
       'zh_Hans': 'Less than',
-      'en': '',
+      'en': 'Less than',
     },
     'cd4fin3h': {
       'zh_Hans': 'Recommend',
-      'en': '',
+      'en': 'Recommend',
     },
     '53y0f75y': {
       'zh_Hans': 'Select temperature',
-      'en': '',
+      'en': 'Select temperature',
     },
     'fzrcjq5s': {
       'zh_Hans': 'Search...',
-      'en': '',
+      'en': 'Search...',
     },
     '2pmp3a9w': {
       'zh_Hans': '10°C',
-      'en': '',
+      'en': '10°C',
     },
     'r2y8z2pk': {
       'zh_Hans': '20°C',
-      'en': '',
+      'en': '20°C',
     },
     'w6vhkddn': {
       'zh_Hans': '30°C',
-      'en': '',
+      'en': '30°C',
     },
     '7r2pucqq': {
       'zh_Hans': '40°C',
-      'en': '',
+      'en': '40°C',
     },
     'qq6yr3u8': {
       'zh_Hans': 'Rain detected',
-      'en': '',
+      'en': 'Rain detected',
     },
     'hf73l9fl': {
       'zh_Hans': 'The system will recommend rainy day outfit',
-      'en': '',
+      'en': 'The system will recommend rainy day outfit',
     },
     'jj4xqtgw': {
       'zh_Hans': 'Brand Integration Frequency',
-      'en': '',
+      'en': 'Brand Integration Frequency',
     },
     'geyydghx': {
       'zh_Hans': 'Adjust values promote vendor items in user suggestions',
-      'en': '',
+      'en': 'Adjust values promote vendor items in user suggestions',
     },
     'jqg4cfmy': {
       'zh_Hans':
           'Higher value will promote vendor items more\noften in user suggestions',
-      'en': '',
+      'en':
+          'Higher value will promote vendor items more\noften in user suggestions',
     },
     '7caqoc99': {
       'zh_Hans': 'Suggestions',
-      'en': '',
+      'en': 'Suggestions',
     },
   },
   // ReportsInsights
