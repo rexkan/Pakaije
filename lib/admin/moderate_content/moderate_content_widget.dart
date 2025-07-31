@@ -23,6 +23,7 @@ class _ModerateContentWidgetState extends State<ModerateContentWidget>
   late ModerateContentModel _model;
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
+  int _selectedIndex = 2; // Set to 2 for "Contents" tab
 
   final animationsMap = <String, AnimationInfo>{};
 
@@ -136,6 +137,31 @@ class _ModerateContentWidgetState extends State<ModerateContentWidget>
     );
   }
 
+  // Navigation handler for bottom nav bar
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+
+    switch (index) {
+      case 0:
+        context.pushNamed('AdminDashboard');
+        break;
+      case 1:
+        context.pushNamed('AccountManagement');
+        break;
+      case 2:
+        // Current page (ModerateContent) - no navigation needed
+        break;
+      case 3:
+        context.pushNamed('SmartSuggestions');
+        break;
+      case 4:
+        context.pushNamed('ReportsInsights');
+        break;
+    }
+  }
+
   @override
   void dispose() {
     _model.dispose();
@@ -179,6 +205,26 @@ class _ModerateContentWidgetState extends State<ModerateContentWidget>
           actions: [],
           centerTitle: false,
           elevation: 2.0,
+        ),
+        // Add the bottom navigation bar
+        bottomNavigationBar: BottomNavigationBar(
+          type: BottomNavigationBarType.fixed,
+          backgroundColor: FlutterFlowTheme.of(context).underground,
+          currentIndex: _selectedIndex,
+          onTap: _onItemTapped,
+          selectedItemColor: FlutterFlowTheme.of(context).blankCanvas,
+          unselectedItemColor: Colors.grey,
+          items: const [
+            BottomNavigationBarItem(
+                icon: Icon(Icons.home_filled), label: "Home"),
+            BottomNavigationBarItem(
+                icon: Icon(Icons.people), label: "Accounts"),
+            BottomNavigationBarItem(
+                icon: Icon(Icons.content_copy), label: "Contents"),
+            BottomNavigationBarItem(icon: Icon(Icons.tune), label: "Tune"),
+            BottomNavigationBarItem(
+                icon: Icon(Icons.analytics), label: "Reports"),
+          ],
         ),
         body: SafeArea(
           top: true,

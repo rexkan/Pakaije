@@ -1153,115 +1153,115 @@ final kTranslationsMap = <Map<String, Map<String, String>>>[
   {
     'txjxqwig': {
       'zh_Hans': 'Daily Users',
-      'en': '',
+      'en': 'Daily Users',
     },
     'p3c2kxra': {
       'zh_Hans': 'Users Today',
-      'en': '',
+      'en': 'Users Today',
     },
     'lzgttw8u': {
       'zh_Hans': '1200',
-      'en': '',
+      'en': '1200',
     },
     '9k3uunzk': {
       'zh_Hans': '+10%',
-      'en': '',
+      'en': '+10%',
     },
     'hssvl0kl': {
       'zh_Hans': 'Active Sessions',
-      'en': '',
+      'en': 'Active Sessions',
     },
     'xih2h3um': {
       'zh_Hans': '850',
-      'en': '',
+      'en': '850',
     },
     '8mc5w0iw': {
       'zh_Hans': '+5%',
-      'en': '',
+      'en': '+5%',
     },
     'kowkcjcv': {
       'zh_Hans': 'Daily User Growth',
-      'en': '',
+      'en': 'Daily User Growth',
     },
     'kcy463p8': {
       'zh_Hans': 'Most Used Tag',
-      'en': '',
+      'en': 'Most Used Tag',
     },
     'ofaguamr': {
       'zh_Hans': '#Korean',
-      'en': '',
+      'en': '#Korean',
     },
     'rxm6r98o': {
       'zh_Hans': '300',
-      'en': '',
+      'en': '300',
     },
     'pux4cmof': {
       'zh_Hans': '#Minimalist',
-      'en': '',
+      'en': '#Minimalist',
     },
     'q6rfp1lh': {
       'zh_Hans': '270',
-      'en': '',
+      'en': '270',
     },
     'ez90i3ob': {
       'zh_Hans': '#Japanese',
-      'en': '',
+      'en': '#Japanese',
     },
     '4u8wfvbx': {
       'zh_Hans': '150',
-      'en': '',
+      'en': '150',
     },
     'oxi1w6ae': {
       'zh_Hans': 'Promo Code Conversion',
-      'en': '',
+      'en': 'Promo Code Conversion',
     },
     'f1a1jp4f': {
       'zh_Hans': 'Codes Applied',
-      'en': '',
+      'en': 'Codes Applied',
     },
     'h39os2ds': {
       'zh_Hans': '800',
-      'en': '',
+      'en': '800',
     },
     'p10k80u4': {
       'zh_Hans': '+15%',
-      'en': '',
+      'en': '+15%',
     },
     '3kvdiew8': {
       'zh_Hans': 'Conversion Rate',
-      'en': '',
+      'en': 'Conversion Rate',
     },
     '64cmgw2q': {
       'zh_Hans': '20%',
-      'en': '',
+      'en': '20%',
     },
     '7jxd1lbx': {
       'zh_Hans': '+2%',
-      'en': '',
+      'en': '+2%',
     },
     '6t68oj3o': {
       'zh_Hans': 'Promo Code Conversions Over Time',
-      'en': '',
+      'en': 'Promo Code Conversions Over Time',
     },
     '87c6psir': {
       'zh_Hans': 'Download CSV',
-      'en': '',
+      'en': 'Download CSV',
     },
     'gwox7mgs': {
       'zh_Hans': 'Print Report',
-      'en': '',
+      'en': 'Print Report',
     },
     'tg3hle71': {
       'zh_Hans': 'Export Summary',
-      'en': '',
+      'en': 'Export Summary',
     },
     'buh52ydw': {
       'zh_Hans': 'Reports & Insights',
-      'en': '',
+      'en': 'Reports & Insights',
     },
     'h1prxzlw': {
       'zh_Hans': 'Reports',
-      'en': '',
+      'en': 'Reports',
     },
   },
   // OutfitMatch
