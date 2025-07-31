@@ -45,10 +45,10 @@ class UsersRecord extends FirestoreRecord {
   String get role => _role ?? '';
   bool hasRole() => _role != null;
 
-  // "is_approved" field.
-  bool? _isApproved;
-  bool get isApproved => _isApproved ?? false;
-  bool hasIsApproved() => _isApproved != null;
+  // "account_status" field.
+  String? _accountStatus;
+  String get accountStatus => _accountStatus ?? 'active';
+  bool hasAccountStatus() => _accountStatus != null;
 
   // "gender" field.
   String? _gender;
@@ -64,11 +64,6 @@ class UsersRecord extends FirestoreRecord {
   String? _frontBodyImageUrl;
   String get frontBodyImageUrl => _frontBodyImageUrl ?? '';
   bool hasFrontBodyImageUrl() => _frontBodyImageUrl != null;
-
-  // "back_body_image_url" field.
-  String? _backBodyImageUrl;
-  String get backBodyImageUrl => _backBodyImageUrl ?? '';
-  bool hasBackBodyImageUrl() => _backBodyImageUrl != null;
 
   // "style_preferences" field.
   List<String>? _stylePreferences;
@@ -97,11 +92,10 @@ class UsersRecord extends FirestoreRecord {
     _uid = snapshotData['uid'] as String?;
     _createdTime = snapshotData['created_time'] as DateTime?;
     _role = snapshotData['role'] as String?;
-    _isApproved = snapshotData['is_approved'] as bool?;
+    _accountStatus = snapshotData['account_status'] as String?;
     _gender = snapshotData['gender'] as String?;
     _phoneNumber = snapshotData['phone_number'] as String?;
     _frontBodyImageUrl = snapshotData['front_body_image_url'] as String?;
-    _backBodyImageUrl = snapshotData['back_body_image_url'] as String?;
     _stylePreferences = getDataList(snapshotData['style_preferences']);
     _savedOutfitIds = getDataList(snapshotData['saved_outfit_ids']);
     _hasCompletedSetup = snapshotData['has_completed_setup'] as bool?;
@@ -148,11 +142,10 @@ Map<String, dynamic> createUsersRecordData({
   String? uid,
   DateTime? createdTime,
   String? role,
-  bool? isApproved,
+  String? accountStatus,
   String? gender,
   String? phoneNumber,
   String? frontBodyImageUrl,
-  String? backBodyImageUrl,
   bool? hasCompletedSetup,
   String? brandDescription,
 }) {
@@ -164,11 +157,10 @@ Map<String, dynamic> createUsersRecordData({
       'uid': uid,
       'created_time': createdTime,
       'role': role,
-      'is_approved': isApproved,
+      'account_status': accountStatus,
       'gender': gender,
       'phone_number': phoneNumber,
       'front_body_image_url': frontBodyImageUrl,
-      'back_body_image_url': backBodyImageUrl,
       'has_completed_setup': hasCompletedSetup,
       'brand_description': brandDescription,
     }.withoutNulls,
@@ -189,11 +181,10 @@ class UsersRecordDocumentEquality implements Equality<UsersRecord> {
         e1?.uid == e2?.uid &&
         e1?.createdTime == e2?.createdTime &&
         e1?.role == e2?.role &&
-        e1?.isApproved == e2?.isApproved &&
+        e1?.accountStatus == e2?.accountStatus &&
         e1?.gender == e2?.gender &&
         e1?.phoneNumber == e2?.phoneNumber &&
         e1?.frontBodyImageUrl == e2?.frontBodyImageUrl &&
-        e1?.backBodyImageUrl == e2?.backBodyImageUrl &&
         listEquality.equals(e1?.stylePreferences, e2?.stylePreferences) &&
         listEquality.equals(e1?.savedOutfitIds, e2?.savedOutfitIds) &&
         e1?.hasCompletedSetup == e2?.hasCompletedSetup &&
@@ -208,11 +199,10 @@ class UsersRecordDocumentEquality implements Equality<UsersRecord> {
         e?.uid,
         e?.createdTime,
         e?.role,
-        e?.isApproved,
+        e?.accountStatus,
         e?.gender,
         e?.phoneNumber,
         e?.frontBodyImageUrl,
-        e?.backBodyImageUrl,
         e?.stylePreferences,
         e?.savedOutfitIds,
         e?.hasCompletedSetup,
