@@ -929,51 +929,51 @@ final kTranslationsMap = <Map<String, Map<String, String>>>[
   {
     '4xfefwma': {
       'zh_Hans': 'Moderation Request',
-      'en': '',
+      'en': 'Moderation Request',
     },
     'kq0kxhzp': {
       'zh_Hans': 'Pending Reviews',
-      'en': '',
+      'en': 'Pending Reviews',
     },
     'cjl5jpjn': {
       'zh_Hans': 'Inappropriate Content',
-      'en': '',
+      'en': 'Inappropriate Content',
     },
     '6xao5r9z': {
       'zh_Hans': 'Brand: Padini',
-      'en': '',
+      'en': 'Brand: Padini',
     },
     'uscx5iwm': {
       'zh_Hans': 'Duplicate Listing',
-      'en': '',
+      'en': 'Duplicate Listing',
     },
     'ka67neqx': {
       'zh_Hans': 'Brand: Zara',
-      'en': '',
+      'en': 'Brand: Zara',
     },
     'mofhj8rj': {
       'zh_Hans': 'Invalid Product',
-      'en': '',
+      'en': 'Invalid Product',
     },
     'gyd4oo3l': {
       'zh_Hans': 'Brand: H&M',
-      'en': '',
+      'en': 'Brand: H&M',
     },
     'o5317htn': {
       'zh_Hans': 'Delete Item',
-      'en': '',
+      'en': 'Delete Item',
     },
     'ufoohno2': {
       'zh_Hans': 'Decline Request',
-      'en': '',
+      'en': 'Decline Request',
     },
     'vnqhtx12': {
       'zh_Hans': 'Content Moderation Panel',
-      'en': '',
+      'en': 'Content Moderation Panel',
     },
     '8nx7t99c': {
       'zh_Hans': 'Contents',
-      'en': '',
+      'en': 'Contents',
     },
   },
   // SmartSuggestions

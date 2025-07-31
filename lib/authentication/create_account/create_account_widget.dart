@@ -125,6 +125,35 @@ class _CreateAccountWidgetState extends State<CreateAccountWidget> {
     }
   }
 
+  // Helper method to determine account status based on role
+  String _getAccountStatusForRole(String role) {
+    final normalizedRole = role.toLowerCase();
+    switch (normalizedRole) {
+      case 'user':
+        return 'active';
+      case 'vendor':
+      case 'admin':
+        return 'pending';
+      default:
+        return 'active'; // Default fallback
+    }
+  }
+
+  // Helper method to get appropriate success message based on role
+  String _getSuccessMessageForRole(String role) {
+    final normalizedRole = role.toLowerCase();
+    switch (normalizedRole) {
+      case 'user':
+        return 'Account created successfully! You can now sign in.';
+      case 'vendor':
+        return 'Vendor account created! Please wait for admin approval before signing in.';
+      case 'admin':
+        return 'Admin account created! Please wait for approval before signing in.';
+      default:
+        return 'Account created successfully!';
+    }
+  }
+
   Future<void> _createAccount() async {
     if (_model.passwordTextController!.text !=
         _model.passwordConfirmTextController!.text) {
@@ -150,26 +179,12 @@ class _CreateAccountWidgetState extends State<CreateAccountWidget> {
 
       if (credential.user != null) {
         await credential.user!.sendEmailVerification();
-        showDialog(
-          context: context,
-          builder: (_) => AlertDialog(
-            title: Text('Verify Your Email'),
-            content: Text(
-                'We sent a verification link to your email. Please verify before logging in.'),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop(); // Close the dialog first
-                  Future.delayed(Duration.zero, () {
-                    context.pushNamed(
-                        LoginPageWidget.routeName); // <-- match this exactly
-                  });
-                },
-                child: Text('OK'),
-              ),
-            ],
-          ),
-        );
+
+        // Determine account status based on role
+        final selectedRole = _model.choiceChipsValue1 ?? 'User';
+        final accountStatus = _getAccountStatusForRole(selectedRole);
+
+        // Create user document in Firestore
         await FirebaseFirestore.instance
             .collection('users')
             .doc(credential.user!.uid)
@@ -178,8 +193,8 @@ class _CreateAccountWidgetState extends State<CreateAccountWidget> {
           'display_name': _model.usernameTextController!.text,
           'uid': credential.user!.uid,
           'created_time': Timestamp.now(),
-          'role': _model.choiceChipsValue1,
-          'is_approved': _model.choiceChipsValue1 == 'User' ? true : false,
+          'role': selectedRole,
+          'account_status': accountStatus, // New field instead of is_approved
           'gender': _model.choiceChipsValue2,
           'phone_number': _model.phoneNumberTextController!.text,
           'photo_url': _model.uploadedFileUrl.isNotEmpty
@@ -187,14 +202,49 @@ class _CreateAccountWidgetState extends State<CreateAccountWidget> {
               : 'https://firebasestorage.googleapis.com/v0/b/pakaije-89pzxl.firebasestorage.app/o/user_848006.png?alt=media&token=1b4c4e8e-31b7-459a-936f-3452f57b1da4',
         });
 
+        // Show success dialog with role-specific message
+        showDialog(
+          context: context,
+          builder: (_) => AlertDialog(
+            title: Text('Account Created Successfully'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                    'We sent a verification link to your email. Please verify before logging in.'),
+                SizedBox(height: 12),
+                Text(
+                  _getSuccessMessageForRole(selectedRole),
+                  style: TextStyle(
+                    fontWeight: FontWeight.w500,
+                    color: accountStatus == 'pending'
+                        ? Colors.orange[700]
+                        : Colors.green[700],
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(); // Close the dialog first
+                  Future.delayed(Duration.zero, () {
+                    context.pushNamed(LoginPageWidget.routeName);
+                  });
+                },
+                child: Text('OK'),
+              ),
+            ],
+          ),
+        );
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Account created successfully!')),
+            SnackBar(content: Text(_getSuccessMessageForRole(selectedRole))),
           );
 
           await Future.delayed(const Duration(seconds: 1));
-
-          context.pushNamed(LoginPageWidget.routeName);
         }
       }
     } catch (e) {
@@ -372,6 +422,22 @@ class _CreateAccountWidgetState extends State<CreateAccountWidget> {
                   _model.choiceChipsValue1,
                   (value) => setState(() => _model.choiceChipsValue1 = value),
                 ),
+                // Add helpful text for role selection
+                if (_model.choiceChipsValue1 != null &&
+                    _model.choiceChipsValue1 != 'User')
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8.0),
+                    child: Text(
+                      _model.choiceChipsValue1 == 'Vendor'
+                          ? '⚠️ Vendor accounts require admin approval before you can sign in.'
+                          : '⚠️ Admin accounts require approval before you can sign in.',
+                      style: TextStyle(
+                        color: Colors.orange[700],
+                        fontSize: 12,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ),
                 const SizedBox(height: 16),
                 _buildTextField(
                   controller: _model.usernameTextController!,

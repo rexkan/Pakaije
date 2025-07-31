@@ -20,11 +20,16 @@ class AccountManagementWidget extends StatefulWidget {
       _AccountManagementWidgetState();
 }
 
+String _searchQuery = '';
+String _adminSearchQuery = ''; // Add admin search query
+String _vendorSearchQuery = ''; // Add vendor search query
+
 class _AccountManagementWidgetState extends State<AccountManagementWidget>
     with TickerProviderStateMixin {
   late AccountManagementModel _model;
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
+  int _selectedIndex = 1; // Set to 1 for Accounts tab
 
   @override
   void initState() {
@@ -45,6 +50,30 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
 
     _model.searchBarTextController3 ??= TextEditingController();
     _model.searchBarFocusNode3 ??= FocusNode();
+  }
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+
+    switch (index) {
+      case 0:
+        context.pushNamed('AdminDashboard');
+        break;
+      case 1:
+        // Stay on current page (Account Management)
+        break;
+      case 2:
+        context.pushNamed('ModerateContent');
+        break;
+      case 3:
+        context.pushNamed('SmartSuggestions');
+        break;
+      case 4:
+        context.pushNamed('ReportsInsights');
+        break;
+    }
   }
 
   @override
@@ -78,7 +107,7 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
                     fontStyle:
                         FlutterFlowTheme.of(context).headlineMedium.fontStyle,
                   ),
-                  color: FlutterFlowTheme.of(context).info,
+                  color: FlutterFlowTheme.of(context).white,
                   letterSpacing: 0.0,
                   fontWeight:
                       FlutterFlowTheme.of(context).headlineMedium.fontWeight,
@@ -89,6 +118,36 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
           actions: [],
           centerTitle: false,
           elevation: 0.0,
+        ),
+        bottomNavigationBar: BottomNavigationBar(
+          type: BottomNavigationBarType.fixed,
+          backgroundColor: FlutterFlowTheme.of(context).underground,
+          currentIndex: _selectedIndex,
+          onTap: _onItemTapped,
+          selectedItemColor: FlutterFlowTheme.of(context).blankCanvas,
+          unselectedItemColor: Colors.grey,
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home_filled),
+              label: "Home",
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.people),
+              label: "Accounts",
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.content_copy),
+              label: "Contents",
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.tune),
+              label: "Tune",
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.analytics),
+              label: "Reports",
+            ),
+          ],
         ),
         body: SafeArea(
           top: true,
@@ -225,10 +284,7 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
                                             _model.searchBarTextController1,
                                         focusNode: _model.searchBarFocusNode1,
                                         decoration: InputDecoration(
-                                          hintText: FFLocalizations.of(context)
-                                              .getText(
-                                            'zpml24qc' /* Search user here */,
-                                          ),
+                                          hintText: 'Search user here',
                                           hintStyle: FlutterFlowTheme.of(
                                                   context)
                                               .labelMedium
@@ -255,10 +311,43 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
                                             horizontal: 16.0,
                                             vertical: 14.0,
                                           ),
-                                          suffixIcon: Icon(
-                                            Icons.search,
-                                            color: FlutterFlowTheme.of(context)
-                                                .tastyCrust,
+                                          suffixIcon: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              // Search Button
+                                              IconButton(
+                                                icon: Icon(Icons.search,
+                                                    color: FlutterFlowTheme.of(
+                                                            context)
+                                                        .tastyCrust),
+                                                onPressed: () {
+                                                  setState(() {
+                                                    _searchQuery = _model
+                                                        .searchBarTextController1
+                                                        .text
+                                                        .trim();
+                                                  });
+                                                },
+                                              ),
+                                              // Clear Button
+                                              if (_searchQuery.isNotEmpty)
+                                                IconButton(
+                                                  icon: Icon(Icons.clear,
+                                                      color:
+                                                          FlutterFlowTheme.of(
+                                                                  context)
+                                                              .tastyCrust),
+                                                  onPressed: () {
+                                                    setState(() {
+                                                      _model
+                                                          .searchBarTextController1
+                                                          ?.clear();
+                                                      _searchQuery =
+                                                          ''; // reset search
+                                                    });
+                                                  },
+                                                ),
+                                            ],
                                           ),
                                         ),
                                         style: FlutterFlowTheme.of(context)
@@ -270,11 +359,26 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
 
                                     // Users List
                                     StreamBuilder<QuerySnapshot>(
-                                      stream: FirebaseFirestore.instance
-                                          .collection('users')
-                                          .where('role', isEqualTo: 'User')
-                                          .orderBy('display_name')
-                                          .snapshots(),
+                                      stream: (_searchQuery.isEmpty)
+                                          ? FirebaseFirestore.instance
+                                              .collection('users')
+                                              .where('role', isEqualTo: 'User')
+                                              .where('account_status',
+                                                  isEqualTo: 'active')
+                                              .orderBy('display_name')
+                                              .snapshots()
+                                          : FirebaseFirestore.instance
+                                              .collection('users')
+                                              .where('role', isEqualTo: 'User')
+                                              .where('account_status',
+                                                  isEqualTo: 'active')
+                                              .where('display_name',
+                                                  isGreaterThanOrEqualTo:
+                                                      _searchQuery,
+                                                  isLessThanOrEqualTo:
+                                                      '$_searchQuery\uf8ff')
+                                              .orderBy('display_name')
+                                              .snapshots(),
                                       builder: (context, snapshot) {
                                         if (!snapshot.hasData) {
                                           return Center(
@@ -416,20 +520,24 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
                                                               ],
                                                             ),
                                                           );
+
                                                           if (confirm == true) {
                                                             await FirebaseFirestore
                                                                 .instance
                                                                 .collection(
                                                                     'users')
                                                                 .doc(userId)
-                                                                .delete();
+                                                                .update({
+                                                              'account_status':
+                                                                  'suspended'
+                                                            });
+
                                                             ScaffoldMessenger
                                                                     .of(context)
                                                                 .showSnackBar(
                                                               SnackBar(
-                                                                content: Text(
-                                                                    '$userName suspended'),
-                                                              ),
+                                                                  content: Text(
+                                                                      '$userName has been suspended')),
                                                             );
                                                           }
                                                         },
@@ -498,7 +606,7 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
                               ),
                             ),
 
-                            // Replace your Admin tab (second TabBarView child) with this:
+                            // Admin Tab
                             SingleChildScrollView(
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(
@@ -512,9 +620,8 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
                                           top: 22.0, bottom: 16.0),
                                       child: Center(
                                         child: ConstrainedBox(
-                                          constraints: BoxConstraints(
-                                              maxWidth:
-                                                  400), // 🔧 Adjust width here
+                                          constraints:
+                                              BoxConstraints(maxWidth: 400),
                                           child: Container(
                                             decoration: BoxDecoration(
                                               color:
@@ -558,11 +665,44 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
                                                   horizontal: 16.0,
                                                   vertical: 14.0,
                                                 ),
-                                                suffixIcon: Icon(
-                                                  Icons.search,
-                                                  color: FlutterFlowTheme.of(
-                                                          context)
-                                                      .tastyCrust,
+                                                suffixIcon: Row(
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  children: [
+                                                    // Search Button
+                                                    IconButton(
+                                                      icon: Icon(Icons.search,
+                                                          color: FlutterFlowTheme
+                                                                  .of(context)
+                                                              .tastyCrust),
+                                                      onPressed: () {
+                                                        setState(() {
+                                                          _adminSearchQuery = _model
+                                                              .searchBarTextController2
+                                                              .text
+                                                              .trim();
+                                                        });
+                                                      },
+                                                    ),
+                                                    // Clear Button
+                                                    if (_adminSearchQuery
+                                                        .isNotEmpty)
+                                                      IconButton(
+                                                        icon: Icon(Icons.clear,
+                                                            color: FlutterFlowTheme
+                                                                    .of(context)
+                                                                .tastyCrust),
+                                                        onPressed: () {
+                                                          setState(() {
+                                                            _model
+                                                                .searchBarTextController2
+                                                                ?.clear();
+                                                            _adminSearchQuery =
+                                                                ''; // reset search
+                                                          });
+                                                        },
+                                                      ),
+                                                  ],
                                                 ),
                                               ),
                                               style:
@@ -591,14 +731,26 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
                                       ),
                                     ),
 
-                                    // Pending Admin Applications
+                                    // Pending Admin Applications - Updated to use account_status
                                     StreamBuilder<QuerySnapshot>(
-                                      stream: FirebaseFirestore.instance
-                                          .collection('users')
-                                          .where('role', isEqualTo: 'Admin')
-                                          .where('is_approved',
-                                              isEqualTo: false)
-                                          .snapshots(),
+                                      stream: (_adminSearchQuery.isEmpty)
+                                          ? FirebaseFirestore.instance
+                                              .collection('users')
+                                              .where('role', isEqualTo: 'Admin')
+                                              .where('account_status',
+                                                  isEqualTo: 'pending')
+                                              .snapshots()
+                                          : FirebaseFirestore.instance
+                                              .collection('users')
+                                              .where('role', isEqualTo: 'Admin')
+                                              .where('account_status',
+                                                  isEqualTo: 'pending')
+                                              .where('display_name',
+                                                  isGreaterThanOrEqualTo:
+                                                      _adminSearchQuery,
+                                                  isLessThanOrEqualTo:
+                                                      '$_adminSearchQuery\uf8ff')
+                                              .snapshots(),
                                       builder: (context, snapshot) {
                                         // Error handling
                                         if (snapshot.hasError) {
@@ -637,7 +789,9 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
                                           return Container(
                                             padding: EdgeInsets.all(16.0),
                                             child: Text(
-                                              'No pending applications',
+                                              _adminSearchQuery.isEmpty
+                                                  ? 'No pending applications'
+                                                  : 'No applications found matching "$_adminSearchQuery"',
                                               style:
                                                   FlutterFlowTheme.of(context)
                                                       .bodyMedium,
@@ -712,8 +866,8 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
                                                                     'users')
                                                                 .doc(adminId)
                                                                 .update({
-                                                              'is_approved':
-                                                                  true
+                                                              'account_status':
+                                                                  'active'
                                                             });
 
                                                             if (mounted) {
@@ -860,13 +1014,26 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
                                       ),
                                     ),
 
-                                    // Approved Admins List
+                                    // Approved Admins List - Updated to use account_status
                                     StreamBuilder<QuerySnapshot>(
-                                      stream: FirebaseFirestore.instance
-                                          .collection('users')
-                                          .where('role', isEqualTo: 'Admin')
-                                          .where('is_approved', isEqualTo: true)
-                                          .snapshots(),
+                                      stream: (_adminSearchQuery.isEmpty)
+                                          ? FirebaseFirestore.instance
+                                              .collection('users')
+                                              .where('role', isEqualTo: 'Admin')
+                                              .where('account_status',
+                                                  isEqualTo: 'active')
+                                              .snapshots()
+                                          : FirebaseFirestore.instance
+                                              .collection('users')
+                                              .where('role', isEqualTo: 'Admin')
+                                              .where('account_status',
+                                                  isEqualTo: 'active')
+                                              .where('display_name',
+                                                  isGreaterThanOrEqualTo:
+                                                      _adminSearchQuery,
+                                                  isLessThanOrEqualTo:
+                                                      '$_adminSearchQuery\uf8ff')
+                                              .snapshots(),
                                       builder: (context, snapshot) {
                                         // Error handling
                                         if (snapshot.hasError) {
@@ -905,7 +1072,9 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
                                           return Container(
                                             padding: EdgeInsets.all(16.0),
                                             child: Text(
-                                              'No approved admins found',
+                                              _adminSearchQuery.isEmpty
+                                                  ? 'No approved admins found'
+                                                  : 'No admin accounts found matching "$_adminSearchQuery"',
                                               style:
                                                   FlutterFlowTheme.of(context)
                                                       .bodyMedium,
@@ -1028,6 +1197,7 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
                                                               ],
                                                             ),
                                                           );
+
                                                           if (confirm == true) {
                                                             try {
                                                               await FirebaseFirestore
@@ -1035,7 +1205,10 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
                                                                   .collection(
                                                                       'users')
                                                                   .doc(adminId)
-                                                                  .delete();
+                                                                  .update({
+                                                                'account_status':
+                                                                    'suspended'
+                                                              });
 
                                                               if (mounted) {
                                                                 ScaffoldMessenger.of(
@@ -1134,6 +1307,7 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
                               ),
                             ),
 
+                            // Vendor Tab
                             SingleChildScrollView(
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(
@@ -1141,7 +1315,7 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    // === Search Bar ===
+                                    // Search Bar
                                     Padding(
                                       padding: const EdgeInsets.only(
                                           top: 22.0, bottom: 16.0),
@@ -1165,6 +1339,10 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
                                               ],
                                             ),
                                             child: TextFormField(
+                                              controller: _model
+                                                  .searchBarTextController3,
+                                              focusNode:
+                                                  _model.searchBarFocusNode3,
                                               decoration: InputDecoration(
                                                 hintText: 'Search vendor here',
                                                 hintStyle: FlutterFlowTheme.of(
@@ -1176,16 +1354,54 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
                                                           FlutterFlowTheme.of(
                                                                   context)
                                                               .underground,
+                                                      letterSpacing: 0.0,
                                                     ),
                                                 border: InputBorder.none,
                                                 contentPadding:
                                                     EdgeInsets.symmetric(
-                                                        horizontal: 16.0,
-                                                        vertical: 14.0),
-                                                suffixIcon: Icon(Icons.search,
-                                                    color: FlutterFlowTheme.of(
-                                                            context)
-                                                        .tastyCrust),
+                                                  horizontal: 16.0,
+                                                  vertical: 14.0,
+                                                ),
+                                                suffixIcon: Row(
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  children: [
+                                                    // Search Button
+                                                    IconButton(
+                                                      icon: Icon(Icons.search,
+                                                          color: FlutterFlowTheme
+                                                                  .of(context)
+                                                              .tastyCrust),
+                                                      onPressed: () {
+                                                        setState(() {
+                                                          _vendorSearchQuery =
+                                                              _model
+                                                                  .searchBarTextController3
+                                                                  .text
+                                                                  .trim();
+                                                        });
+                                                      },
+                                                    ),
+                                                    // Clear Button
+                                                    if (_vendorSearchQuery
+                                                        .isNotEmpty)
+                                                      IconButton(
+                                                        icon: Icon(Icons.clear,
+                                                            color: FlutterFlowTheme
+                                                                    .of(context)
+                                                                .tastyCrust),
+                                                        onPressed: () {
+                                                          setState(() {
+                                                            _model
+                                                                .searchBarTextController3
+                                                                ?.clear();
+                                                            _vendorSearchQuery =
+                                                                ''; // reset search
+                                                          });
+                                                        },
+                                                      ),
+                                                  ],
+                                                ),
                                               ),
                                               style:
                                                   FlutterFlowTheme.of(context)
@@ -1203,42 +1419,86 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
                                       child: Text(
                                         'Applications',
                                         style: FlutterFlowTheme.of(context)
-                                            .titleMedium,
+                                            .titleMedium
+                                            .override(
+                                              color:
+                                                  FlutterFlowTheme.of(context)
+                                                      .primaryText,
+                                              letterSpacing: 0.0,
+                                            ),
                                       ),
                                     ),
 
-                                    // Pending Vendor Applications
+                                    // Pending Vendor Applications - Updated to use account_status
                                     StreamBuilder<QuerySnapshot>(
-                                      stream: FirebaseFirestore.instance
-                                          .collection('users')
-                                          .where('role',
-                                              isEqualTo:
-                                                  'Vendor') // ✅ must match Firebase case
-                                          .where('is_approved',
-                                              isEqualTo: false)
-                                          .snapshots(),
+                                      stream: (_vendorSearchQuery.isEmpty)
+                                          ? FirebaseFirestore.instance
+                                              .collection('users')
+                                              .where('role',
+                                                  isEqualTo: 'Vendor')
+                                              .where('account_status',
+                                                  isEqualTo: 'pending')
+                                              .snapshots()
+                                          : FirebaseFirestore.instance
+                                              .collection('users')
+                                              .where('role',
+                                                  isEqualTo: 'Vendor')
+                                              .where('account_status',
+                                                  isEqualTo: 'pending')
+                                              .where('display_name',
+                                                  isGreaterThanOrEqualTo:
+                                                      _vendorSearchQuery,
+                                                  isLessThanOrEqualTo:
+                                                      '$_vendorSearchQuery\uf8ff')
+                                              .snapshots(),
                                       builder: (context, snapshot) {
                                         if (snapshot.hasError) {
-                                          return Text(
-                                              'Error: ${snapshot.error}');
-                                        }
-                                        if (snapshot.connectionState ==
-                                            ConnectionState.waiting) {
-                                          return Center(
-                                            child: CircularProgressIndicator(
-                                                color:
-                                                    FlutterFlowTheme.of(context)
-                                                        .tastyCrust),
+                                          return Container(
+                                            padding: EdgeInsets.all(16.0),
+                                            child: Text(
+                                              'Error loading applications: ${snapshot.error}',
+                                              style:
+                                                  FlutterFlowTheme.of(context)
+                                                      .bodyMedium
+                                                      .override(
+                                                        color: Colors.red,
+                                                      ),
+                                            ),
                                           );
                                         }
+
+                                        if (snapshot.connectionState ==
+                                            ConnectionState.waiting) {
+                                          return Container(
+                                            height: 100,
+                                            child: Center(
+                                              child: CircularProgressIndicator(
+                                                color:
+                                                    FlutterFlowTheme.of(context)
+                                                        .tastyCrust,
+                                              ),
+                                            ),
+                                          );
+                                        }
+
                                         if (!snapshot.hasData ||
                                             snapshot.data!.docs.isEmpty) {
-                                          return Text(
-                                              'No pending vendor applications');
+                                          return Container(
+                                            padding: EdgeInsets.all(16.0),
+                                            child: Text(
+                                              _vendorSearchQuery.isEmpty
+                                                  ? 'No pending vendor applications'
+                                                  : 'No applications found matching "$_vendorSearchQuery"',
+                                              style:
+                                                  FlutterFlowTheme.of(context)
+                                                      .bodyMedium,
+                                            ),
+                                          );
                                         }
 
                                         final pendingVendors =
                                             snapshot.data!.docs;
+
                                         return Column(
                                           children: pendingVendors.map((doc) {
                                             final vendorData = doc.data()
@@ -1258,8 +1518,8 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
                                                 : 'N/A';
 
                                             return Padding(
-                                              padding: const EdgeInsets.only(
-                                                  bottom: 12.0),
+                                              padding:
+                                                  EdgeInsets.only(bottom: 12.0),
                                               child: Container(
                                                 decoration: BoxDecoration(
                                                   color: FlutterFlowTheme.of(
@@ -1277,42 +1537,155 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
                                                   ],
                                                 ),
                                                 child: ListTile(
-                                                  title: Text(vendorName),
+                                                  title: Text(
+                                                    vendorName,
+                                                    style: FlutterFlowTheme.of(
+                                                            context)
+                                                        .bodyLarge,
+                                                  ),
                                                   subtitle: Text(
-                                                      'Applied on $createdDate'),
+                                                    'Applied on $createdDate',
+                                                    style: FlutterFlowTheme.of(
+                                                            context)
+                                                        .labelSmall,
+                                                  ),
                                                   trailing: Row(
                                                     mainAxisSize:
                                                         MainAxisSize.min,
                                                     children: [
+                                                      // Accept Button
                                                       TextButton(
                                                         onPressed: () async {
-                                                          await FirebaseFirestore
-                                                              .instance
-                                                              .collection(
-                                                                  'users')
-                                                              .doc(vendorId)
-                                                              .update({
-                                                            'is_approved': true
-                                                          });
+                                                          try {
+                                                            await FirebaseFirestore
+                                                                .instance
+                                                                .collection(
+                                                                    'users')
+                                                                .doc(vendorId)
+                                                                .update({
+                                                              'account_status':
+                                                                  'active'
+                                                            });
+                                                            if (context
+                                                                .mounted) {
+                                                              ScaffoldMessenger
+                                                                      .of(context)
+                                                                  .showSnackBar(
+                                                                SnackBar(
+                                                                  content: Text(
+                                                                      '$vendorName approved'),
+                                                                  backgroundColor:
+                                                                      Colors
+                                                                          .green,
+                                                                ),
+                                                              );
+                                                            }
+                                                          } catch (e) {
+                                                            if (context
+                                                                .mounted) {
+                                                              ScaffoldMessenger
+                                                                      .of(context)
+                                                                  .showSnackBar(
+                                                                SnackBar(
+                                                                  content: Text(
+                                                                      'Error approving vendor: $e'),
+                                                                  backgroundColor:
+                                                                      Colors
+                                                                          .red,
+                                                                ),
+                                                              );
+                                                            }
+                                                          }
                                                         },
-                                                        child: Text('Approve',
-                                                            style: TextStyle(
-                                                                color: Colors
-                                                                    .green)),
+                                                        child: Text(
+                                                          'Accept',
+                                                          style: TextStyle(
+                                                              color:
+                                                                  Colors.green),
+                                                        ),
                                                       ),
+                                                      // Reject Button
                                                       TextButton(
                                                         onPressed: () async {
-                                                          await FirebaseFirestore
-                                                              .instance
-                                                              .collection(
-                                                                  'users')
-                                                              .doc(vendorId)
-                                                              .delete();
+                                                          final confirm =
+                                                              await showDialog<
+                                                                  bool>(
+                                                            context: context,
+                                                            builder:
+                                                                (context) =>
+                                                                    AlertDialog(
+                                                              title: Text(
+                                                                  'Confirm Rejection'),
+                                                              content: Text(
+                                                                  'Are you sure you want to reject $vendorName?'),
+                                                              actions: [
+                                                                TextButton(
+                                                                  onPressed: () =>
+                                                                      Navigator.pop(
+                                                                          context,
+                                                                          false),
+                                                                  child: Text(
+                                                                      'Cancel'),
+                                                                ),
+                                                                TextButton(
+                                                                  onPressed: () =>
+                                                                      Navigator.pop(
+                                                                          context,
+                                                                          true),
+                                                                  child: Text(
+                                                                      'Reject'),
+                                                                ),
+                                                              ],
+                                                            ),
+                                                          );
+
+                                                          if (confirm == true) {
+                                                            try {
+                                                              await FirebaseFirestore
+                                                                  .instance
+                                                                  .collection(
+                                                                      'users')
+                                                                  .doc(vendorId)
+                                                                  .delete();
+
+                                                              if (context
+                                                                  .mounted) {
+                                                                ScaffoldMessenger.of(
+                                                                        context)
+                                                                    .showSnackBar(
+                                                                  SnackBar(
+                                                                    content: Text(
+                                                                        '$vendorName rejected'),
+                                                                    backgroundColor:
+                                                                        Colors
+                                                                            .orange,
+                                                                  ),
+                                                                );
+                                                              }
+                                                            } catch (e) {
+                                                              if (context
+                                                                  .mounted) {
+                                                                ScaffoldMessenger.of(
+                                                                        context)
+                                                                    .showSnackBar(
+                                                                  SnackBar(
+                                                                    content: Text(
+                                                                        'Error rejecting vendor: $e'),
+                                                                    backgroundColor:
+                                                                        Colors
+                                                                            .red,
+                                                                  ),
+                                                                );
+                                                              }
+                                                            }
+                                                          }
                                                         },
-                                                        child: Text('Reject',
-                                                            style: TextStyle(
-                                                                color: Colors
-                                                                    .red)),
+                                                        child: Text(
+                                                          'Reject',
+                                                          style: TextStyle(
+                                                              color:
+                                                                  Colors.red),
+                                                        ),
                                                       ),
                                                     ],
                                                   ),
@@ -1324,37 +1697,93 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
                                       },
                                     ),
 
-                                    // === Accounts Section ===
+                                    // === Vendor Accounts Section ===
                                     Padding(
                                       padding: const EdgeInsets.only(
                                           top: 20.0, bottom: 12.0),
                                       child: Text(
-                                        'Accounts',
+                                        'Vendor Accounts',
                                         style: FlutterFlowTheme.of(context)
-                                            .titleMedium,
+                                            .titleMedium
+                                            .override(
+                                              color:
+                                                  FlutterFlowTheme.of(context)
+                                                      .primaryText,
+                                              letterSpacing: 0.0,
+                                            ),
                                       ),
                                     ),
 
+                                    // Approved Vendors List - Updated to use account_status
                                     StreamBuilder<QuerySnapshot>(
-                                      stream: FirebaseFirestore.instance
-                                          .collection('users')
-                                          .where('role',
-                                              isEqualTo:
-                                                  'Vendor') // ✅ fixed case
-                                          .where('is_approved', isEqualTo: true)
-                                          .snapshots(),
+                                      stream: (_vendorSearchQuery.isEmpty)
+                                          ? FirebaseFirestore.instance
+                                              .collection('users')
+                                              .where('role',
+                                                  isEqualTo: 'Vendor')
+                                              .where('account_status',
+                                                  isEqualTo: 'active')
+                                              .snapshots()
+                                          : FirebaseFirestore.instance
+                                              .collection('users')
+                                              .where('role',
+                                                  isEqualTo: 'Vendor')
+                                              .where('account_status',
+                                                  isEqualTo: 'active')
+                                              .where('display_name',
+                                                  isGreaterThanOrEqualTo:
+                                                      _vendorSearchQuery,
+                                                  isLessThanOrEqualTo:
+                                                      '$_vendorSearchQuery\uf8ff')
+                                              .snapshots(),
                                       builder: (context, snapshot) {
                                         if (snapshot.hasError) {
-                                          return Text(
-                                              'Error: ${snapshot.error}');
+                                          return Container(
+                                            padding: const EdgeInsets.all(16.0),
+                                            child: Text(
+                                              'Error loading vendor accounts: ${snapshot.error}',
+                                              style:
+                                                  FlutterFlowTheme.of(context)
+                                                      .bodyMedium
+                                                      .override(
+                                                        color: Colors.red,
+                                                      ),
+                                            ),
+                                          );
                                         }
+
+                                        if (snapshot.connectionState ==
+                                            ConnectionState.waiting) {
+                                          return Container(
+                                            height: 100,
+                                            child: Center(
+                                              child: CircularProgressIndicator(
+                                                color:
+                                                    FlutterFlowTheme.of(context)
+                                                        .tastyCrust,
+                                              ),
+                                            ),
+                                          );
+                                        }
+
                                         if (!snapshot.hasData ||
                                             snapshot.data!.docs.isEmpty) {
-                                          return Text('No vendor accounts');
+                                          return Container(
+                                            padding: const EdgeInsets.all(16.0),
+                                            child: Text(
+                                              _vendorSearchQuery.isEmpty
+                                                  ? 'No vendor accounts'
+                                                  : 'No vendor accounts found matching "$_vendorSearchQuery"',
+                                              style:
+                                                  FlutterFlowTheme.of(context)
+                                                      .bodyMedium,
+                                            ),
+                                          );
                                         }
 
                                         final approvedVendors =
                                             snapshot.data!.docs;
+
                                         return Column(
                                           children: approvedVendors.map((doc) {
                                             final vendorData = doc.data()
@@ -1363,11 +1792,21 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
                                             final vendorName =
                                                 vendorData['display_name'] ??
                                                     'Unnamed';
+                                            final joinedDate = vendorData[
+                                                        'created_time'] !=
+                                                    null
+                                                ? (vendorData['created_time']
+                                                        as Timestamp)
+                                                    .toDate()
+                                                    .toString()
+                                                    .split(' ')[0]
+                                                : 'N/A';
 
                                             return Padding(
                                               padding: const EdgeInsets.only(
                                                   bottom: 12.0),
                                               child: Container(
+                                                height: 70.0,
                                                 decoration: BoxDecoration(
                                                   color: FlutterFlowTheme.of(
                                                           context)
@@ -1375,73 +1814,188 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
                                                   borderRadius:
                                                       BorderRadius.circular(
                                                           12.0),
-                                                  boxShadow: [
+                                                  boxShadow: const [
                                                     BoxShadow(
-                                                      color: Colors.black12,
-                                                      blurRadius: 4,
-                                                      offset: Offset(0, 2),
-                                                    )
+                                                      blurRadius: 3.0,
+                                                      color: Color(0x33000000),
+                                                      offset: Offset(0.0, 1.0),
+                                                    ),
                                                   ],
                                                 ),
-                                                child: ListTile(
-                                                  title: Text(vendorName),
-                                                  subtitle: Text(
-                                                      'Active vendor account'),
-                                                  trailing: GestureDetector(
-                                                    onTap: () async {
-                                                      await FirebaseFirestore
-                                                          .instance
-                                                          .collection('users')
-                                                          .doc(vendorId)
-                                                          .update({
-                                                        'is_approved': false
-                                                      });
-                                                    },
-                                                    child: Container(
-                                                      height: 36,
-                                                      decoration: BoxDecoration(
-                                                        color:
-                                                            FlutterFlowTheme.of(
-                                                                    context)
-                                                                .underground,
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(8),
-                                                        boxShadow: [
-                                                          BoxShadow(
-                                                            blurRadius: 4,
-                                                            color: Color(
-                                                                0x33000000),
-                                                            offset:
-                                                                Offset(0, 2),
-                                                          ),
-                                                        ],
-                                                        border: Border.all(
-                                                          color: FlutterFlowTheme
-                                                                  .of(context)
-                                                              .blankCanvas,
-                                                          width: 2,
+                                                child: Padding(
+                                                  padding: EdgeInsets.symmetric(
+                                                      horizontal: 12.0),
+                                                  child: Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .spaceBetween,
+                                                    children: [
+                                                      // Left: Vendor Info
+                                                      Expanded(
+                                                        child: Column(
+                                                          mainAxisAlignment:
+                                                              MainAxisAlignment
+                                                                  .center,
+                                                          crossAxisAlignment:
+                                                              CrossAxisAlignment
+                                                                  .start,
+                                                          children: [
+                                                            Text(
+                                                              vendorName,
+                                                              style: FlutterFlowTheme
+                                                                      .of(context)
+                                                                  .bodyLarge,
+                                                              overflow:
+                                                                  TextOverflow
+                                                                      .ellipsis,
+                                                            ),
+                                                            SizedBox(
+                                                                height: 4.0),
+                                                            Text(
+                                                              'Vendor • Joined $joinedDate',
+                                                              style: FlutterFlowTheme
+                                                                      .of(context)
+                                                                  .labelSmall,
+                                                              overflow:
+                                                                  TextOverflow
+                                                                      .ellipsis,
+                                                            ),
+                                                          ],
                                                         ),
                                                       ),
-                                                      padding: const EdgeInsets
-                                                          .symmetric(
-                                                          horizontal: 12.0),
-                                                      child: Center(
-                                                        child: Text(
-                                                          'Suspend',
-                                                          style: FlutterFlowTheme
-                                                                  .of(context)
-                                                              .bodyMedium
-                                                              .override(
-                                                                font: GoogleFonts
-                                                                    .inter(),
-                                                                color: FlutterFlowTheme.of(
+                                                      // Right: Suspend Button
+                                                      InkWell(
+                                                        onTap: () async {
+                                                          final confirm =
+                                                              await showDialog<
+                                                                  bool>(
+                                                            context: context,
+                                                            builder:
+                                                                (context) =>
+                                                                    AlertDialog(
+                                                              title: const Text(
+                                                                  'Confirm Suspension'),
+                                                              content: Text(
+                                                                  'Suspend $vendorName\'s account?'),
+                                                              actions: [
+                                                                TextButton(
+                                                                  onPressed: () =>
+                                                                      Navigator.pop(
+                                                                          context,
+                                                                          false),
+                                                                  child: const Text(
+                                                                      'Cancel'),
+                                                                ),
+                                                                TextButton(
+                                                                  onPressed: () =>
+                                                                      Navigator.pop(
+                                                                          context,
+                                                                          true),
+                                                                  child:
+                                                                      const Text(
+                                                                    'Suspend',
+                                                                    style: TextStyle(
+                                                                        color: Colors
+                                                                            .red),
+                                                                  ),
+                                                                ),
+                                                              ],
+                                                            ),
+                                                          );
+
+                                                          if (confirm == true) {
+                                                            try {
+                                                              await FirebaseFirestore
+                                                                  .instance
+                                                                  .collection(
+                                                                      'users')
+                                                                  .doc(vendorId)
+                                                                  .update({
+                                                                'account_status':
+                                                                    'suspended'
+                                                              });
+                                                              if (context
+                                                                  .mounted) {
+                                                                ScaffoldMessenger.of(
                                                                         context)
-                                                                    .white,
+                                                                    .showSnackBar(
+                                                                  SnackBar(
+                                                                    content: Text(
+                                                                        '$vendorName suspended'),
+                                                                    backgroundColor:
+                                                                        Colors
+                                                                            .orange,
+                                                                  ),
+                                                                );
+                                                              }
+                                                            } catch (e) {
+                                                              if (context
+                                                                  .mounted) {
+                                                                ScaffoldMessenger.of(
+                                                                        context)
+                                                                    .showSnackBar(
+                                                                  SnackBar(
+                                                                    content: Text(
+                                                                        'Error suspending vendor: $e'),
+                                                                    backgroundColor:
+                                                                        Colors
+                                                                            .red,
+                                                                  ),
+                                                                );
+                                                              }
+                                                            }
+                                                          }
+                                                        },
+                                                        child: Container(
+                                                          height: 36.0,
+                                                          decoration:
+                                                              BoxDecoration(
+                                                            color: FlutterFlowTheme
+                                                                    .of(context)
+                                                                .underground,
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        8.0),
+                                                            boxShadow: const [
+                                                              BoxShadow(
+                                                                blurRadius: 4.0,
+                                                                color: Color(
+                                                                    0x33000000),
+                                                                offset: Offset(
+                                                                    0.0, 2.0),
                                                               ),
+                                                            ],
+                                                            border: Border.all(
+                                                              color: FlutterFlowTheme
+                                                                      .of(context)
+                                                                  .blankCanvas,
+                                                              width: 2.0,
+                                                            ),
+                                                          ),
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .symmetric(
+                                                                  horizontal:
+                                                                      12.0),
+                                                          child: Center(
+                                                            child: Text(
+                                                              'Suspend',
+                                                              style: FlutterFlowTheme
+                                                                      .of(context)
+                                                                  .bodyMedium
+                                                                  .override(
+                                                                    font: GoogleFonts
+                                                                        .inter(),
+                                                                    color: FlutterFlowTheme.of(
+                                                                            context)
+                                                                        .white,
+                                                                  ),
+                                                            ),
+                                                          ),
                                                         ),
                                                       ),
-                                                    ),
+                                                    ],
                                                   ),
                                                 ),
                                               ),
@@ -1450,6 +2004,9 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
                                         );
                                       },
                                     ),
+
+                                    // Add some bottom padding
+                                    SizedBox(height: 20.0),
                                   ],
                                 ),
                               ),

@@ -97,7 +97,7 @@ class _AdminDashboardWidgetState extends State<AdminDashboardWidget>
           ),
           actions: [
             Padding(
-              padding: EdgeInsetsDirectional.fromSTEB(0.0, 0.0, 12.0, 0.0),
+              padding: EdgeInsetsDirectional.fromSTEB(0.0, 0.0, 8.0, 0.0),
               child: FlutterFlowIconButton(
                 borderColor: Colors.transparent,
                 borderRadius: 30.0,
@@ -109,7 +109,51 @@ class _AdminDashboardWidgetState extends State<AdminDashboardWidget>
                   size: 30.0,
                 ),
                 onPressed: () {
-                  print('IconButton pressed ...');
+                  print('Profile pressed ...');
+                },
+              ),
+            ),
+            Padding(
+              padding: EdgeInsetsDirectional.fromSTEB(0.0, 0.0, 12.0, 0.0),
+              child: FlutterFlowIconButton(
+                borderColor: Colors.transparent,
+                borderRadius: 30.0,
+                borderWidth: 1.0,
+                buttonSize: 60.0,
+                icon: Icon(
+                  Icons.logout,
+                  color: FlutterFlowTheme.of(context).blankCanvas,
+                  size: 26.0,
+                ),
+                onPressed: () async {
+                  // Show confirmation dialog
+                  final shouldLogout = await showDialog<bool>(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: Text('Logout'),
+                        content: Text('Are you sure you want to logout?'),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(false),
+                            child: Text('Cancel'),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(true),
+                            child: Text('Logout'),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+
+                  if (shouldLogout == true) {
+                    // Add your logout logic here
+                    // For example:
+                    // await FirebaseAuth.instance.signOut();
+                    context.pushReplacementNamed('LoginPage');
+                    print('User logged out');
+                  }
                 },
               ),
             ),
@@ -153,7 +197,7 @@ class _AdminDashboardWidgetState extends State<AdminDashboardWidget>
           top: true,
           child: SingleChildScrollView(
             child: Column(
-              mainAxisSize: MainAxisSize.max,
+              mainAxisSize: MainAxisSize.min, // Changed from max to min
               children: [
                 Container(
                   width: double.infinity,
@@ -227,8 +271,8 @@ class _AdminDashboardWidgetState extends State<AdminDashboardWidget>
                                                 .collection('users')
                                                 .where('role',
                                                     isEqualTo: 'User')
-                                                .where('is_approved',
-                                                    isEqualTo: true)
+                                                .where('account_status',
+                                                    isEqualTo: 'active')
                                                 .snapshots(),
                                             builder: (context, snapshot) {
                                               if (!snapshot.hasData) {
@@ -365,9 +409,8 @@ class _AdminDashboardWidgetState extends State<AdminDashboardWidget>
                                                 .collection('users')
                                                 .where('role',
                                                     isEqualTo: 'Vendor')
-                                                .where('is_approved',
-                                                    isEqualTo:
-                                                        true) // Only approved vendors
+                                                .where('account_status',
+                                                    isEqualTo: 'active')
                                                 .snapshots(),
                                             builder: (context, snapshot) {
                                               if (!snapshot.hasData) {
@@ -512,13 +555,13 @@ class _AdminDashboardWidgetState extends State<AdminDashboardWidget>
                       ),
                       const SizedBox(height: 12.0),
 
-                      // Urgent task list
+                      // Urgent task list - Updated to use account_status
                       StreamBuilder<QuerySnapshot>(
                         stream: FirebaseFirestore.instance
                             .collection('users')
-                            .where('role', isEqualTo: 'Vendor')
-                            .where('is_approved', isEqualTo: false)
-                            .snapshots(),
+                            .where('account_status', isEqualTo: 'pending')
+                            .where('role',
+                                whereIn: ['Vendor', 'Admin']).snapshots(),
                         builder: (context, snapshot) {
                           if (!snapshot.hasData) {
                             return Center(child: CircularProgressIndicator());
@@ -531,7 +574,7 @@ class _AdminDashboardWidgetState extends State<AdminDashboardWidget>
                               padding: EdgeInsetsDirectional.fromSTEB(
                                   16.0, 8.0, 0.0, 12.0),
                               child: Text(
-                                'No urgent tasks right now.',
+                                'No pending approvals right now.',
                                 style: FlutterFlowTheme.of(context).labelMedium,
                               ),
                             );
@@ -543,8 +586,10 @@ class _AdminDashboardWidgetState extends State<AdminDashboardWidget>
                             itemCount: tasks.length,
                             itemBuilder: (context, index) {
                               final task = tasks[index];
-                              final vendorName =
-                                  task['name'] ?? 'Unknown Vendor';
+                              final data = task.data() as Map<String, dynamic>;
+                              final userName =
+                                  data['display_name'] ?? 'Unknown User';
+                              final userRole = data['role'] ?? 'Unknown';
 
                               return Padding(
                                 padding: const EdgeInsetsDirectional.fromSTEB(
@@ -556,35 +601,90 @@ class _AdminDashboardWidgetState extends State<AdminDashboardWidget>
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: ListTile(
-                                    leading: Icon(Icons.warning_amber,
-                                        color: Colors.redAccent, size: 28),
+                                    leading: Icon(
+                                        userRole == 'Vendor'
+                                            ? Icons.store
+                                            : Icons.admin_panel_settings,
+                                        color: Colors.orange,
+                                        size: 28),
                                     title: Text(
-                                      'Pending Vendor Approval',
+                                      'Pending $userRole Approval',
                                       style: FlutterFlowTheme.of(context)
                                           .bodyLarge,
                                     ),
-                                    subtitle: Text('Vendor: $vendorName'),
+                                    subtitle: Text('$userRole: $userName'),
                                     trailing: Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         IconButton(
                                           icon: Icon(Icons.check_circle,
-                                              color: Colors.green),
-                                          onPressed: () {
-                                            FirebaseFirestore.instance
+                                              color: Colors.green, size: 30),
+                                          onPressed: () async {
+                                            await FirebaseFirestore.instance
                                                 .collection('users')
                                                 .doc(task.id)
-                                                .update({'is_approved': true});
+                                                .update({
+                                              'account_status': 'active'
+                                            });
+
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(
+                                              SnackBar(
+                                                  content: Text(
+                                                      '$userRole approved successfully!')),
+                                            );
                                           },
                                         ),
                                         IconButton(
-                                          icon: Icon(Icons.cancel,
-                                              color: Colors.red),
-                                          onPressed: () {
-                                            FirebaseFirestore.instance
-                                                .collection('users')
-                                                .doc(task.id)
-                                                .delete();
+                                          icon: Icon(Icons.block,
+                                              color: Colors.red, size: 30),
+                                          onPressed: () async {
+                                            // Show confirmation dialog before suspending
+                                            final shouldSuspend =
+                                                await showDialog<bool>(
+                                              context: context,
+                                              builder: (BuildContext context) {
+                                                return AlertDialog(
+                                                  title:
+                                                      Text('Suspend Account'),
+                                                  content: Text(
+                                                      'Are you sure you want to suspend this $userRole account?'),
+                                                  actions: [
+                                                    TextButton(
+                                                      onPressed: () =>
+                                                          Navigator.of(context)
+                                                              .pop(false),
+                                                      child: Text('Cancel'),
+                                                    ),
+                                                    TextButton(
+                                                      onPressed: () =>
+                                                          Navigator.of(context)
+                                                              .pop(true),
+                                                      child: Text('Suspend',
+                                                          style: TextStyle(
+                                                              color:
+                                                                  Colors.red)),
+                                                    ),
+                                                  ],
+                                                );
+                                              },
+                                            );
+
+                                            if (shouldSuspend == true) {
+                                              await FirebaseFirestore.instance
+                                                  .collection('users')
+                                                  .doc(task.id)
+                                                  .update({
+                                                'account_status': 'suspended'
+                                              });
+
+                                              ScaffoldMessenger.of(context)
+                                                  .showSnackBar(
+                                                SnackBar(
+                                                    content: Text(
+                                                        '$userRole account suspended.')),
+                                              );
+                                            }
                                           },
                                         ),
                                       ],
@@ -627,76 +727,103 @@ class _AdminDashboardWidgetState extends State<AdminDashboardWidget>
                         ),
                       ),
                       SizedBox(height: 10),
-                      Container(
-                        height:
-                            350, // ✅ set desired height for your scroll area
-                        child: StreamBuilder<QuerySnapshot>(
-                          stream: FirebaseFirestore.instance
-                              .collection('users')
-                              .orderBy('created_time', descending: true)
-                              .limit(10)
-                              .snapshots(),
-                          builder: (context, snapshot) {
-                            if (!snapshot.hasData) {
-                              return Center(child: CircularProgressIndicator());
-                            }
+                      // Removed the fixed height Container - this was causing the gap
+                      StreamBuilder<QuerySnapshot>(
+                        stream: FirebaseFirestore.instance
+                            .collection('users')
+                            .orderBy('created_time', descending: true)
+                            .limit(10)
+                            .snapshots(),
+                        builder: (context, snapshot) {
+                          if (!snapshot.hasData) {
+                            return Center(child: CircularProgressIndicator());
+                          }
 
-                            final docs = snapshot.data!.docs;
+                          final docs = snapshot.data!.docs;
 
-                            return ListView.builder(
-                              itemCount: docs.length,
-                              itemBuilder: (context, index) {
-                                final data =
-                                    docs[index].data() as Map<String, dynamic>;
-                                final createdTime =
-                                    (data['created_time'] as Timestamp)
-                                        .toDate();
-                                final role = data['role'] ?? 'Unknown';
-                                final name =
-                                    data['display_name'] ?? 'Unnamed User';
+                          return ListView.builder(
+                            shrinkWrap:
+                                true, // This allows ListView to take only the space it needs
+                            physics:
+                                NeverScrollableScrollPhysics(), // Disables ListView's own scrolling
+                            itemCount: docs.length,
+                            itemBuilder: (context, index) {
+                              final data =
+                                  docs[index].data() as Map<String, dynamic>;
+                              final createdTime =
+                                  (data['created_time'] as Timestamp).toDate();
+                              final role = data['role'] ?? 'Unknown';
+                              final name =
+                                  data['display_name'] ?? 'Unnamed User';
+                              final accountStatus =
+                                  data['account_status'] ?? 'unknown';
 
-                                return Container(
-                                  margin: const EdgeInsets.symmetric(
-                                      vertical: 5, horizontal: 10),
-                                  padding: const EdgeInsets.all(12),
-                                  decoration: BoxDecoration(
+                              return Container(
+                                margin: const EdgeInsets.symmetric(
+                                    vertical: 5, horizontal: 10),
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color:
+                                      FlutterFlowTheme.of(context).blankCanvas,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
                                     color: FlutterFlowTheme.of(context)
-                                        .blankCanvas,
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(
+                                        .secondaryText,
+                                    width: 0.5,
+                                  ),
+                                  boxShadow: const [
+                                    BoxShadow(
+                                      blurRadius: 4.0,
+                                      color: Color(0x33000000),
+                                      offset: Offset(0, 2),
+                                    )
+                                  ],
+                                ),
+                                child: ListTile(
+                                  leading: Icon(
+                                      role == 'Vendor'
+                                          ? Icons.store
+                                          : role == 'Admin'
+                                              ? Icons.admin_panel_settings
+                                              : Icons.person,
                                       color: FlutterFlowTheme.of(context)
-                                          .secondaryText,
-                                      width: 0.5,
-                                    ),
-                                    boxShadow: const [
-                                      BoxShadow(
-                                        blurRadius: 4.0,
-                                        color: Color(0x33000000),
-                                        offset: Offset(0, 2),
-                                      )
+                                          .northAtlantic),
+                                  title: Text(
+                                    "New $role signed up: $name",
+                                    style:
+                                        FlutterFlowTheme.of(context).titleSmall,
+                                  ),
+                                  subtitle: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        timeDifference(createdTime),
+                                        style: FlutterFlowTheme.of(context)
+                                            .bodyMedium,
+                                      ),
+                                      Text(
+                                        'Status: ${accountStatus.toUpperCase()}',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: accountStatus == 'active'
+                                              ? Colors.green
+                                              : accountStatus == 'pending'
+                                                  ? Colors.orange
+                                                  : Colors.red,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
                                     ],
                                   ),
-                                  child: ListTile(
-                                    leading: Icon(Icons.person,
-                                        color: FlutterFlowTheme.of(context)
-                                            .northAtlantic),
-                                    title: Text(
-                                      "New $role signed up: $name",
-                                      style: FlutterFlowTheme.of(context)
-                                          .titleSmall,
-                                    ),
-                                    subtitle: Text(
-                                      timeDifference(createdTime),
-                                      style: FlutterFlowTheme.of(context)
-                                          .bodyMedium,
-                                    ),
-                                  ),
-                                );
-                              },
-                            );
-                          },
-                        ),
+                                ),
+                              );
+                            },
+                          );
+                        },
                       ),
+                      // Add some bottom padding to give space from the bottom nav bar
+                      SizedBox(height: 20),
                     ],
                   ),
                 ),
