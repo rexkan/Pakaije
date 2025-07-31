@@ -7,6 +7,7 @@ import '/index.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'login_page_model.dart';
 export 'login_page_model.dart';
 
@@ -502,6 +503,78 @@ class _LoginPageWidgetState extends State<LoginPageWidget> {
                                                 return;
                                               }
 
+                                              // Get the current Firebase user to check email verification
+                                              final firebaseUser = FirebaseAuth
+                                                  .instance.currentUser;
+                                              if (firebaseUser != null) {
+                                                await firebaseUser
+                                                    .reload(); // Refresh user data
+
+                                                if (!firebaseUser
+                                                    .emailVerified) {
+                                                  // Sign out the user since email is not verified
+                                                  await FirebaseAuth.instance
+                                                      .signOut();
+
+                                                  showDialog(
+                                                    context: context,
+                                                    builder: (_) => AlertDialog(
+                                                      title: Text(
+                                                          'Email Not Verified'),
+                                                      content: Column(
+                                                        mainAxisSize:
+                                                            MainAxisSize.min,
+                                                        children: [
+                                                          Text(
+                                                              'Please verify your email before signing in.'),
+                                                          SizedBox(height: 12),
+                                                          Text(
+                                                              'Check your email inbox and click the verification link.'),
+                                                        ],
+                                                      ),
+                                                      actions: [
+                                                        TextButton(
+                                                          onPressed: () async {
+                                                            try {
+                                                              await firebaseUser
+                                                                  .sendEmailVerification();
+                                                              Navigator.of(
+                                                                      context)
+                                                                  .pop();
+                                                              ScaffoldMessenger
+                                                                      .of(context)
+                                                                  .showSnackBar(
+                                                                SnackBar(
+                                                                    content: Text(
+                                                                        'Verification email sent!')),
+                                                              );
+                                                            } catch (e) {
+                                                              ScaffoldMessenger
+                                                                      .of(context)
+                                                                  .showSnackBar(
+                                                                SnackBar(
+                                                                    content: Text(
+                                                                        'Failed to send verification email: $e')),
+                                                              );
+                                                            }
+                                                          },
+                                                          child: Text(
+                                                              'Resend Email'),
+                                                        ),
+                                                        TextButton(
+                                                          onPressed: () =>
+                                                              Navigator.of(
+                                                                      context)
+                                                                  .pop(),
+                                                          child: Text('OK'),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  );
+                                                  return;
+                                                }
+                                              }
+
                                               _model.currentUserDoc =
                                                   await UsersRecord
                                                       .getDocumentOnce(
@@ -521,13 +594,24 @@ class _LoginPageWidgetState extends State<LoginPageWidget> {
                                               final role = _model
                                                   .currentUserDoc?.role
                                                   ?.toLowerCase();
-                                              final isApproved = _model
-                                                      .currentUserDoc
-                                                      ?.isApproved ??
-                                                  false;
+                                              final accountStatus = _model
+                                                  .currentUserDoc?.accountStatus
+                                                  ?.toLowerCase();
+
+                                              // Check if account is suspended
+                                              if (accountStatus ==
+                                                  'suspended') {
+                                                ScaffoldMessenger.of(context)
+                                                    .showSnackBar(
+                                                  SnackBar(
+                                                      content: Text(
+                                                          'Your account has been suspended. Please contact support.')),
+                                                );
+                                                return;
+                                              }
 
                                               if (role == 'admin') {
-                                                if (!isApproved) {
+                                                if (accountStatus != 'active') {
                                                   ScaffoldMessenger.of(context)
                                                       .showSnackBar(
                                                     SnackBar(
@@ -541,7 +625,7 @@ class _LoginPageWidgetState extends State<LoginPageWidget> {
                                                         .routeName,
                                                     context.mounted);
                                               } else if (role == 'vendor') {
-                                                if (!isApproved) {
+                                                if (accountStatus != 'active') {
                                                   ScaffoldMessenger.of(context)
                                                       .showSnackBar(
                                                     SnackBar(
@@ -555,6 +639,16 @@ class _LoginPageWidgetState extends State<LoginPageWidget> {
                                                         .routeName,
                                                     context.mounted);
                                               } else if (role == 'user') {
+                                                // Users should have 'active' status by default, but check just in case
+                                                if (accountStatus != 'active') {
+                                                  ScaffoldMessenger.of(context)
+                                                      .showSnackBar(
+                                                    SnackBar(
+                                                        content: Text(
+                                                            'Your account is not active. Please contact support.')),
+                                                  );
+                                                  return;
+                                                }
                                                 context.pushNamedAuth(
                                                     HomePageWidget.routeName,
                                                     context.mounted);
