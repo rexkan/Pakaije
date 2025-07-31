@@ -639,15 +639,25 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                 smartSuggestion,
                                                 style: FlutterFlowTheme.of(
                                                         context)
-                                                    .bodyMedium
+                                                    .titleSmall
                                                     .override(
-                                                      font: GoogleFonts.inter(),
+                                                      font: GoogleFonts.inter(
+                                                        fontWeight:
+                                                            FlutterFlowTheme.of(
+                                                                    context)
+                                                                .titleSmall
+                                                                .fontWeight,
+                                                        fontStyle:
+                                                            FlutterFlowTheme.of(
+                                                                    context)
+                                                                .titleSmall
+                                                                .fontStyle,
+                                                      ),
                                                       color:
                                                           FlutterFlowTheme.of(
                                                                   context)
                                                               .underground,
                                                       letterSpacing: 0.0,
-                                                      fontSize: 13.0,
                                                       lineHeight: 1.4,
                                                     ),
                                               ),
