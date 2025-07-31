@@ -35,5 +35,5 @@ export '/vendor/manage_discount_codes/manage_discount_codes_widget.dart'
     show ManageDiscountCodesWidget;
 export '/vendor/setting_buy_links/setting_buy_links_widget.dart'
     show SettingBuyLinksWidget;
-export '/product_details_page/product_details_page_widget.dart'
+export 'user/product_details_page/product_details_page_widget.dart'
     show ProductDetailsPageWidget;
