@@ -63,7 +63,6 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
   late Animation<double> _fadeAnimation;
   
   // Search and filter state
-  String _searchQuery = '';
   String _selectedCategory = 'All';
   bool _isGridView = true;
 
@@ -239,14 +238,14 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
           'w55wjj9s' /* Trending Items */,
         ),
         style: FlutterFlowTheme.of(context).displaySmall.override(
-          font: GoogleFonts.interTight(),
+          fontFamily: GoogleFonts.interTight().fontFamily,
           color: FlutterFlowTheme.of(context).white,
           fontSize: 24.0,
           letterSpacing: 0.0,
           fontWeight: FontWeight.w600,
         ),
       ),
-      actions: [],
+      actions: const [],
       centerTitle: true,
       elevation: 2.0,
     );
@@ -326,6 +325,7 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
           child: Text(
             category,
             style: FlutterFlowTheme.of(context).bodyMedium.override(
+              fontFamily: GoogleFonts.inter().fontFamily,
               color: isSelected 
                   ? Colors.white
                   : FlutterFlowTheme.of(context).primaryText,
@@ -498,19 +498,21 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
           Text(
             'No items found',
             style: FlutterFlowTheme.of(context).headlineSmall.override(
+              fontFamily: GoogleFonts.interTight().fontFamily,
               color: FlutterFlowTheme.of(context).primaryText,
               fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 8.0),
           Text(
-            'Try adjusting your search or filters',
+            'Try adjusting your filters',
             style: FlutterFlowTheme.of(context).bodyMedium.override(
+              fontFamily: GoogleFonts.inter().fontFamily,
               color: FlutterFlowTheme.of(context).secondaryText,
             ),
           ),
           const SizedBox(height: 24.0),
-                      ElevatedButton(
+          ElevatedButton(
             onPressed: () {
               setState(() {
                 _selectedCategory = 'All';
@@ -523,7 +525,7 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
                 borderRadius: BorderRadius.circular(20.0),
               ),
             ),
-            child: Text(
+            child: const Text(
               'Clear Filters',
               style: TextStyle(color: Colors.white),
             ),
@@ -536,7 +538,29 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
   Widget _buildEnhancedClothingCard(ClothingItem item) {
     return GestureDetector(
       onTap: () {
-        // Navigate to item details with hero animation
+        // Convert ClothingItem to Map for FlutterFlow navigation
+        final itemMap = {
+          'id': item.id,
+          'name': item.name,
+          'description': item.description,
+          'price': item.price,
+          'originalPrice': item.originalPrice,
+          'imagePath': item.imagePath,
+          'colors': item.colors,
+          'sizes': item.sizes,
+          'rating': item.rating,
+          'reviewCount': item.reviewCount,
+          'category': item.category,
+          'isNew': item.isNew,
+          'isOnSale': item.isOnSale,
+          'discountPercent': item.discountPercent,
+          'brand': item.brand,
+        };
+        
+        context.pushNamed(
+          'ProductDetailsPage',
+          extra: itemMap,
+        );
       },
       child: Container(
         decoration: BoxDecoration(
@@ -559,8 +583,8 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
               flex: 4,
               child: Container(
                 width: double.infinity,
-                decoration: BoxDecoration(
-                  borderRadius: const BorderRadius.only(
+                decoration: const BoxDecoration(
+                  borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(20.0),
                     topRight: Radius.circular(20.0),
                   ),
@@ -624,6 +648,7 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
                   Text(
                     item.name,
                     style: FlutterFlowTheme.of(context).bodyLarge.override(
+                      fontFamily: GoogleFonts.inter().fontFamily,
                       fontWeight: FontWeight.w600,
                       letterSpacing: 0.0,
                       fontSize: 16.0,
@@ -635,6 +660,7 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
                   Text(
                     item.description,
                     style: FlutterFlowTheme.of(context).bodySmall.override(
+                      fontFamily: GoogleFonts.inter().fontFamily,
                       color: FlutterFlowTheme.of(context).secondaryText,
                       letterSpacing: 0.0,
                       fontSize: 12.0,
@@ -652,6 +678,7 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
                         Text(
                           item.originalPrice,
                           style: FlutterFlowTheme.of(context).bodySmall.override(
+                            fontFamily: GoogleFonts.inter().fontFamily,
                             color: FlutterFlowTheme.of(context).secondaryText,
                             fontSize: 12.0,
                             decoration: TextDecoration.lineThrough,
@@ -662,6 +689,7 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
                       Text(
                         item.price,
                         style: FlutterFlowTheme.of(context).headlineSmall.override(
+                          fontFamily: GoogleFonts.interTight().fontFamily,
                           color: FlutterFlowTheme.of(context).underground,
                           fontSize: 18.0,
                           fontWeight: FontWeight.bold,
@@ -680,130 +708,164 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
   }
 
   Widget _buildListClothingCard(ClothingItem item) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16.0),
-      decoration: BoxDecoration(
-        color: FlutterFlowTheme.of(context).secondaryBackground,
-        borderRadius: BorderRadius.circular(16.0),
-        boxShadow: [
-          BoxShadow(
-            blurRadius: 8.0,
-            color: Colors.black.withOpacity(0.06),
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Row(
-          children: [
-            // Image
-            Container(
-              width: 100.0,
-              height: 100.0,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12.0),
-              ),
-              child: Stack(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(12.0),
-                    child: Image.asset(
-                      item.imagePath,
-                      width: 100.0,
-                      height: 100.0,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          color: FlutterFlowTheme.of(context).alternate,
-                          child: Icon(
-                            Icons.image_not_supported,
-                            size: 30.0,
-                            color: FlutterFlowTheme.of(context).secondaryText,
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  // Badges
-                  if (item.isNew || item.isOnSale)
-                    Positioned(
-                      top: 8.0,
-                      left: 8.0,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (item.isNew) _buildBadge('NEW', Colors.green),
-                          if (item.isOnSale) 
-                            Padding(
-                              padding: const EdgeInsets.only(top: 2.0),
-                              child: _buildBadge('-${item.discountPercent}%', Colors.red),
-                            ),
-                        ],
-                      ),
-                    ),
-                ],
-              ),
-            ),
-            
-            const SizedBox(width: 16.0),
-            
-            // Content
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    item.name,
-                    style: FlutterFlowTheme.of(context).bodyLarge.override(
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.0,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4.0),
-                  Text(
-                    item.description,
-                    style: FlutterFlowTheme.of(context).bodySmall.override(
-                      color: FlutterFlowTheme.of(context).secondaryText,
-                      letterSpacing: 0.0,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
-            
-            // Price Section only
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                if (item.originalPrice.isNotEmpty && item.isOnSale) ...[
-                  Text(
-                    item.originalPrice,
-                    style: FlutterFlowTheme.of(context).bodySmall.override(
-                      color: FlutterFlowTheme.of(context).secondaryText,
-                      fontSize: 12.0,
-                      decoration: TextDecoration.lineThrough,
-                    ),
-                  ),
-                  const SizedBox(height: 4.0),
-                ],
-                Text(
-                  item.price,
-                  style: FlutterFlowTheme.of(context).headlineSmall.override(
-                    color: FlutterFlowTheme.of(context).underground,
-                    fontSize: 18.0,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 0.0,
-                  ),
-                ),
-              ],
+    return GestureDetector(
+      onTap: () {
+        // Convert ClothingItem to Map for FlutterFlow navigation
+        final itemMap = {
+          'id': item.id,
+          'name': item.name,
+          'description': item.description,
+          'price': item.price,
+          'originalPrice': item.originalPrice,
+          'imagePath': item.imagePath,
+          'colors': item.colors,
+          'sizes': item.sizes,
+          'rating': item.rating,
+          'reviewCount': item.reviewCount,
+          'category': item.category,
+          'isNew': item.isNew,
+          'isOnSale': item.isOnSale,
+          'discountPercent': item.discountPercent,
+          'brand': item.brand,
+        };
+        
+        context.pushNamed(
+          'ProductDetailsPage',
+          extra: itemMap,
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16.0),
+        decoration: BoxDecoration(
+          color: FlutterFlowTheme.of(context).secondaryBackground,
+          borderRadius: BorderRadius.circular(16.0),
+          boxShadow: [
+            BoxShadow(
+              blurRadius: 8.0,
+              color: Colors.black.withOpacity(0.06),
+              offset: const Offset(0, 4),
             ),
           ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: Row(
+            children: [
+              // Image
+              Container(
+                width: 100.0,
+                height: 100.0,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12.0),
+                ),
+                child: Stack(
+                  children: [
+                    Hero(
+                      tag: 'item-${item.id}',
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12.0),
+                        child: Image.asset(
+                          item.imagePath,
+                          width: 100.0,
+                          height: 100.0,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              color: FlutterFlowTheme.of(context).alternate,
+                              child: Icon(
+                                Icons.image_not_supported,
+                                size: 30.0,
+                                color: FlutterFlowTheme.of(context).secondaryText,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                    // Badges
+                    if (item.isNew || item.isOnSale)
+                      Positioned(
+                        top: 8.0,
+                        left: 8.0,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (item.isNew) _buildBadge('NEW', Colors.green),
+                            if (item.isOnSale) 
+                              Padding(
+                                padding: const EdgeInsets.only(top: 2.0),
+                                child: _buildBadge('-${item.discountPercent}%', Colors.red),
+                              ),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              
+              const SizedBox(width: 16.0),
+              
+              // Content
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item.name,
+                      style: FlutterFlowTheme.of(context).bodyLarge.override(
+                        fontFamily: GoogleFonts.inter().fontFamily,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.0,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4.0),
+                    Text(
+                      item.description,
+                      style: FlutterFlowTheme.of(context).bodySmall.override(
+                        fontFamily: GoogleFonts.inter().fontFamily,
+                        color: FlutterFlowTheme.of(context).secondaryText,
+                        letterSpacing: 0.0,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              
+              // Price Section only
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (item.originalPrice.isNotEmpty && item.isOnSale) ...[
+                    Text(
+                      item.originalPrice,
+                      style: FlutterFlowTheme.of(context).bodySmall.override(
+                        fontFamily: GoogleFonts.inter().fontFamily,
+                        color: FlutterFlowTheme.of(context).secondaryText,
+                        fontSize: 12.0,
+                        decoration: TextDecoration.lineThrough,
+                      ),
+                    ),
+                    const SizedBox(height: 4.0),
+                  ],
+                  Text(
+                    item.price,
+                    style: FlutterFlowTheme.of(context).headlineSmall.override(
+                      fontFamily: GoogleFonts.interTight().fontFamily,
+                      color: FlutterFlowTheme.of(context).underground,
+                      fontSize: 18.0,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.0,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -825,7 +887,7 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
       ),
       child: Text(
         text,
-        style: TextStyle(
+        style: const TextStyle(
           color: Colors.white,
           fontSize: 10.0,
           fontWeight: FontWeight.bold,
@@ -910,6 +972,7 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
             AnimatedDefaultTextStyle(
               duration: const Duration(milliseconds: 200),
               style: FlutterFlowTheme.of(context).bodySmall.override(
+                fontFamily: GoogleFonts.inter().fontFamily,
                 color: isActive 
                     ? FlutterFlowTheme.of(context).waxFlower
                     : Colors.white.withOpacity(0.7),
