@@ -35,9 +35,6 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
     super.initState();
     _model = createModel(context, () => SettingBuyLinksModel());
 
-    _model.textController ??= TextEditingController();
-    _model.textFieldFocusNode ??= FocusNode();
-
     animationsMap.addAll({
       'containerOnPageLoadAnimation1': AnimationInfo(
         trigger: AnimationTrigger.onPageLoad,
@@ -409,7 +406,7 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
                                       .orderBy('date_added', descending: true),
                             ),
                             builder: (context, snapshot) {
-                              // Customize what your widget looks like when it's loading.
+                              // Loading state
                               if (!snapshot.hasData) {
                                 return Center(
                                   child: SizedBox(
@@ -426,18 +423,31 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
                               List<BrandedItemsRecord> products =
                                   snapshot.data!;
 
+                              // Empty state
                               if (products.isEmpty) {
-                                return Center(
+                                return Container(
+                                  width: double.infinity,
+                                  padding: EdgeInsets.symmetric(vertical: 60.0),
+                                  decoration: BoxDecoration(
+                                    color: FlutterFlowTheme.of(context)
+                                        .secondaryBackground,
+                                    borderRadius: BorderRadius.circular(16.0),
+                                    border: Border.all(
+                                      color: FlutterFlowTheme.of(context)
+                                          .alternate,
+                                      width: 2.0,
+                                    ),
+                                  ),
                                   child: Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
                                       Icon(
-                                        Icons.inventory_2_outlined,
-                                        size: 64.0,
+                                        Icons.link_off,
+                                        size: 80.0,
                                         color: FlutterFlowTheme.of(context)
                                             .secondaryText,
                                       ),
-                                      SizedBox(height: 16.0),
+                                      SizedBox(height: 24.0),
                                       Text(
                                         'No products found',
                                         style: FlutterFlowTheme.of(context)
@@ -448,11 +458,12 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
                                                   FlutterFlowTheme.of(context)
                                                       .secondaryText,
                                               letterSpacing: 0.0,
+                                              fontWeight: FontWeight.w600,
                                             ),
                                       ),
-                                      SizedBox(height: 8.0),
+                                      SizedBox(height: 12.0),
                                       Text(
-                                        'Add some products to manage their buy links',
+                                        'Add products to manage their buy links',
                                         style: FlutterFlowTheme.of(context)
                                             .bodyMedium
                                             .override(
@@ -462,6 +473,40 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
                                                       .secondaryText,
                                               letterSpacing: 0.0,
                                             ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                      SizedBox(height: 32.0),
+                                      FFButtonWidget(
+                                        onPressed: () => context.pushNamed(
+                                            AddProductWidget.routeName),
+                                        text: 'Add Your First Product',
+                                        icon: Icon(
+                                          Icons.add_circle_outline,
+                                          size: 20.0,
+                                        ),
+                                        options: FFButtonOptions(
+                                          height: 48.0,
+                                          padding:
+                                              EdgeInsetsDirectional.fromSTEB(
+                                                  24.0, 0.0, 24.0, 0.0),
+                                          iconPadding:
+                                              EdgeInsetsDirectional.fromSTEB(
+                                                  0.0, 0.0, 8.0, 0.0),
+                                          color: FlutterFlowTheme.of(context)
+                                              .primary,
+                                          textStyle:
+                                              FlutterFlowTheme.of(context)
+                                                  .titleSmall
+                                                  .override(
+                                                    fontFamily: 'Inter Tight',
+                                                    color: Colors.white,
+                                                    letterSpacing: 0.0,
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
+                                          elevation: 2.0,
+                                          borderRadius:
+                                              BorderRadius.circular(24.0),
+                                        ),
                                       ),
                                     ],
                                   ),
@@ -502,17 +547,6 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
                           );
                         },
                       ),
-
-                      SizedBox(height: 32.0),
-
-                      Divider(
-                        height: 40.0,
-                        thickness: 2.0,
-                        color: FlutterFlowTheme.of(context).alternate,
-                      ),
-
-                      // Update Link Section
-                      _buildUpdateLinkSection(),
 
                       SizedBox(height: 80.0), // Space for bottom navigation
                     ],
@@ -606,7 +640,7 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
 
             // Product Image
             Expanded(
-              flex: 3,
+              flex: 4,
               child: Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
@@ -642,13 +676,14 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
               ),
             ),
 
-            SizedBox(height: 16.0),
+            SizedBox(height: 12.0),
 
             // Product Info
             Expanded(
-              flex: 2,
+              flex: 3,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   if (product != null)
                     Text(
@@ -661,7 +696,7 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
                           ),
                     ),
 
-                  SizedBox(height: 8.0),
+                  SizedBox(height: 6.0),
 
                   Text(
                     'Current Link:',
@@ -669,30 +704,37 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
                           fontFamily: GoogleFonts.inter().fontFamily,
                           color: FlutterFlowTheme.of(context).secondaryText,
                           letterSpacing: 0.0,
+                          fontSize: 12.0,
                         ),
                   ),
 
-                  Text(
-                    currentLink.isEmpty ? 'No link set' : currentLink,
-                    style: FlutterFlowTheme.of(context).bodySmall.override(
-                          fontFamily: GoogleFonts.inter().fontFamily,
-                          color: currentLink.isEmpty
-                              ? FlutterFlowTheme.of(context).secondaryText
-                              : FlutterFlowTheme.of(context).primary,
-                          letterSpacing: 0.0,
-                          decoration: currentLink.isEmpty
-                              ? null
-                              : TextDecoration.underline,
-                        ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+                  SizedBox(height: 2.0),
+
+                  Flexible(
+                    child: Text(
+                      currentLink.isEmpty ? 'No link set' : currentLink,
+                      style: FlutterFlowTheme.of(context).bodySmall.override(
+                            fontFamily: GoogleFonts.inter().fontFamily,
+                            color: currentLink.isEmpty
+                                ? FlutterFlowTheme.of(context).secondaryText
+                                : FlutterFlowTheme.of(context).primary,
+                            letterSpacing: 0.0,
+                            fontSize: 12.0,
+                            decoration: currentLink.isEmpty
+                                ? null
+                                : TextDecoration.underline,
+                          ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
 
-                  Spacer(),
+                  SizedBox(height: 8.0),
 
                   // Update Link Button
                   SizedBox(
                     width: double.infinity,
+                    height: 32.0,
                     child: TextButton(
                       onPressed: () {
                         _showUpdateLinkDialog(
@@ -701,21 +743,24 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
                       style: TextButton.styleFrom(
                         backgroundColor:
                             FlutterFlowTheme.of(context).primaryBackground,
-                        padding: EdgeInsets.symmetric(vertical: 8.0),
+                        padding: EdgeInsets.symmetric(vertical: 4.0),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8.0),
+                          borderRadius: BorderRadius.circular(6.0),
                           side: BorderSide(
                             color: FlutterFlowTheme.of(context).primary,
                             width: 1.0,
                           ),
                         ),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
                       child: Text(
                         'Update Link',
-                        style: FlutterFlowTheme.of(context).bodyMedium.override(
+                        style: FlutterFlowTheme.of(context).bodySmall.override(
                               fontFamily: GoogleFonts.inter().fontFamily,
                               color: FlutterFlowTheme.of(context).primary,
                               letterSpacing: 0.0,
+                              fontSize: 13.0,
                               fontWeight: FontWeight.w500,
                             ),
                       ),
@@ -730,159 +775,6 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
     ).animateOnPageLoad(animation);
   }
 
-  Widget _buildUpdateLinkSection() {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: FlutterFlowTheme.of(context).secondaryBackground,
-        borderRadius: BorderRadius.circular(12.0),
-        border: Border.all(
-          color: FlutterFlowTheme.of(context).alternate,
-          width: 2.0,
-        ),
-        boxShadow: [
-          BoxShadow(
-            blurRadius: 4.0,
-            color: Color(0x33000000),
-            offset: Offset(0.0, 2.0),
-          )
-        ],
-      ),
-      child: Padding(
-        padding: EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Update Product Link',
-              style: FlutterFlowTheme.of(context).headlineSmall.override(
-                    fontFamily: GoogleFonts.interTight().fontFamily,
-                    fontSize: 20.0,
-                    letterSpacing: 0.0,
-                    fontWeight: FontWeight.w600,
-                  ),
-            ),
-            SizedBox(height: 16.0),
-            Text(
-              'Product URL',
-              style: FlutterFlowTheme.of(context).bodyLarge.override(
-                    fontFamily: GoogleFonts.inter().fontFamily,
-                    fontSize: 16.0,
-                    letterSpacing: 0.0,
-                    fontWeight: FontWeight.w500,
-                  ),
-            ),
-            SizedBox(height: 8.0),
-            TextFormField(
-              controller: _model.textController!,
-              focusNode: _model.textFieldFocusNode!,
-              autofocus: false,
-              obscureText: false,
-              decoration: InputDecoration(
-                hintText: 'e.g., https://shopee.com/your-product-link',
-                hintStyle: FlutterFlowTheme.of(context).bodyMedium.override(
-                      fontFamily: GoogleFonts.inter().fontFamily,
-                      color: FlutterFlowTheme.of(context).secondaryText,
-                      letterSpacing: 0.0,
-                    ),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(
-                    color: FlutterFlowTheme.of(context).alternate,
-                    width: 2.0,
-                  ),
-                  borderRadius: BorderRadius.circular(12.0),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(
-                    color: FlutterFlowTheme.of(context).primary,
-                    width: 2.0,
-                  ),
-                  borderRadius: BorderRadius.circular(12.0),
-                ),
-                errorBorder: OutlineInputBorder(
-                  borderSide: BorderSide(
-                    color: FlutterFlowTheme.of(context).error,
-                    width: 2.0,
-                  ),
-                  borderRadius: BorderRadius.circular(12.0),
-                ),
-                focusedErrorBorder: OutlineInputBorder(
-                  borderSide: BorderSide(
-                    color: FlutterFlowTheme.of(context).error,
-                    width: 2.0,
-                  ),
-                  borderRadius: BorderRadius.circular(12.0),
-                ),
-                filled: true,
-                fillColor: FlutterFlowTheme.of(context).secondaryBackground,
-                contentPadding:
-                    EdgeInsetsDirectional.fromSTEB(16.0, 16.0, 16.0, 16.0),
-                prefixIcon: Icon(
-                  Icons.link,
-                  color: FlutterFlowTheme.of(context).secondaryText,
-                  size: 20.0,
-                ),
-              ),
-              style: FlutterFlowTheme.of(context).bodyMedium.override(
-                    fontFamily: GoogleFonts.inter().fontFamily,
-                    letterSpacing: 0.0,
-                  ),
-              keyboardType: TextInputType.url,
-              validator: _model.textControllerValidator.asValidator(context),
-            ),
-            SizedBox(height: 24.0),
-            FFButtonWidget(
-              onPressed: () {
-                if (_model.textController?.text.isEmpty ?? true) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Please enter a valid URL'),
-                      backgroundColor: FlutterFlowTheme.of(context).error,
-                    ),
-                  );
-                  return;
-                }
-
-                // Handle update logic here
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Product link updated successfully!'),
-                    backgroundColor: FlutterFlowTheme.of(context).primary,
-                  ),
-                );
-                _model.textController?.clear();
-              },
-              text: 'Update Link',
-              icon: Icon(
-                Icons.upload,
-                size: 16.0,
-              ),
-              options: FFButtonOptions(
-                width: double.infinity,
-                height: 48.0,
-                padding: EdgeInsets.symmetric(horizontal: 24.0),
-                iconPadding: EdgeInsetsDirectional.fromSTEB(0.0, 0.0, 8.0, 0.0),
-                color: FlutterFlowTheme.of(context).primary,
-                textStyle: FlutterFlowTheme.of(context).titleSmall.override(
-                      fontFamily: GoogleFonts.interTight().fontFamily,
-                      color: Colors.white,
-                      letterSpacing: 0.0,
-                      fontWeight: FontWeight.w600,
-                    ),
-                elevation: 3.0,
-                borderSide: BorderSide(
-                  color: Colors.transparent,
-                  width: 1.0,
-                ),
-                borderRadius: BorderRadius.circular(12.0),
-              ),
-            ),
-          ],
-        ),
-      ),
-    ).animateOnPageLoad(animationsMap['containerOnPageLoadAnimation3']!);
-  }
-
   void _showUpdateLinkDialog(
       String productName, String currentLink, BrandedItemsRecord? product) {
     final TextEditingController dialogController =
@@ -892,32 +784,106 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Update Link for $productName'),
+          title: Row(
+            children: [
+              Icon(
+                Icons.link,
+                color: FlutterFlowTheme.of(context).primary,
+                size: 24.0,
+              ),
+              SizedBox(width: 12.0),
+              Expanded(
+                child: Text(
+                  'Update Link',
+                  style: FlutterFlowTheme.of(context).headlineSmall.override(
+                        fontFamily: 'Inter Tight',
+                        letterSpacing: 0.0,
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+              ),
+            ],
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
+                'Product: $productName',
+                style: FlutterFlowTheme.of(context).bodyLarge.override(
+                      fontFamily: 'Inter',
+                      letterSpacing: 0.0,
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+              SizedBox(height: 8.0),
+              Text(
                 'Enter the new buy link for this product:',
-                style: FlutterFlowTheme.of(context).bodyMedium,
+                style: FlutterFlowTheme.of(context).bodyMedium.override(
+                      fontFamily: 'Inter',
+                      color: FlutterFlowTheme.of(context).secondaryText,
+                      letterSpacing: 0.0,
+                    ),
               ),
               SizedBox(height: 16.0),
               TextFormField(
                 controller: dialogController,
                 decoration: InputDecoration(
                   hintText: 'https://your-store.com/product',
+                  hintStyle: FlutterFlowTheme.of(context).bodyMedium.override(
+                        fontFamily: 'Inter',
+                        color: FlutterFlowTheme.of(context).secondaryText,
+                        letterSpacing: 0.0,
+                      ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8.0),
+                    borderSide: BorderSide(
+                      color: FlutterFlowTheme.of(context).alternate,
+                      width: 1.0,
+                    ),
                   ),
-                  prefixIcon: Icon(Icons.link),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8.0),
+                    borderSide: BorderSide(
+                      color: FlutterFlowTheme.of(context).primary,
+                      width: 2.0,
+                    ),
+                  ),
+                  prefixIcon: Icon(
+                    Icons.link,
+                    color: FlutterFlowTheme.of(context).secondaryText,
+                  ),
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 16.0,
+                    vertical: 12.0,
+                  ),
                 ),
                 keyboardType: TextInputType.url,
+                style: FlutterFlowTheme.of(context).bodyMedium.override(
+                      fontFamily: 'Inter',
+                      letterSpacing: 0.0,
+                    ),
               ),
             ],
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.0),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: Text('Cancel'),
+              style: TextButton.styleFrom(
+                padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
+              ),
+              child: Text(
+                'Cancel',
+                style: FlutterFlowTheme.of(context).bodyLarge.override(
+                      fontFamily: 'Inter',
+                      color: FlutterFlowTheme.of(context).secondaryText,
+                      letterSpacing: 0.0,
+                      fontWeight: FontWeight.w500,
+                    ),
+              ),
             ),
             ElevatedButton(
               onPressed: () async {
@@ -931,16 +897,56 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
                     Navigator.of(context).pop();
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Link updated for $productName'),
+                        content: Row(
+                          children: [
+                            Icon(
+                              Icons.check_circle,
+                              color: Colors.white,
+                              size: 20.0,
+                            ),
+                            SizedBox(width: 8.0),
+                            Expanded(
+                              child: Text(
+                                'Link updated for $productName',
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ),
+                          ],
+                        ),
                         backgroundColor: FlutterFlowTheme.of(context).primary,
+                        duration: Duration(seconds: 3),
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8.0),
+                        ),
                       ),
                     );
                   } catch (e) {
                     Navigator.of(context).pop();
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Error updating link: ${e.toString()}'),
+                        content: Row(
+                          children: [
+                            Icon(
+                              Icons.error,
+                              color: Colors.white,
+                              size: 20.0,
+                            ),
+                            SizedBox(width: 8.0),
+                            Expanded(
+                              child: Text(
+                                'Error updating link: ${e.toString()}',
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ),
+                          ],
+                        ),
                         backgroundColor: FlutterFlowTheme.of(context).error,
+                        duration: Duration(seconds: 4),
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8.0),
+                        ),
                       ),
                     );
                   }
@@ -948,16 +954,58 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
                   Navigator.of(context).pop();
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Error: Product not found'),
+                      content: Row(
+                        children: [
+                          Icon(
+                            Icons.error,
+                            color: Colors.white,
+                            size: 20.0,
+                          ),
+                          SizedBox(width: 8.0),
+                          Expanded(
+                            child: Text(
+                              'Error: Product not found',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ),
+                        ],
+                      ),
                       backgroundColor: FlutterFlowTheme.of(context).error,
+                      duration: Duration(seconds: 3),
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8.0),
+                      ),
                     ),
                   );
                 }
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: FlutterFlowTheme.of(context).primary,
+                padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
               ),
-              child: Text('Update', style: TextStyle(color: Colors.white)),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.save,
+                    color: Colors.white,
+                    size: 18.0,
+                  ),
+                  SizedBox(width: 6.0),
+                  Text(
+                    'Update',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16.0,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         );
