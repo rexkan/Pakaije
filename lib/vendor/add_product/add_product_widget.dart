@@ -4,12 +4,17 @@ import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/flutter_flow/form_field_controller.dart';
+import '/flutter_flow/upload_data.dart';
 import '/index.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'add_product_model.dart';
 export 'add_product_model.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import '/backend/backend.dart';
+import '/auth/firebase_auth/auth_util.dart';
 
 class AddProductWidget extends StatefulWidget {
   const AddProductWidget({super.key});
@@ -31,11 +36,22 @@ class _AddProductWidgetState extends State<AddProductWidget> {
     super.initState();
     _model = createModel(context, () => AddProductModel());
 
+    // Initialize existing text controllers
     _model.itemNameTextController ??= TextEditingController();
     _model.itemNameFocusNode ??= FocusNode();
 
     _model.categoryTextController ??= TextEditingController();
     _model.categoryFocusNode ??= FocusNode();
+
+    // Initialize missing text controllers
+    _model.priceTextController ??= TextEditingController();
+    _model.priceFocusNode ??= FocusNode();
+
+    _model.buyLinkTextController ??= TextEditingController();
+    _model.buyLinkFocusNode ??= FocusNode();
+
+    _model.descriptionTextController ??= TextEditingController();
+    _model.descriptionFocusNode ??= FocusNode();
   }
 
   @override
@@ -176,12 +192,20 @@ class _AddProductWidgetState extends State<AddProductWidget> {
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(10.0),
-            child: Image.asset(
-              'assets/images/white_shoes.jpeg',
-              width: double.infinity,
-              height: double.infinity,
-              fit: BoxFit.cover,
-            ),
+            child: _model.uploadedLocalFile != null &&
+                    _model.uploadedLocalFile.bytes?.isNotEmpty == true
+                ? Image.memory(
+                    _model.uploadedLocalFile.bytes!,
+                    width: double.infinity,
+                    height: double.infinity,
+                    fit: BoxFit.cover,
+                  )
+                : Image.asset(
+                    'assets/images/white_shoes.jpeg',
+                    width: double.infinity,
+                    height: double.infinity,
+                    fit: BoxFit.cover,
+                  ),
           ),
           if (isMain)
             Positioned(
@@ -214,8 +238,39 @@ class _AddProductWidgetState extends State<AddProductWidget> {
               ),
               child: IconButton(
                 icon: Icon(Icons.edit, color: Colors.white, size: 20.0),
-                onPressed: () {
-                  // Handle image upload
+                onPressed: () async {
+                  final selectedMedia = await selectMediaWithSourceBottomSheet(
+                    context: context,
+                    allowPhoto: true,
+                    allowVideo: false,
+                  );
+
+                  if (selectedMedia != null &&
+                      selectedMedia.every(
+                          (m) => validateFileFormat(m.storagePath, context))) {
+                    setState(() => _model.isDataUploading = true);
+                    var selectedUploadedFiles = <FFUploadedFile>[];
+
+                    try {
+                      selectedUploadedFiles = selectedMedia
+                          .map((m) => FFUploadedFile(
+                                name: m.storagePath.split('/').last,
+                                bytes: m.bytes,
+                                height: m.dimensions?.height,
+                                width: m.dimensions?.width,
+                                blurHash: m.blurHash,
+                              ))
+                          .toList();
+                    } finally {
+                      _model.isDataUploading = false;
+                    }
+
+                    if (selectedUploadedFiles.isNotEmpty) {
+                      setState(() {
+                        _model.uploadedLocalFile = selectedUploadedFiles.first;
+                      });
+                    }
+                  }
                 },
               ),
             ),
@@ -294,8 +349,12 @@ class _AddProductWidgetState extends State<AddProductWidget> {
                 fontFamily: 'Inter',
                 letterSpacing: 0.0,
               ),
-          validator:
-              _model.itemNameTextControllerValidator.asValidator(context),
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'Item name is required';
+            }
+            return null;
+          },
         ),
 
         SizedBox(height: 16.0),
@@ -355,8 +414,198 @@ class _AddProductWidgetState extends State<AddProductWidget> {
                 fontFamily: 'Inter',
                 letterSpacing: 0.0,
               ),
-          validator:
-              _model.categoryTextControllerValidator.asValidator(context),
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'Category is required';
+            }
+            return null;
+          },
+        ),
+
+        SizedBox(height: 16.0),
+
+        // Price Field
+        TextFormField(
+          controller: _model.priceTextController,
+          focusNode: _model.priceFocusNode,
+          autofocus: false,
+          obscureText: false,
+          keyboardType: TextInputType.numberWithOptions(decimal: true),
+          decoration: InputDecoration(
+            labelText: 'Price',
+            labelStyle: FlutterFlowTheme.of(context).labelMedium.override(
+                  fontFamily: 'Inter',
+                  letterSpacing: 0.0,
+                ),
+            hintText: 'Enter product price',
+            hintStyle: FlutterFlowTheme.of(context).labelMedium.override(
+                  fontFamily: 'Inter',
+                  letterSpacing: 0.0,
+                ),
+            enabledBorder: OutlineInputBorder(
+              borderSide: BorderSide(
+                color: FlutterFlowTheme.of(context).alternate,
+                width: 2.0,
+              ),
+              borderRadius: BorderRadius.circular(12.0),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderSide: BorderSide(
+                color: FlutterFlowTheme.of(context).primary,
+                width: 2.0,
+              ),
+              borderRadius: BorderRadius.circular(12.0),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderSide: BorderSide(
+                color: FlutterFlowTheme.of(context).error,
+                width: 2.0,
+              ),
+              borderRadius: BorderRadius.circular(12.0),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderSide: BorderSide(
+                color: FlutterFlowTheme.of(context).error,
+                width: 2.0,
+              ),
+              borderRadius: BorderRadius.circular(12.0),
+            ),
+            filled: true,
+            fillColor: FlutterFlowTheme.of(context).secondaryBackground,
+            contentPadding:
+                EdgeInsetsDirectional.fromSTEB(16.0, 20.0, 16.0, 20.0),
+          ),
+          style: FlutterFlowTheme.of(context).bodyLarge.override(
+                fontFamily: 'Inter',
+                letterSpacing: 0.0,
+              ),
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'Price is required';
+            }
+            if (double.tryParse(value) == null) {
+              return 'Please enter a valid price';
+            }
+            return null;
+          },
+        ),
+
+        SizedBox(height: 16.0),
+
+        // Buy Link Field
+        TextFormField(
+          controller: _model.buyLinkTextController,
+          focusNode: _model.buyLinkFocusNode,
+          autofocus: false,
+          obscureText: false,
+          decoration: InputDecoration(
+            labelText: 'Buy Link (Optional)',
+            labelStyle: FlutterFlowTheme.of(context).labelMedium.override(
+                  fontFamily: 'Inter',
+                  letterSpacing: 0.0,
+                ),
+            hintText: 'Enter purchase link',
+            hintStyle: FlutterFlowTheme.of(context).labelMedium.override(
+                  fontFamily: 'Inter',
+                  letterSpacing: 0.0,
+                ),
+            enabledBorder: OutlineInputBorder(
+              borderSide: BorderSide(
+                color: FlutterFlowTheme.of(context).alternate,
+                width: 2.0,
+              ),
+              borderRadius: BorderRadius.circular(12.0),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderSide: BorderSide(
+                color: FlutterFlowTheme.of(context).primary,
+                width: 2.0,
+              ),
+              borderRadius: BorderRadius.circular(12.0),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderSide: BorderSide(
+                color: FlutterFlowTheme.of(context).error,
+                width: 2.0,
+              ),
+              borderRadius: BorderRadius.circular(12.0),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderSide: BorderSide(
+                color: FlutterFlowTheme.of(context).error,
+                width: 2.0,
+              ),
+              borderRadius: BorderRadius.circular(12.0),
+            ),
+            filled: true,
+            fillColor: FlutterFlowTheme.of(context).secondaryBackground,
+            contentPadding:
+                EdgeInsetsDirectional.fromSTEB(16.0, 20.0, 16.0, 20.0),
+          ),
+          style: FlutterFlowTheme.of(context).bodyLarge.override(
+                fontFamily: 'Inter',
+                letterSpacing: 0.0,
+              ),
+        ),
+
+        SizedBox(height: 16.0),
+
+        // Description Field
+        TextFormField(
+          controller: _model.descriptionTextController,
+          focusNode: _model.descriptionFocusNode,
+          autofocus: false,
+          textCapitalization: TextCapitalization.sentences,
+          obscureText: false,
+          maxLines: 3,
+          decoration: InputDecoration(
+            labelText: 'Description (Optional)',
+            labelStyle: FlutterFlowTheme.of(context).labelMedium.override(
+                  fontFamily: 'Inter',
+                  letterSpacing: 0.0,
+                ),
+            hintText: 'Enter product description',
+            hintStyle: FlutterFlowTheme.of(context).labelMedium.override(
+                  fontFamily: 'Inter',
+                  letterSpacing: 0.0,
+                ),
+            enabledBorder: OutlineInputBorder(
+              borderSide: BorderSide(
+                color: FlutterFlowTheme.of(context).alternate,
+                width: 2.0,
+              ),
+              borderRadius: BorderRadius.circular(12.0),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderSide: BorderSide(
+                color: FlutterFlowTheme.of(context).primary,
+                width: 2.0,
+              ),
+              borderRadius: BorderRadius.circular(12.0),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderSide: BorderSide(
+                color: FlutterFlowTheme.of(context).error,
+                width: 2.0,
+              ),
+              borderRadius: BorderRadius.circular(12.0),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderSide: BorderSide(
+                color: FlutterFlowTheme.of(context).error,
+                width: 2.0,
+              ),
+              borderRadius: BorderRadius.circular(12.0),
+            ),
+            filled: true,
+            fillColor: FlutterFlowTheme.of(context).secondaryBackground,
+            contentPadding:
+                EdgeInsetsDirectional.fromSTEB(16.0, 20.0, 16.0, 20.0),
+          ),
+          style: FlutterFlowTheme.of(context).bodyLarge.override(
+                fontFamily: 'Inter',
+                letterSpacing: 0.0,
+              ),
         ),
       ],
     );
@@ -380,6 +629,9 @@ class _AddProductWidgetState extends State<AddProductWidget> {
             ChipData('Black'),
             ChipData('Grey'),
             ChipData('White'),
+            ChipData('Red'),
+            ChipData('Blue'),
+            ChipData('Green'),
           ],
           onChanged: (val) =>
               setState(() => _model.choiceChipsValue1 = val?.firstOrNull),
@@ -442,6 +694,9 @@ class _AddProductWidgetState extends State<AddProductWidget> {
             ChipData('Casual'),
             ChipData('Formal'),
             ChipData('Party'),
+            ChipData('Work'),
+            ChipData('Sport'),
+            ChipData('Evening'),
           ],
           onChanged: (val) =>
               setState(() => _model.choiceChipsValue2 = val?.firstOrNull),
@@ -490,19 +745,74 @@ class _AddProductWidgetState extends State<AddProductWidget> {
     return SizedBox(
       width: double.infinity,
       child: FFButtonWidget(
-        onPressed: () {
+        onPressed: () async {
           if (_model.formKey.currentState == null ||
               !_model.formKey.currentState!.validate()) {
             return;
           }
-          // Handle save logic here
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Product saved successfully!'),
-              backgroundColor: FlutterFlowTheme.of(context).primary,
-            ),
+
+          // Show loading
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (context) => Center(child: CircularProgressIndicator()),
           );
-          context.pop();
+
+          try {
+            String? imageUrl;
+
+            // Upload image if selected
+            if (_model.uploadedLocalFile != null &&
+                _model.uploadedLocalFile.bytes?.isNotEmpty == true) {
+              // Upload to Firebase Storage
+              final storageRef = FirebaseStorage.instance.ref().child(
+                  'product_images/${DateTime.now().millisecondsSinceEpoch}.jpg');
+
+              final uploadTask =
+                  await storageRef.putData(_model.uploadedLocalFile.bytes!);
+              imageUrl = await uploadTask.ref.getDownloadURL();
+            }
+
+            // Create the product in Firestore
+            await BrandedItemsRecord.collection
+                .add(createBrandedItemsRecordData(
+              vendorId: currentUserUid,
+              name: _model.itemNameTextController?.text ?? '',
+              category: _model.categoryTextController?.text ?? '',
+              price: double.tryParse(_model.priceTextController?.text ?? '0') ??
+                  0.0,
+              productUrl: _model.buyLinkTextController?.text ?? '',
+              description: _model.descriptionTextController?.text ?? '',
+              imageUrl: imageUrl ?? '',
+              dateAdded: getCurrentTimestamp,
+            ))
+                .then((docRef) async {
+              // Update with style tags and weather suitability if needed
+              await docRef.update({
+                'style_tags': [_model.choiceChipsValue2 ?? 'Casual'],
+                'weather_suitability': [],
+              });
+            });
+
+            Navigator.pop(context); // Close loading dialog
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Product saved successfully!'),
+                backgroundColor: FlutterFlowTheme.of(context).primary,
+              ),
+            );
+
+            context.pop(); // Go back to previous screen
+          } catch (e) {
+            Navigator.pop(context); // Close loading dialog
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Error: ${e.toString()}'),
+                backgroundColor: FlutterFlowTheme.of(context).error,
+              ),
+            );
+          }
         },
         text: 'Save Product',
         options: FFButtonOptions(
@@ -545,13 +855,13 @@ class _AddProductWidgetState extends State<AddProductWidget> {
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           _buildNavItem(Icons.person, 'Profile', false,
-              () => context.pushNamed(VendorDashboardWidget.routeName)),
+              () => context.pushNamed('VendorDashboard')),
           _buildNavItem(Icons.discount_outlined, 'Code', false,
-              () => context.pushNamed(ManageDiscountCodesWidget.routeName)),
+              () => context.pushNamed('ManageDiscountCodes')),
           _buildNavItem(Icons.tv_rounded, 'Virtual', false,
-              () => context.pushNamed(VirtualTryOnSettingWidget.routeName)),
+              () => context.pushNamed('VirtualTryOnSetting')),
           _buildNavItem(Icons.settings_sharp, 'Link', false,
-              () => context.pushNamed(SettingBuyLinksWidget.routeName)),
+              () => context.pushNamed('SettingBuyLinks')),
           _buildNavItem(Icons.add, 'Add', true, () => {}),
         ],
       ),

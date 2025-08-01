@@ -9,6 +9,8 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'setting_buy_links_model.dart';
 export 'setting_buy_links_model.dart';
+import '/backend/backend.dart';
+import '/auth/firebase_auth/auth_util.dart';
 
 class SettingBuyLinksWidget extends StatefulWidget {
   const SettingBuyLinksWidget({super.key});
@@ -109,6 +111,218 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
     super.dispose();
   }
 
+  // Show delete confirmation dialog
+  void _showDeleteConfirmation(BrandedItemsRecord product) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Row(
+            children: [
+              Icon(
+                Icons.warning_amber_rounded,
+                color: FlutterFlowTheme.of(context).error,
+                size: 28.0,
+              ),
+              SizedBox(width: 12.0),
+              Expanded(
+                child: Text(
+                  'Delete Product',
+                  style: FlutterFlowTheme.of(context).headlineSmall.override(
+                        fontFamily: 'Inter Tight',
+                        color: FlutterFlowTheme.of(context).error,
+                        letterSpacing: 0.0,
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Are you sure you want to delete "${product.name}"?',
+                style: FlutterFlowTheme.of(context).bodyLarge.override(
+                      fontFamily: 'Inter',
+                      letterSpacing: 0.0,
+                      fontWeight: FontWeight.w500,
+                    ),
+              ),
+              SizedBox(height: 12.0),
+              Text(
+                'This action cannot be undone. The product will be permanently removed from your inventory.',
+                style: FlutterFlowTheme.of(context).bodyMedium.override(
+                      fontFamily: 'Inter',
+                      color: FlutterFlowTheme.of(context).secondaryText,
+                      letterSpacing: 0.0,
+                    ),
+              ),
+            ],
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.0),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              style: TextButton.styleFrom(
+                padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
+              ),
+              child: Text(
+                'Cancel',
+                style: FlutterFlowTheme.of(context).bodyLarge.override(
+                      fontFamily: 'Inter',
+                      color: FlutterFlowTheme.of(context).secondaryText,
+                      letterSpacing: 0.0,
+                      fontWeight: FontWeight.w500,
+                    ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.of(context).pop();
+                await _deleteProduct(product);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: FlutterFlowTheme.of(context).error,
+                padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.delete_forever,
+                    color: Colors.white,
+                    size: 18.0,
+                  ),
+                  SizedBox(width: 6.0),
+                  Text(
+                    'Delete',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16.0,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Delete product from Firebase
+  Future<void> _deleteProduct(BrandedItemsRecord product) async {
+    try {
+      // Show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return Center(
+            child: Container(
+              padding: EdgeInsets.all(20.0),
+              decoration: BoxDecoration(
+                color: FlutterFlowTheme.of(context).secondaryBackground,
+                borderRadius: BorderRadius.circular(12.0),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      FlutterFlowTheme.of(context).primary,
+                    ),
+                  ),
+                  SizedBox(height: 16.0),
+                  Text(
+                    'Deleting product...',
+                    style: FlutterFlowTheme.of(context).bodyMedium.override(
+                          fontFamily: 'Inter',
+                          letterSpacing: 0.0,
+                        ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      );
+
+      // Delete the product from Firebase
+      await product.reference.delete();
+
+      // Close loading dialog
+      Navigator.of(context).pop();
+
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(
+                Icons.check_circle,
+                color: Colors.white,
+                size: 20.0,
+              ),
+              SizedBox(width: 8.0),
+              Expanded(
+                child: Text(
+                  '${product.name} has been deleted successfully',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 3),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8.0),
+          ),
+        ),
+      );
+    } catch (e) {
+      // Close loading dialog if it's open
+      Navigator.of(context).pop();
+
+      // Show error message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(
+                Icons.error,
+                color: Colors.white,
+                size: 20.0,
+              ),
+              SizedBox(width: 8.0),
+              Expanded(
+                child: Text(
+                  'Error deleting product: ${e.toString()}',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: FlutterFlowTheme.of(context).error,
+          duration: Duration(seconds: 4),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8.0),
+          ),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -186,25 +400,105 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
                           int crossAxisCount =
                               constraints.maxWidth > 600 ? 2 : 1;
 
-                          return GridView.count(
-                            shrinkWrap: true,
-                            physics: NeverScrollableScrollPhysics(),
-                            crossAxisCount: crossAxisCount,
-                            crossAxisSpacing: 16.0,
-                            mainAxisSpacing: 16.0,
-                            childAspectRatio: crossAxisCount == 2 ? 1.2 : 1.0,
-                            children: [
-                              _buildProductCard(
-                                'Basic Black Tee',
-                                'https://example.com/black-tee',
-                                animationsMap['containerOnPageLoadAnimation1']!,
-                              ),
-                              _buildProductCard(
-                                'White Sneakers',
-                                'https://example.com/white-sneakers',
-                                animationsMap['containerOnPageLoadAnimation2']!,
-                              ),
-                            ],
+                          return StreamBuilder<List<BrandedItemsRecord>>(
+                            stream: queryBrandedItemsRecord(
+                              queryBuilder: (brandedItemsRecord) =>
+                                  brandedItemsRecord
+                                      .where('vendor_id',
+                                          isEqualTo: currentUserUid)
+                                      .orderBy('date_added', descending: true),
+                            ),
+                            builder: (context, snapshot) {
+                              // Customize what your widget looks like when it's loading.
+                              if (!snapshot.hasData) {
+                                return Center(
+                                  child: SizedBox(
+                                    width: 50.0,
+                                    height: 50.0,
+                                    child: CircularProgressIndicator(
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        FlutterFlowTheme.of(context).primary,
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }
+                              List<BrandedItemsRecord> products =
+                                  snapshot.data!;
+
+                              if (products.isEmpty) {
+                                return Center(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.inventory_2_outlined,
+                                        size: 64.0,
+                                        color: FlutterFlowTheme.of(context)
+                                            .secondaryText,
+                                      ),
+                                      SizedBox(height: 16.0),
+                                      Text(
+                                        'No products found',
+                                        style: FlutterFlowTheme.of(context)
+                                            .headlineSmall
+                                            .override(
+                                              fontFamily: 'Inter Tight',
+                                              color:
+                                                  FlutterFlowTheme.of(context)
+                                                      .secondaryText,
+                                              letterSpacing: 0.0,
+                                            ),
+                                      ),
+                                      SizedBox(height: 8.0),
+                                      Text(
+                                        'Add some products to manage their buy links',
+                                        style: FlutterFlowTheme.of(context)
+                                            .bodyMedium
+                                            .override(
+                                              fontFamily: 'Inter',
+                                              color:
+                                                  FlutterFlowTheme.of(context)
+                                                      .secondaryText,
+                                              letterSpacing: 0.0,
+                                            ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }
+
+                              return LayoutBuilder(
+                                builder: (context, constraints) {
+                                  int crossAxisCount =
+                                      constraints.maxWidth > 600 ? 2 : 1;
+
+                                  return GridView.builder(
+                                    shrinkWrap: true,
+                                    physics: NeverScrollableScrollPhysics(),
+                                    gridDelegate:
+                                        SliverGridDelegateWithFixedCrossAxisCount(
+                                      crossAxisCount: crossAxisCount,
+                                      crossAxisSpacing: 16.0,
+                                      mainAxisSpacing: 16.0,
+                                      childAspectRatio:
+                                          crossAxisCount == 2 ? 1.2 : 1.0,
+                                    ),
+                                    itemCount: products.length,
+                                    itemBuilder: (context, index) {
+                                      final product = products[index];
+                                      return _buildProductCard(
+                                        product.name,
+                                        product.productUrl,
+                                        animationsMap[
+                                            'containerOnPageLoadAnimation${(index % 3) + 1}']!,
+                                        product: product,
+                                      );
+                                    },
+                                  );
+                                },
+                              );
+                            },
                           );
                         },
                       ),
@@ -236,7 +530,11 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
   }
 
   Widget _buildProductCard(
-      String productName, String currentLink, AnimationInfo animation) {
+    String productName,
+    String currentLink,
+    AnimationInfo animation, {
+    BrandedItemsRecord? product,
+  }) {
     return Container(
       decoration: BoxDecoration(
         color: FlutterFlowTheme.of(context).secondaryBackground,
@@ -258,6 +556,54 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Header with Product Name and Delete Button
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    productName,
+                    style: FlutterFlowTheme.of(context).headlineSmall.override(
+                          fontFamily: GoogleFonts.interTight().fontFamily,
+                          fontSize: 18.0,
+                          letterSpacing: 0.0,
+                          fontWeight: FontWeight.w600,
+                        ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                // Delete Button
+                GestureDetector(
+                  onTap: () {
+                    if (product != null) {
+                      _showDeleteConfirmation(product);
+                    }
+                  },
+                  child: Container(
+                    padding: EdgeInsets.all(6.0),
+                    decoration: BoxDecoration(
+                      color:
+                          FlutterFlowTheme.of(context).error.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8.0),
+                      border: Border.all(
+                        color:
+                            FlutterFlowTheme.of(context).error.withOpacity(0.3),
+                        width: 1.0,
+                      ),
+                    ),
+                    child: Icon(
+                      Icons.delete_outline,
+                      color: FlutterFlowTheme.of(context).error,
+                      size: 20.0,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+            SizedBox(height: 16.0),
+
             // Product Image
             Expanded(
               flex: 3,
@@ -268,10 +614,30 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(8.0),
-                  child: Image.asset(
-                    'assets/images/basic_black_tee.jpg',
-                    fit: BoxFit.cover,
-                  ),
+                  child: product?.imageUrl.isNotEmpty == true
+                      ? Image.network(
+                          product!.imageUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              color: FlutterFlowTheme.of(context).alternate,
+                              child: Icon(
+                                Icons.image_not_supported,
+                                color:
+                                    FlutterFlowTheme.of(context).secondaryText,
+                                size: 48.0,
+                              ),
+                            );
+                          },
+                        )
+                      : Container(
+                          color: FlutterFlowTheme.of(context).alternate,
+                          child: Icon(
+                            Icons.image,
+                            color: FlutterFlowTheme.of(context).secondaryText,
+                            size: 48.0,
+                          ),
+                        ),
                 ),
               ),
             ),
@@ -284,15 +650,16 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    productName,
-                    style: FlutterFlowTheme.of(context).headlineSmall.override(
-                          fontFamily: GoogleFonts.interTight().fontFamily,
-                          fontSize: 18.0,
-                          letterSpacing: 0.0,
-                          fontWeight: FontWeight.w600,
-                        ),
-                  ),
+                  if (product != null)
+                    Text(
+                      product.category,
+                      style: FlutterFlowTheme.of(context).bodySmall.override(
+                            fontFamily: GoogleFonts.inter().fontFamily,
+                            color: FlutterFlowTheme.of(context).primary,
+                            letterSpacing: 0.0,
+                            fontWeight: FontWeight.w500,
+                          ),
+                    ),
 
                   SizedBox(height: 8.0),
 
@@ -306,12 +673,16 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
                   ),
 
                   Text(
-                    currentLink,
+                    currentLink.isEmpty ? 'No link set' : currentLink,
                     style: FlutterFlowTheme.of(context).bodySmall.override(
                           fontFamily: GoogleFonts.inter().fontFamily,
-                          color: FlutterFlowTheme.of(context).primary,
+                          color: currentLink.isEmpty
+                              ? FlutterFlowTheme.of(context).secondaryText
+                              : FlutterFlowTheme.of(context).primary,
                           letterSpacing: 0.0,
-                          decoration: TextDecoration.underline,
+                          decoration: currentLink.isEmpty
+                              ? null
+                              : TextDecoration.underline,
                         ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -324,7 +695,8 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
                     width: double.infinity,
                     child: TextButton(
                       onPressed: () {
-                        _showUpdateLinkDialog(productName, currentLink);
+                        _showUpdateLinkDialog(
+                            productName, currentLink, product);
                       },
                       style: TextButton.styleFrom(
                         backgroundColor:
@@ -511,7 +883,8 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
     ).animateOnPageLoad(animationsMap['containerOnPageLoadAnimation3']!);
   }
 
-  void _showUpdateLinkDialog(String productName, String currentLink) {
+  void _showUpdateLinkDialog(
+      String productName, String currentLink, BrandedItemsRecord? product) {
     final TextEditingController dialogController =
         TextEditingController(text: currentLink);
 
@@ -547,15 +920,39 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
               child: Text('Cancel'),
             ),
             ElevatedButton(
-              onPressed: () {
-                // Handle update logic
-                Navigator.of(context).pop();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Link updated for $productName'),
-                    backgroundColor: FlutterFlowTheme.of(context).primary,
-                  ),
-                );
+              onPressed: () async {
+                // Handle update logic with the actual product
+                if (product != null) {
+                  try {
+                    await product.reference.update({
+                      'product_url': dialogController.text,
+                    });
+
+                    Navigator.of(context).pop();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Link updated for $productName'),
+                        backgroundColor: FlutterFlowTheme.of(context).primary,
+                      ),
+                    );
+                  } catch (e) {
+                    Navigator.of(context).pop();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Error updating link: ${e.toString()}'),
+                        backgroundColor: FlutterFlowTheme.of(context).error,
+                      ),
+                    );
+                  }
+                } else {
+                  Navigator.of(context).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Error: Product not found'),
+                      backgroundColor: FlutterFlowTheme.of(context).error,
+                    ),
+                  );
+                }
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: FlutterFlowTheme.of(context).primary,
