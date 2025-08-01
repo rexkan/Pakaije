@@ -231,63 +231,63 @@ final kTranslationsMap = <Map<String, Map<String, String>>>[
   {
     'bmyk6uai': {
       'zh_Hans': 'Admin Dashboard',
-      'en': '',
+      'en': 'Admin Dashboard',
     },
     'rat39zhn': {
       'zh_Hans': 'Fashion Brand Name',
-      'en': '',
+      'en': 'Fashion Brand Name',
     },
     'v6mkehgt': {
       'zh_Hans': 'Welcome to your dashboard',
-      'en': '',
+      'en': 'Welcome to your dashboard',
     },
     '117xolf0': {
       'zh_Hans': 'Quick Actions',
-      'en': '',
+      'en': 'Quick Actions',
     },
     'wku26ku8': {
       'zh_Hans': 'Virtual Try-On Setting',
-      'en': '',
+      'en': 'Virtual Try-On Setting',
     },
     '2vh8qpif': {
       'zh_Hans': 'Generate Discount Codes',
-      'en': '',
+      'en': 'Generate Discount Codes',
     },
     '3f7k9yr8': {
       'zh_Hans': 'Setting Buy Links',
-      'en': '',
+      'en': 'Setting Buy Links',
     },
     'u9cj6y8q': {
       'zh_Hans': 'Your Branded Products',
-      'en': '',
+      'en': 'Your Branded Products',
     },
     'a5gpunvx': {
       'zh_Hans': '+ Add New Product',
-      'en': '',
+      'en': '+ Add New Product',
     },
     'f9i8ahkt': {
       'zh_Hans': 'Profile',
-      'en': '',
+      'en': 'Profile',
     },
     'ox7iiivm': {
       'zh_Hans': 'Code',
-      'en': '',
+      'en': 'Code',
     },
     '9v4dj9ym': {
       'zh_Hans': 'Virtual',
-      'en': '',
+      'en': 'Virtual',
     },
     '2n3m97us': {
       'zh_Hans': 'Link',
-      'en': '',
+      'en': 'Link',
     },
     'clbgcl56': {
       'zh_Hans': 'Add',
-      'en': '',
+      'en': 'Add',
     },
     'zm8jicd4': {
       'zh_Hans': 'Home',
-      'en': '',
+      'en': 'Home',
     },
   },
   // UserProfile
@@ -1844,67 +1844,67 @@ final kTranslationsMap = <Map<String, Map<String, String>>>[
   {
     'l1irw7eq': {
       'zh_Hans': 'Virtual Try-On Setting',
-      'en': '',
+      'en': 'Virtual Try-On Setting',
     },
     '4rcpwvxb': {
       'zh_Hans': 'Product Lists',
-      'en': '',
+      'en': 'Product Lists',
     },
     'ij57il7x': {
       'zh_Hans': 'Product Name',
-      'en': '',
+      'en': 'Product Name',
     },
     'vf8y14fk': {
       'zh_Hans': 'Product Tags',
-      'en': '',
+      'en': 'Product Tags',
     },
     'zckull2v': {
       'zh_Hans': 'Product Name',
-      'en': '',
+      'en': 'Product Name',
     },
     '6havdzbu': {
       'zh_Hans': 'Product Tags',
-      'en': '',
+      'en': 'Product Tags',
     },
     '67atclb6': {
       'zh_Hans': 'Product Name',
-      'en': '',
+      'en': 'Product Name',
     },
     'zx0g3xbe': {
       'zh_Hans': 'Product Tags',
-      'en': '',
+      'en': 'Product Tags',
     },
     'p3coiibg': {
       'zh_Hans': 'Product Name',
-      'en': '',
+      'en': 'Product Name',
     },
     'sid0gtkc': {
       'zh_Hans': 'Product Tags',
-      'en': '',
+      'en': 'Product Tags',
     },
     'gm7403p0': {
       'zh_Hans': 'Profile',
-      'en': '',
+      'en': 'Profile',
     },
     'zq6kx6x4': {
       'zh_Hans': 'Code',
-      'en': '',
+      'en': 'Code',
     },
     'w13stjta': {
       'zh_Hans': 'Virtual',
-      'en': '',
+      'en': 'Virtual',
     },
     'gmbq92yg': {
       'zh_Hans': 'Link',
-      'en': '',
+      'en': 'Link',
     },
     'o5zfriuv': {
       'zh_Hans': 'Add',
-      'en': '',
+      'en': 'Add',
     },
     'qzcdgb6w': {
       'zh_Hans': 'Home',
-      'en': '',
+      'en': 'Home',
     },
   },
   // AddProduct
