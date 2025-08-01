@@ -472,12 +472,7 @@ class _AddNewItemWidgetState extends State<AddNewItemWidget> {
                                       controller: _model
                                               .categoryDropDownValueController ??=
                                           FormFieldController<String>(null),
-                                      options: [
-                                        'Tops',
-                                        'Bottoms',
-                                        'Skirts',
-                                        'Shoes'
-                                      ],
+                                      options: ['Tops', 'Bottoms', 'Shoes'],
                                       onChanged: (val) => safeSetState(() =>
                                           _model.categoryDropDownValue = val),
                                       width: 330.0,
@@ -703,10 +698,7 @@ class _AddNewItemWidgetState extends State<AddNewItemWidget> {
                                       controller: _model
                                               .weatherDropDownValueController ??=
                                           FormFieldController<String>(null),
-                                      options: [
-                                        'Hot weather',
-                                        'Cold weather'
-                                      ],
+                                      options: ['Hot weather', 'Cold weather'],
                                       onChanged: (val) => safeSetState(() =>
                                           _model.weatherDropDownValue = val),
                                       width: 330.0,
@@ -1092,12 +1084,13 @@ class _AddNewItemWidgetState extends State<AddNewItemWidget> {
                                           return;
                                         }
 
-                                        if (_model.weatherDropDownValue == null) {
+                                        if (_model.weatherDropDownValue ==
+                                            null) {
                                           ScaffoldMessenger.of(context)
                                               .showSnackBar(
                                             SnackBar(
-                                              content:
-                                                  Text('Please select weather suitability'),
+                                              content: Text(
+                                                  'Please select weather suitability'),
                                               backgroundColor:
                                                   FlutterFlowTheme.of(context)
                                                       .error,
@@ -1125,21 +1118,26 @@ class _AddNewItemWidgetState extends State<AddNewItemWidget> {
                                           // Prepare occasion list (style category)
                                           List<String> occasionList = [];
                                           if (_model.selectedStyleTag != null) {
-                                            occasionList.add(_model.selectedStyleTag!);
+                                            occasionList
+                                                .add(_model.selectedStyleTag!);
                                           }
 
                                           // Prepare weather suitability list
                                           List<String> weatherList = [];
-                                          if (_model.weatherDropDownValue != null) {
-                                            weatherList.add(_model.weatherDropDownValue!);
+                                          if (_model.weatherDropDownValue !=
+                                              null) {
+                                            weatherList.add(
+                                                _model.weatherDropDownValue!);
                                           }
 
                                           await WardrobeItemsRecord.collection
                                               .add({
                                             'user_id': currentUserUid,
                                             'image_url': _model.uploadedFileUrl,
-                                            'name': _model.itemNameTextController.text,
-                                            'category': _model.categoryDropDownValue!,
+                                            'name': _model
+                                                .itemNameTextController.text,
+                                            'category':
+                                                _model.categoryDropDownValue!,
                                             'color': _model.colorDropDownValue!,
                                             'occasion': occasionList,
                                             'weather_suitability': weatherList,
