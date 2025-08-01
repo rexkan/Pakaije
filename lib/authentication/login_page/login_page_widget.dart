@@ -1,9 +1,11 @@
+// STEP 1: Add this import at the top of your login page file
 import '/auth/firebase_auth/auth_util.dart';
 import '/backend/backend.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/index.dart';
+import '/services/session_service.dart'; // 🔥 ADD THIS IMPORT
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -41,7 +43,6 @@ class _LoginPageWidgetState extends State<LoginPageWidget> {
   @override
   void dispose() {
     _model.dispose();
-
     super.dispose();
   }
 
@@ -573,6 +574,29 @@ class _LoginPageWidgetState extends State<LoginPageWidget> {
                                                   );
                                                   return;
                                                 }
+                                              }
+
+                                              // 🔥 Track successful login
+                                              try {
+                                                await SessionService
+                                                    .trackUserAction(
+                                                  action: 'user_login',
+                                                  metadata: {
+                                                    'login_time': DateTime.now()
+                                                        .toIso8601String(),
+                                                    'login_method':
+                                                        'email_password',
+                                                    'user_email': _model
+                                                        .emailAddressTextController
+                                                        .text,
+                                                  },
+                                                );
+                                                print(
+                                                    '✅ Login session tracked successfully');
+                                              } catch (e) {
+                                                print(
+                                                    '⚠️ Failed to track login session: $e');
+                                                // Don't stop the login process if session tracking fails
                                               }
 
                                               _model.currentUserDoc =

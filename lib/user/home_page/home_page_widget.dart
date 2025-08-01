@@ -13,6 +13,7 @@ export 'home_page_model.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import '/backend/backend.dart'; // Firebase backend integration
 
 class HomePageWidget extends StatefulWidget {
   const HomePageWidget({super.key});
@@ -31,41 +32,177 @@ class _HomePageWidgetState extends State<HomePageWidget> {
   String? temperature;
   late String currentDate;
 
+  // NEW: Smart suggestion variables
+  SuggestionSettingsRecord? suggestionSettings;
+  String smartSuggestion = "Loading personalized suggestions...";
+  Map<String, dynamic>? fullWeatherData;
+  DocumentReference? settingsDocRef;
+  bool isLoadingSuggestions = true;
+
   @override
   void initState() {
     super.initState();
     _model = createModel(context, () => HomePageModel());
 
     currentDate = DateFormat('dd/MM').format(DateTime.now());
-    getTemperature();
+
+    // Initialize Firebase settings document reference
+    settingsDocRef = SuggestionSettingsRecord.collection.doc('global_settings');
+
+    // Load suggestion settings first, then weather
+    _loadSuggestionSettings().then((_) {
+      getTemperature();
+    });
   }
 
+  // NEW: Load suggestion settings from Firebase using the schema
+  Future<void> _loadSuggestionSettings() async {
+    try {
+      print('🔄 Loading suggestion settings...');
+
+      suggestionSettings =
+          await SuggestionSettingsRecord.getDocumentOnce(settingsDocRef!);
+
+      if (suggestionSettings != null) {
+        print('✅ Suggestion settings loaded successfully');
+        print(
+            'Temperature ranges: Cold(${suggestionSettings!.weatherTempColdMin}-${suggestionSettings!.weatherTempColdMax}), Warm(${suggestionSettings!.weatherTempWarmMin}-${suggestionSettings!.weatherTempWarmMax}), Hot(${suggestionSettings!.weatherTempHotMin}+)');
+      } else {
+        print('⚠️ No suggestion settings found, will use defaults');
+        // Set default settings if none exist
+        setState(() {
+          smartSuggestion =
+              "Default weather suggestions enabled - personalized settings not configured by admin yet.";
+        });
+      }
+    } catch (e) {
+      print('❌ Error loading suggestion settings: $e');
+      setState(() {
+        smartSuggestion =
+            "Unable to load personalized settings. Please check your connection.";
+        isLoadingSuggestions = false;
+      });
+    }
+  }
+
+  // UPDATED: Get temperature and generate smart suggestions
   Future<void> getTemperature() async {
-    final city = 'Kuala Lumpur'; // Change to any city
+    final city = 'Kuala Lumpur';
     final apiKey =
-        'YOUR_API_KEY'; // 🔁 Replace with your OpenWeatherMap API key
+        'e94a49d026651e92567ebe5d78715d81'; // Use the same API key as admin
     final url =
         'https://api.openweathermap.org/data/2.5/weather?q=$city&appid=$apiKey&units=metric';
 
     try {
+      print('🌤️ Fetching weather data...');
       final response = await http.get(Uri.parse(url));
+
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         setState(() {
           temperature = data['main']['temp'].toStringAsFixed(1);
+          fullWeatherData = data;
+
+          // Generate smart suggestion based on settings and weather
+          if (suggestionSettings != null) {
+            smartSuggestion = _generateSmartSuggestion(data);
+            print(
+                '✅ Smart suggestion generated: ${smartSuggestion.substring(0, 50)}...');
+          } else {
+            smartSuggestion =
+                "Weather data loaded, but personalized settings unavailable. Using basic suggestions.";
+          }
+          isLoadingSuggestions = false;
         });
       } else {
-        print('Failed to load weather data');
+        print('Failed to load weather data: ${response.statusCode}');
+        setState(() {
+          smartSuggestion = "Unable to load weather data for suggestions";
+          isLoadingSuggestions = false;
+        });
       }
     } catch (e) {
-      print('Error fetching temperature: $e');
+      print('Error fetching weather: $e');
+      setState(() {
+        smartSuggestion =
+            "Error loading weather-based suggestions. Please check your connection.";
+        isLoadingSuggestions = false;
+      });
     }
+  }
+
+  // NEW: Generate smart suggestions using the schema
+  String _generateSmartSuggestion(Map<String, dynamic> weather) {
+    if (suggestionSettings == null) {
+      // Fallback to basic suggestions without admin settings
+      final temp = (weather['main']?['temp'] as num?)?.round() ?? 0;
+      final description =
+          weather['weather']?[0]?['main']?.toString().toLowerCase() ?? '';
+
+      if (temp <= 24) {
+        return "🧥 Cool weather (${temp}°C) - consider wearing a light jacket or long sleeves";
+      } else if (temp >= 30) {
+        return "☀️ Hot weather (${temp}°C) - stay cool with light clothing and stay hydrated";
+      } else {
+        return "👕 Pleasant weather (${temp}°C) - perfect for comfortable, casual clothing";
+      }
+    }
+
+    final temp = (weather['main']?['temp'] as num?)?.round() ?? 0;
+    final humidity = (weather['main']?['humidity'] as num?) ?? 0;
+    final windSpeed = ((weather['wind']?['speed'] as num?) ?? 0) * 3.6;
+    final description =
+        weather['weather']?[0]?['main']?.toString().toLowerCase() ?? '';
+
+    List<String> suggestions = [];
+
+    // Temperature-based suggestions using schema fields
+    if (temp <= suggestionSettings!.weatherTempColdMax) {
+      suggestions.add(
+          "🧥 Cold weather detected (${temp}°C) - wear warm layers, jacket, and closed shoes");
+    } else if (temp >= suggestionSettings!.weatherTempWarmMin &&
+        temp <= suggestionSettings!.weatherTempWarmMax) {
+      suggestions.add(
+          "👕 Perfect weather (${temp}°C) - light, breathable clothing recommended");
+    } else if (temp >= suggestionSettings!.weatherTempHotMin) {
+      suggestions.add(
+          "☀️ Hot weather (${temp}°C) - wear light colors, UV protection, and stay hydrated");
+    }
+
+    // Condition-based suggestions using schema settings
+    if (suggestionSettings!.weatherHumidityAlert && humidity > 80) {
+      suggestions.add(
+          "💧 High humidity (${humidity}%) - choose moisture-wicking fabrics and avoid heavy materials");
+    }
+
+    if (suggestionSettings!.weatherStrongWind && windSpeed > 25) {
+      suggestions.add(
+          "💨 Strong winds (${windSpeed.round()} km/h) - avoid loose clothing and secure accessories");
+    }
+
+    if (suggestionSettings!.weatherRainDetection &&
+        description.contains('rain')) {
+      suggestions.add(
+          "🌧️ Rain detected - bring an umbrella and consider waterproof clothing");
+    }
+
+    if (suggestionSettings!.weatherUvProtection &&
+        description.contains('clear') &&
+        temp >= suggestionSettings!.weatherTempHotMin) {
+      suggestions.add(
+          "🕶️ Clear skies and hot weather - sunglasses, hat, and sunscreen are essential");
+    }
+
+    if (suggestions.isEmpty) {
+      return "Perfect weather conditions! Dress comfortably and enjoy your day! ☀️";
+    }
+
+    return suggestions.join('\n\n');
   }
 
   @override
   void dispose() {
     _model.dispose();
-
     super.dispose();
   }
 
@@ -137,7 +274,10 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                           EdgeInsetsDirectional.fromSTEB(16.0, 12.0, 16.0, 0.0),
                       child: Container(
                         width: double.infinity,
-                        height: 250.0,
+                        constraints: BoxConstraints(
+                          minHeight:
+                              280.0, // Use constraints instead of fixed height
+                        ),
                         decoration: BoxDecoration(
                           color:
                               FlutterFlowTheme.of(context).secondaryBackground,
@@ -333,7 +473,6 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                               CrossAxisAlignment.center,
                                           children: [
                                             Text(
-                                              /*27 */
                                               temperature != null
                                                   ? '$temperature°C'
                                                   : '...',
@@ -381,63 +520,258 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                   ),
                                 ],
                               ),
+
+                              // ENHANCED OUTFIT SUGGEST SECTION
                               Padding(
                                 padding: EdgeInsetsDirectional.fromSTEB(
                                     0.0, 12.0, 0.0, 0.0),
-                                child: Text(
-                                  FFLocalizations.of(context).getText(
-                                    '8nn2q56u' /* Outfit Suggest */,
-                                  ),
-                                  style: FlutterFlowTheme.of(context)
-                                      .titleMedium
-                                      .override(
-                                        font: GoogleFonts.interTight(
-                                          fontWeight:
-                                              FlutterFlowTheme.of(context)
-                                                  .titleMedium
-                                                  .fontWeight,
-                                          fontStyle:
-                                              FlutterFlowTheme.of(context)
-                                                  .titleMedium
-                                                  .fontStyle,
-                                        ),
-                                        color: FlutterFlowTheme.of(context)
-                                            .underground,
-                                        letterSpacing: 0.0,
-                                        fontWeight: FlutterFlowTheme.of(context)
-                                            .titleMedium
-                                            .fontWeight,
-                                        fontStyle: FlutterFlowTheme.of(context)
-                                            .titleMedium
-                                            .fontStyle,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      FFLocalizations.of(context).getText(
+                                        '8nn2q56u' /* Outfit Suggest */,
                                       ),
-                                ),
-                              ),
-                              Text(
-                                FFLocalizations.of(context).getText(
-                                  '9rqy3n49' /*  */,
-                                ),
-                                style: FlutterFlowTheme.of(context)
-                                    .titleMedium
-                                    .override(
-                                      font: GoogleFonts.interTight(
-                                        fontWeight: FlutterFlowTheme.of(context)
-                                            .titleMedium
-                                            .fontWeight,
-                                        fontStyle: FlutterFlowTheme.of(context)
-                                            .titleMedium
-                                            .fontStyle,
-                                      ),
-                                      color: FlutterFlowTheme.of(context)
-                                          .underground,
-                                      letterSpacing: 0.0,
-                                      fontWeight: FlutterFlowTheme.of(context)
+                                      style: FlutterFlowTheme.of(context)
                                           .titleMedium
-                                          .fontWeight,
-                                      fontStyle: FlutterFlowTheme.of(context)
-                                          .titleMedium
-                                          .fontStyle,
+                                          .override(
+                                            font: GoogleFonts.interTight(
+                                              fontWeight:
+                                                  FlutterFlowTheme.of(context)
+                                                      .titleMedium
+                                                      .fontWeight,
+                                              fontStyle:
+                                                  FlutterFlowTheme.of(context)
+                                                      .titleMedium
+                                                      .fontStyle,
+                                            ),
+                                            color: FlutterFlowTheme.of(context)
+                                                .underground,
+                                            letterSpacing: 0.0,
+                                            fontWeight:
+                                                FlutterFlowTheme.of(context)
+                                                    .titleMedium
+                                                    .fontWeight,
+                                            fontStyle:
+                                                FlutterFlowTheme.of(context)
+                                                    .titleMedium
+                                                    .fontStyle,
+                                          ),
                                     ),
+
+                                    // Smart Suggestion Container
+                                    Padding(
+                                      padding: EdgeInsetsDirectional.fromSTEB(
+                                          0.0, 8.0, 0.0, 0.0),
+                                      child: Container(
+                                        width: double.infinity,
+                                        padding: EdgeInsetsDirectional.fromSTEB(
+                                            14.0, 14.0, 14.0, 14.0),
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(
+                                            colors: [
+                                              Color(0xFFF8F9FA),
+                                              Color(0xFFE3F2FD),
+                                            ],
+                                            stops: [0.0, 1.0],
+                                            begin:
+                                                AlignmentDirectional(0.0, -1.0),
+                                            end: AlignmentDirectional(0.0, 1.0),
+                                          ),
+                                          borderRadius:
+                                              BorderRadius.circular(10.0),
+                                          border: Border.all(
+                                            color: FlutterFlowTheme.of(context)
+                                                .underground
+                                                .withOpacity(0.1),
+                                            width: 1.0,
+                                          ),
+                                        ),
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            // Header with icon
+                                            Row(
+                                              children: [
+                                                Icon(
+                                                  isLoadingSuggestions
+                                                      ? Icons.hourglass_empty
+                                                      : Icons.lightbulb_outline,
+                                                  color: FlutterFlowTheme.of(
+                                                          context)
+                                                      .underground,
+                                                  size: 18.0,
+                                                ),
+                                                Padding(
+                                                  padding: EdgeInsetsDirectional
+                                                      .fromSTEB(
+                                                          6.0, 0.0, 0.0, 0.0),
+                                                  child: Text(
+                                                    isLoadingSuggestions
+                                                        ? 'Loading Smart Suggestions'
+                                                        : 'Smart Weather Suggestions',
+                                                    style: FlutterFlowTheme.of(
+                                                            context)
+                                                        .titleSmall
+                                                        .override(
+                                                          font: GoogleFonts
+                                                              .interTight(),
+                                                          color: FlutterFlowTheme
+                                                                  .of(context)
+                                                              .underground,
+                                                          letterSpacing: 0.0,
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                          fontSize: 14.0,
+                                                        ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+
+                                            // Suggestion text
+                                            Padding(
+                                              padding: EdgeInsetsDirectional
+                                                  .fromSTEB(
+                                                      0.0, 10.0, 0.0, 0.0),
+                                              child: Text(
+                                                smartSuggestion,
+                                                style: FlutterFlowTheme.of(
+                                                        context)
+                                                    .titleSmall
+                                                    .override(
+                                                      font: GoogleFonts.inter(
+                                                        fontWeight:
+                                                            FlutterFlowTheme.of(
+                                                                    context)
+                                                                .titleSmall
+                                                                .fontWeight,
+                                                        fontStyle:
+                                                            FlutterFlowTheme.of(
+                                                                    context)
+                                                                .titleSmall
+                                                                .fontStyle,
+                                                      ),
+                                                      color:
+                                                          FlutterFlowTheme.of(
+                                                                  context)
+                                                              .underground,
+                                                      letterSpacing: 0.0,
+                                                      lineHeight: 1.4,
+                                                    ),
+                                              ),
+                                            ),
+
+                                            // Weather info footer
+                                            if (fullWeatherData != null &&
+                                                !isLoadingSuggestions)
+                                              Padding(
+                                                padding: EdgeInsetsDirectional
+                                                    .fromSTEB(
+                                                        0.0, 10.0, 0.0, 0.0),
+                                                child: Container(
+                                                  width: double.infinity,
+                                                  padding: EdgeInsetsDirectional
+                                                      .fromSTEB(
+                                                          10.0, 6.0, 10.0, 6.0),
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.white
+                                                        .withOpacity(0.7),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            6.0),
+                                                  ),
+                                                  child: Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .spaceBetween,
+                                                    children: [
+                                                      Text(
+                                                        suggestionSettings !=
+                                                                null
+                                                            ? 'Personalized for current KL weather'
+                                                            : 'Basic weather suggestions for KL',
+                                                        style:
+                                                            FlutterFlowTheme.of(
+                                                                    context)
+                                                                .bodySmall
+                                                                .override(
+                                                                  font: GoogleFonts
+                                                                      .inter(),
+                                                                  color: FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .secondaryText,
+                                                                  letterSpacing:
+                                                                      0.0,
+                                                                  fontSize:
+                                                                      11.0,
+                                                                ),
+                                                      ),
+                                                      Row(
+                                                        children: [
+                                                          Icon(
+                                                            suggestionSettings !=
+                                                                    null
+                                                                ? Icons.verified
+                                                                : Icons
+                                                                    .info_outline,
+                                                            color:
+                                                                suggestionSettings !=
+                                                                        null
+                                                                    ? Colors
+                                                                        .green
+                                                                    : Colors
+                                                                        .orange,
+                                                            size: 14.0,
+                                                          ),
+                                                          Padding(
+                                                            padding:
+                                                                EdgeInsetsDirectional
+                                                                    .fromSTEB(
+                                                                        3.0,
+                                                                        0.0,
+                                                                        0.0,
+                                                                        0.0),
+                                                            child: Text(
+                                                              suggestionSettings !=
+                                                                      null
+                                                                  ? 'Live'
+                                                                  : 'Basic',
+                                                              style: FlutterFlowTheme
+                                                                      .of(context)
+                                                                  .bodySmall
+                                                                  .override(
+                                                                    font: GoogleFonts
+                                                                        .inter(),
+                                                                    color: suggestionSettings !=
+                                                                            null
+                                                                        ? Colors
+                                                                            .green
+                                                                        : Colors
+                                                                            .orange,
+                                                                    letterSpacing:
+                                                                        0.0,
+                                                                    fontSize:
+                                                                        11.0,
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .w600,
+                                                                  ),
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ],
                           ),
