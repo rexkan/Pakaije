@@ -34,7 +34,6 @@ class _AdminDashboardWidgetState extends State<AdminDashboardWidget>
   @override
   void dispose() {
     _model.dispose();
-
     super.dispose();
   }
 
@@ -197,8 +196,9 @@ class _AdminDashboardWidgetState extends State<AdminDashboardWidget>
           top: true,
           child: SingleChildScrollView(
             child: Column(
-              mainAxisSize: MainAxisSize.min, // Changed from max to min
+              mainAxisSize: MainAxisSize.min,
               children: [
+                // 🔥 FIXED: Centered Active Users and Active Vendors Cards
                 Container(
                   width: double.infinity,
                   height: 148.88,
@@ -211,10 +211,7 @@ class _AdminDashboardWidgetState extends State<AdminDashboardWidget>
                       BoxShadow(
                         blurRadius: 3.0,
                         color: Color(0x33000000),
-                        offset: Offset(
-                          0.0,
-                          1.0,
-                        ),
+                        offset: Offset(0.0, 1.0),
                       )
                     ],
                   ),
@@ -229,80 +226,48 @@ class _AdminDashboardWidgetState extends State<AdminDashboardWidget>
                           child: Padding(
                             padding: EdgeInsetsDirectional.fromSTEB(
                                 0.0, 8.0, 0.0, 0.0),
-                            child: ListView(
-                              padding: EdgeInsets.zero,
-                              primary: false,
-                              shrinkWrap: true,
-                              scrollDirection: Axis.horizontal,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment
+                                  .spaceEvenly, // 🔥 CHANGED: Center the cards
                               children: [
-                                Padding(
-                                  padding: EdgeInsetsDirectional.fromSTEB(
-                                      36.0, 7.0, 8.0, 8.0),
-                                  child: Container(
-                                    width: 181.6,
-                                    decoration: BoxDecoration(
-                                      color: FlutterFlowTheme.of(context)
-                                          .blankCanvas,
-                                      boxShadow: [
-                                        BoxShadow(
-                                          blurRadius: 4.0,
-                                          color: Color(0x33000000),
-                                          offset: Offset(
-                                            0.0,
-                                            2.0,
-                                          ),
-                                        )
-                                      ],
-                                      borderRadius: BorderRadius.circular(8.0),
-                                      border: Border.all(
-                                        color: Color(0xFFE0E3E7),
-                                        width: 2.0,
-                                      ),
+                                // Active Users Card
+                                Container(
+                                  width:
+                                      160, // 🔥 CHANGED: Fixed width for both cards
+                                  decoration: BoxDecoration(
+                                    color: FlutterFlowTheme.of(context)
+                                        .blankCanvas,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        blurRadius: 4.0,
+                                        color: Color(0x33000000),
+                                        offset: Offset(0.0, 2.0),
+                                      )
+                                    ],
+                                    borderRadius: BorderRadius.circular(8.0),
+                                    border: Border.all(
+                                      color: Color(0xFFE0E3E7),
+                                      width: 2.0,
                                     ),
-                                    child: Padding(
-                                      padding: EdgeInsets.all(12.0),
-                                      child: Column(
-                                        mainAxisSize: MainAxisSize.max,
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          StreamBuilder<QuerySnapshot>(
-                                            stream: FirebaseFirestore.instance
-                                                .collection('users')
-                                                .where('role',
-                                                    isEqualTo: 'User')
-                                                .where('account_status',
-                                                    isEqualTo: 'active')
-                                                .snapshots(),
-                                            builder: (context, snapshot) {
-                                              if (!snapshot.hasData) {
-                                                return Text(
-                                                  '0',
-                                                  style: FlutterFlowTheme.of(
-                                                          context)
-                                                      .displaySmall
-                                                      .override(
-                                                        font: GoogleFonts
-                                                            .interTight(
-                                                          fontWeight:
-                                                              FlutterFlowTheme.of(
-                                                                      context)
-                                                                  .displaySmall
-                                                                  .fontWeight,
-                                                          fontStyle:
-                                                              FlutterFlowTheme.of(
-                                                                      context)
-                                                                  .displaySmall
-                                                                  .fontStyle,
-                                                        ),
-                                                        letterSpacing: 0.0,
-                                                      ),
-                                                );
-                                              }
-                                              final userCount =
-                                                  snapshot.data!.docs.length;
+                                  ),
+                                  child: Padding(
+                                    padding: EdgeInsets.all(12.0),
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.max,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        StreamBuilder<QuerySnapshot>(
+                                          stream: FirebaseFirestore.instance
+                                              .collection('users')
+                                              .where('role', isEqualTo: 'User')
+                                              .where('account_status',
+                                                  isEqualTo: 'active')
+                                              .snapshots(),
+                                          builder: (context, snapshot) {
+                                            if (!snapshot.hasData) {
                                               return Text(
-                                                userCount.toString(),
+                                                '0',
                                                 style:
                                                     FlutterFlowTheme.of(context)
                                                         .displaySmall
@@ -323,128 +288,116 @@ class _AdminDashboardWidgetState extends State<AdminDashboardWidget>
                                                           letterSpacing: 0.0,
                                                         ),
                                               );
-                                            },
-                                          ),
-                                          Padding(
-                                            padding:
-                                                EdgeInsetsDirectional.fromSTEB(
-                                                    0.0, 4.0, 0.0, 0.0),
-                                            child: Text(
-                                              FFLocalizations.of(context)
-                                                  .getText(
-                                                '2deva6hz' /* Active Users */,
-                                              ),
-                                              style:
-                                                  FlutterFlowTheme.of(context)
-                                                      .labelMedium
-                                                      .override(
-                                                        font: GoogleFonts.inter(
-                                                          fontWeight:
-                                                              FlutterFlowTheme.of(
-                                                                      context)
-                                                                  .labelMedium
-                                                                  .fontWeight,
-                                                          fontStyle:
-                                                              FlutterFlowTheme.of(
-                                                                      context)
-                                                                  .labelMedium
-                                                                  .fontStyle,
-                                                        ),
-                                                        color:
-                                                            FlutterFlowTheme.of(
-                                                                    context)
-                                                                .primaryText,
-                                                        letterSpacing: 0.0,
-                                                        fontWeight:
-                                                            FlutterFlowTheme.of(
-                                                                    context)
-                                                                .labelMedium
-                                                                .fontWeight,
-                                                        fontStyle:
-                                                            FlutterFlowTheme.of(
-                                                                    context)
-                                                                .labelMedium
-                                                                .fontStyle,
-                                                      ),
+                                            }
+                                            final userCount =
+                                                snapshot.data!.docs.length;
+                                            return Text(
+                                              userCount.toString(),
+                                              style: FlutterFlowTheme.of(
+                                                      context)
+                                                  .displaySmall
+                                                  .override(
+                                                    font:
+                                                        GoogleFonts.interTight(
+                                                      fontWeight:
+                                                          FlutterFlowTheme.of(
+                                                                  context)
+                                                              .displaySmall
+                                                              .fontWeight,
+                                                      fontStyle:
+                                                          FlutterFlowTheme.of(
+                                                                  context)
+                                                              .displaySmall
+                                                              .fontStyle,
+                                                    ),
+                                                    letterSpacing: 0.0,
+                                                  ),
+                                            );
+                                          },
+                                        ),
+                                        Padding(
+                                          padding:
+                                              EdgeInsetsDirectional.fromSTEB(
+                                                  0.0, 4.0, 0.0, 0.0),
+                                          child: Text(
+                                            FFLocalizations.of(context).getText(
+                                              '2deva6hz' /* Active Users */,
                                             ),
+                                            style: FlutterFlowTheme.of(context)
+                                                .labelMedium
+                                                .override(
+                                                  font: GoogleFonts.inter(
+                                                    fontWeight:
+                                                        FlutterFlowTheme.of(
+                                                                context)
+                                                            .labelMedium
+                                                            .fontWeight,
+                                                    fontStyle:
+                                                        FlutterFlowTheme.of(
+                                                                context)
+                                                            .labelMedium
+                                                            .fontStyle,
+                                                  ),
+                                                  color: FlutterFlowTheme.of(
+                                                          context)
+                                                      .primaryText,
+                                                  letterSpacing: 0.0,
+                                                  fontWeight:
+                                                      FlutterFlowTheme.of(
+                                                              context)
+                                                          .labelMedium
+                                                          .fontWeight,
+                                                  fontStyle:
+                                                      FlutterFlowTheme.of(
+                                                              context)
+                                                          .labelMedium
+                                                          .fontStyle,
+                                                ),
                                           ),
-                                        ],
-                                      ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ),
-                                Padding(
-                                  padding: EdgeInsetsDirectional.fromSTEB(
-                                      14.0, 7.0, 8.0, 8.0),
-                                  child: Container(
-                                    width: 171.71,
-                                    decoration: BoxDecoration(
-                                      color: FlutterFlowTheme.of(context)
-                                          .blankCanvas,
-                                      boxShadow: [
-                                        BoxShadow(
-                                          blurRadius: 4.0,
-                                          color: Color(0x33000000),
-                                          offset: Offset(
-                                            0.0,
-                                            2.0,
-                                          ),
-                                        )
-                                      ],
-                                      borderRadius: BorderRadius.circular(8.0),
-                                      border: Border.all(
-                                        color: Color(0xFFE0E3E7),
-                                        width: 2.0,
-                                      ),
+
+                                // Active Vendors Card
+                                Container(
+                                  width: 160, // 🔥 CHANGED: Same fixed width
+                                  decoration: BoxDecoration(
+                                    color: FlutterFlowTheme.of(context)
+                                        .blankCanvas,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        blurRadius: 4.0,
+                                        color: Color(0x33000000),
+                                        offset: Offset(0.0, 2.0),
+                                      )
+                                    ],
+                                    borderRadius: BorderRadius.circular(8.0),
+                                    border: Border.all(
+                                      color: Color(0xFFE0E3E7),
+                                      width: 2.0,
                                     ),
-                                    child: Padding(
-                                      padding: EdgeInsets.all(12.0),
-                                      child: Column(
-                                        mainAxisSize: MainAxisSize.max,
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          StreamBuilder<QuerySnapshot>(
-                                            stream: FirebaseFirestore.instance
-                                                .collection('users')
-                                                .where('role',
-                                                    isEqualTo: 'Vendor')
-                                                .where('account_status',
-                                                    isEqualTo: 'active')
-                                                .snapshots(),
-                                            builder: (context, snapshot) {
-                                              if (!snapshot.hasData) {
-                                                return Text(
-                                                  '0',
-                                                  style: FlutterFlowTheme.of(
-                                                          context)
-                                                      .displaySmall
-                                                      .override(
-                                                        font: GoogleFonts
-                                                            .interTight(
-                                                          fontWeight:
-                                                              FlutterFlowTheme.of(
-                                                                      context)
-                                                                  .displaySmall
-                                                                  .fontWeight,
-                                                          fontStyle:
-                                                              FlutterFlowTheme.of(
-                                                                      context)
-                                                                  .displaySmall
-                                                                  .fontStyle,
-                                                        ),
-                                                        color:
-                                                            FlutterFlowTheme.of(
-                                                                    context)
-                                                                .primaryText,
-                                                        letterSpacing: 0.0,
-                                                      ),
-                                                );
-                                              }
-                                              final vendorCount =
-                                                  snapshot.data!.docs.length;
+                                  ),
+                                  child: Padding(
+                                    padding: EdgeInsets.all(12.0),
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.max,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        StreamBuilder<QuerySnapshot>(
+                                          stream: FirebaseFirestore.instance
+                                              .collection('users')
+                                              .where('role',
+                                                  isEqualTo: 'Vendor')
+                                              .where('account_status',
+                                                  isEqualTo: 'active')
+                                              .snapshots(),
+                                          builder: (context, snapshot) {
+                                            if (!snapshot.hasData) {
                                               return Text(
-                                                vendorCount.toString(),
+                                                '0',
                                                 style:
                                                     FlutterFlowTheme.of(context)
                                                         .displaySmall
@@ -468,53 +421,77 @@ class _AdminDashboardWidgetState extends State<AdminDashboardWidget>
                                                           letterSpacing: 0.0,
                                                         ),
                                               );
-                                            },
-                                          ),
-                                          Padding(
-                                            padding:
-                                                EdgeInsetsDirectional.fromSTEB(
-                                                    0.0, 4.0, 0.0, 0.0),
-                                            child: Text(
-                                              FFLocalizations.of(context)
-                                                  .getText(
-                                                'zwczaws4' /* Active Vendors */,
-                                              ),
-                                              style:
-                                                  FlutterFlowTheme.of(context)
-                                                      .labelMedium
-                                                      .override(
-                                                        font: GoogleFonts.inter(
-                                                          fontWeight:
-                                                              FlutterFlowTheme.of(
-                                                                      context)
-                                                                  .labelMedium
-                                                                  .fontWeight,
-                                                          fontStyle:
-                                                              FlutterFlowTheme.of(
-                                                                      context)
-                                                                  .labelMedium
-                                                                  .fontStyle,
-                                                        ),
-                                                        color:
-                                                            FlutterFlowTheme.of(
-                                                                    context)
-                                                                .primaryText,
-                                                        letterSpacing: 0.0,
-                                                        fontWeight:
-                                                            FlutterFlowTheme.of(
-                                                                    context)
-                                                                .labelMedium
-                                                                .fontWeight,
-                                                        fontStyle:
-                                                            FlutterFlowTheme.of(
-                                                                    context)
-                                                                .labelMedium
-                                                                .fontStyle,
-                                                      ),
+                                            }
+                                            final vendorCount =
+                                                snapshot.data!.docs.length;
+                                            return Text(
+                                              vendorCount.toString(),
+                                              style: FlutterFlowTheme.of(
+                                                      context)
+                                                  .displaySmall
+                                                  .override(
+                                                    font:
+                                                        GoogleFonts.interTight(
+                                                      fontWeight:
+                                                          FlutterFlowTheme.of(
+                                                                  context)
+                                                              .displaySmall
+                                                              .fontWeight,
+                                                      fontStyle:
+                                                          FlutterFlowTheme.of(
+                                                                  context)
+                                                              .displaySmall
+                                                              .fontStyle,
+                                                    ),
+                                                    color: FlutterFlowTheme.of(
+                                                            context)
+                                                        .primaryText,
+                                                    letterSpacing: 0.0,
+                                                  ),
+                                            );
+                                          },
+                                        ),
+                                        Padding(
+                                          padding:
+                                              EdgeInsetsDirectional.fromSTEB(
+                                                  0.0, 4.0, 0.0, 0.0),
+                                          child: Text(
+                                            FFLocalizations.of(context).getText(
+                                              'zwczaws4' /* Active Vendors */,
                                             ),
+                                            style: FlutterFlowTheme.of(context)
+                                                .labelMedium
+                                                .override(
+                                                  font: GoogleFonts.inter(
+                                                    fontWeight:
+                                                        FlutterFlowTheme.of(
+                                                                context)
+                                                            .labelMedium
+                                                            .fontWeight,
+                                                    fontStyle:
+                                                        FlutterFlowTheme.of(
+                                                                context)
+                                                            .labelMedium
+                                                            .fontStyle,
+                                                  ),
+                                                  color: FlutterFlowTheme.of(
+                                                          context)
+                                                      .primaryText,
+                                                  letterSpacing: 0.0,
+                                                  fontWeight:
+                                                      FlutterFlowTheme.of(
+                                                              context)
+                                                          .labelMedium
+                                                          .fontWeight,
+                                                  fontStyle:
+                                                      FlutterFlowTheme.of(
+                                                              context)
+                                                          .labelMedium
+                                                          .fontStyle,
+                                                ),
                                           ),
-                                        ],
-                                      ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ),
@@ -526,6 +503,8 @@ class _AdminDashboardWidgetState extends State<AdminDashboardWidget>
                     ),
                   ),
                 ),
+
+                // Urgent Tasks Section
                 Container(
                   width: 422.5,
                   decoration: BoxDecoration(
@@ -699,6 +678,8 @@ class _AdminDashboardWidgetState extends State<AdminDashboardWidget>
                     ],
                   ),
                 ),
+
+                // Recent Activity Section
                 Container(
                   width: 422.5,
                   decoration: BoxDecoration(
@@ -727,7 +708,7 @@ class _AdminDashboardWidgetState extends State<AdminDashboardWidget>
                         ),
                       ),
                       SizedBox(height: 10),
-                      // Removed the fixed height Container - this was causing the gap
+                      // Recent activity list
                       StreamBuilder<QuerySnapshot>(
                         stream: FirebaseFirestore.instance
                             .collection('users')
@@ -742,10 +723,8 @@ class _AdminDashboardWidgetState extends State<AdminDashboardWidget>
                           final docs = snapshot.data!.docs;
 
                           return ListView.builder(
-                            shrinkWrap:
-                                true, // This allows ListView to take only the space it needs
-                            physics:
-                                NeverScrollableScrollPhysics(), // Disables ListView's own scrolling
+                            shrinkWrap: true,
+                            physics: NeverScrollableScrollPhysics(),
                             itemCount: docs.length,
                             itemBuilder: (context, index) {
                               final data =

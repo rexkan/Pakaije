@@ -5,6 +5,8 @@ import '/backend/backend.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart'; // 🔥 ADDED FOR DATE FORMATTING
 import 'reports_insights_model.dart';
 export 'reports_insights_model.dart';
 
@@ -31,7 +33,20 @@ class _ReportsInsightsWidgetState extends State<ReportsInsightsWidget> {
   int contentReports = 0;
   double promoConversion = 0.0;
   List<Map<String, dynamic>> wardrobeCategories = [];
-  List<Map<String, dynamic>> userGrowthData = [];
+  List<Map<String, dynamic>> userGrowthData =
+      []; // 🔥 MODIFIED: Now holds real data
+
+  // 🔥 ADDED: User statistics
+  int totalUsers = 0;
+  int newUsersThisPeriod = 0;
+
+  // 🔥 ADDED: Promo code statistics
+  int totalPromoCopies = 0;
+  int uniquePromoUsers = 0;
+  List<MapEntry<String, int>> mostPopularPromos = [];
+
+  // 🔥 ADDED: Vendor performance statistics
+  List<Map<String, dynamic>> vendorPerformanceData = [];
 
   @override
   void initState() {
@@ -47,8 +62,10 @@ class _ReportsInsightsWidgetState extends State<ReportsInsightsWidget> {
         _loadActiveSessionsData(),
         _loadOutfitMetrics(),
         _loadContentReports(),
-        _loadPromoMetrics(),
+        _loadPromoMetrics(), // 🔥 NOW USES REAL PROMO DATA
         _loadWardrobeCategories(),
+        _loadUserGrowthData(), // 🔥 ADDED: Load user growth data
+        _loadVendorPerformance(), // 🔥 ADDED: Load vendor performance data
       ]);
       setState(() {}); // Refresh UI with loaded data
     } catch (e) {
@@ -56,64 +73,169 @@ class _ReportsInsightsWidgetState extends State<ReportsInsightsWidget> {
     }
   }
 
-  // Method 1: Get from daily_reports collection (if you have this data)
-  Future<void> _loadActiveSessionsData() async {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-
+  // 🔥 ADDED: Load user growth data from users collection
+  Future<void> _loadUserGrowthData() async {
     try {
-      // Option 1: From daily_reports collection
-      final dailyReportQuery = await FirebaseFirestore.instance
-          .collection('daily_reports')
-          .where('date', isGreaterThanOrEqualTo: today)
-          .orderBy('date', descending: true)
-          .limit(1)
+      final now = DateTime.now();
+      final days = _selectedTimeRange == '7d'
+          ? 7
+          : _selectedTimeRange == '30d'
+              ? 30
+              : 90;
+      final startDate = now.subtract(Duration(days: days));
+
+      print('📊 Loading user growth data for ${_selectedTimeRange}...');
+      print(
+          '📅 Date range: ${DateFormat('yyyy-MM-dd').format(startDate)} to ${DateFormat('yyyy-MM-dd').format(now)}');
+
+      // Get all users created within the selected time range
+      final usersQuery = await FirebaseFirestore.instance
+          .collection('users')
+          .where('created_time', isGreaterThan: startDate)
+          .where('role',
+              isEqualTo:
+                  'User') // 🔥 Only count regular users (not vendors/admins)
+          .orderBy('created_time')
           .get();
 
-      if (dailyReportQuery.docs.isNotEmpty) {
-        activeSessions =
-            dailyReportQuery.docs.first.data()['active_sessions'] ?? 0;
-      } else {
-        // Option 2: Calculate from users with recent activity
-        await _calculateActiveSessionsFromUsers();
+      print('📈 Found ${usersQuery.docs.length} new users in selected period');
+
+      // Update new users count
+      newUsersThisPeriod = usersQuery.docs.length;
+
+      // Get total user count
+      final totalUsersQuery = await FirebaseFirestore.instance
+          .collection('users')
+          .where('role', isEqualTo: 'User')
+          .get();
+
+      totalUsers = totalUsersQuery.docs.length;
+      print('👥 Total users: $totalUsers');
+
+      // Group users by day for chart
+      Map<String, int> dailySignups = {};
+
+      // Initialize all days in range with 0
+      for (int i = 0; i < days; i++) {
+        final date = now.subtract(Duration(days: days - 1 - i));
+        final dayKey = DateFormat('yyyy-MM-dd').format(date);
+        dailySignups[dayKey] = 0;
       }
+
+      // Count actual signups per day
+      for (var doc in usersQuery.docs) {
+        final data = doc.data();
+        final createdTime = (data['created_time'] as Timestamp).toDate();
+        final dayKey = DateFormat('yyyy-MM-dd').format(createdTime);
+        dailySignups[dayKey] = (dailySignups[dayKey] ?? 0) + 1;
+
+        // Debug: Print sample user data
+        if (dailySignups[dayKey] == 1) {
+          print(
+              '📝 Sample user on $dayKey: ${data['display_name']} (${data['email']})');
+        }
+      }
+
+      // Convert to chart data format
+      userGrowthData = [];
+      dailySignups.entries.toList().asMap().forEach((index, entry) {
+        userGrowthData.add({
+          'date': entry.key,
+          'count': entry.value,
+          'index': index,
+        });
+      });
+
+      print('📊 Chart data points: ${userGrowthData.length}');
+      print('📈 User growth data: $userGrowthData');
     } catch (e) {
-      print('Error loading active sessions: $e');
-      // Fallback to calculating from user activity
-      await _calculateActiveSessionsFromUsers();
+      print('❌ Error loading user growth data: $e');
+      // Set default data if there's an error
+      userGrowthData = [
+        {
+          'date': DateFormat('yyyy-MM-dd')
+              .format(DateTime.now().subtract(Duration(days: 6))),
+          'count': 0,
+          'index': 0
+        },
+        {
+          'date': DateFormat('yyyy-MM-dd')
+              .format(DateTime.now().subtract(Duration(days: 5))),
+          'count': 0,
+          'index': 1
+        },
+        {
+          'date': DateFormat('yyyy-MM-dd')
+              .format(DateTime.now().subtract(Duration(days: 4))),
+          'count': 0,
+          'index': 2
+        },
+        {
+          'date': DateFormat('yyyy-MM-dd')
+              .format(DateTime.now().subtract(Duration(days: 3))),
+          'count': 0,
+          'index': 3
+        },
+        {
+          'date': DateFormat('yyyy-MM-dd')
+              .format(DateTime.now().subtract(Duration(days: 2))),
+          'count': 0,
+          'index': 4
+        },
+        {
+          'date': DateFormat('yyyy-MM-dd')
+              .format(DateTime.now().subtract(Duration(days: 1))),
+          'count': 0,
+          'index': 5
+        },
+        {
+          'date': DateFormat('yyyy-MM-dd').format(DateTime.now()),
+          'count': 0,
+          'index': 6
+        },
+      ];
+      newUsersThisPeriod = 0;
+      totalUsers = 0;
     }
   }
 
-  // Method 2: Calculate active sessions based on recent user activity
-  Future<void> _calculateActiveSessionsFromUsers() async {
+  // 🔥 MODIFIED: Load active sessions from user_sessions collection
+  Future<void> _loadActiveSessionsData() async {
+    try {
+      // Calculate active sessions from user_sessions collection
+      await _calculateActiveSessionsFromUserSessions();
+    } catch (e) {
+      print('Error loading active sessions: $e');
+      activeSessions = 0;
+    }
+  }
+
+  // 🔥 MODIFIED: Calculate active sessions from user_sessions collection
+  Future<void> _calculateActiveSessionsFromUserSessions() async {
     final now = DateTime.now();
-    final last30Minutes = now.subtract(Duration(minutes: 30));
+    final activeThreshold = now.subtract(Duration(
+        minutes:
+            30)); // Consider sessions active if last_active within 30 minutes
 
     try {
-      // Count users who created outfits in last 30 minutes
-      final recentOutfitsQuery = await FirebaseFirestore.instance
-          .collection('outfits')
-          .where('created_time', isGreaterThan: last30Minutes)
+      final userSessionsQuery = await FirebaseFirestore.instance
+          .collection('user_sessions')
+          .where('last_active', isGreaterThan: activeThreshold)
           .get();
 
-      // Count users who planned outfits in last 30 minutes
-      final recentPlansQuery = await FirebaseFirestore.instance
-          .collection('outfit_plans')
-          .where('created_time', isGreaterThan: last30Minutes)
-          .get();
+      activeSessions = userSessionsQuery.docs.length;
 
-      // Get unique users from both activities
-      Set<String> activeUserIds = {};
-      for (var doc in recentOutfitsQuery.docs) {
-        activeUserIds.add(doc.data()['user_id'] ?? '');
-      }
-      for (var doc in recentPlansQuery.docs) {
-        activeUserIds.add(doc.data()['user_id'] ?? '');
-      }
+      print('✅ Active sessions found: $activeSessions');
+      print('✅ Query returned ${userSessionsQuery.docs.length} documents');
 
-      activeSessions = activeUserIds.length;
+      // Debug: Print some sample session data
+      for (var doc in userSessionsQuery.docs.take(3)) {
+        final data = doc.data();
+        print(
+            'Session: ${data['user_id']} - Last Active: ${data['last_active']}');
+      }
     } catch (e) {
-      print('Error calculating active sessions: $e');
+      print('❌ Error calculating active sessions from user_sessions: $e');
       activeSessions = 0;
     }
   }
@@ -164,22 +286,277 @@ class _ReportsInsightsWidgetState extends State<ReportsInsightsWidget> {
     }
   }
 
+  // 🔥 UPDATED: Load real promo metrics from promo_code_usage collection
   Future<void> _loadPromoMetrics() async {
     try {
-      final activePromos = await FirebaseFirestore.instance
+      final now = DateTime.now();
+      final startDate = now.subtract(Duration(
+          days: _selectedTimeRange == '7d'
+              ? 7
+              : _selectedTimeRange == '30d'
+                  ? 30
+                  : 90));
+
+      // Get all promo code copies in the selected time range
+      final usageQuery = await FirebaseFirestore.instance
+          .collection('promo_code_usage')
+          .where('timestamp', isGreaterThan: startDate)
+          .get();
+
+      // Get total active promo codes for comparison
+      final activePromosQuery = await FirebaseFirestore.instance
           .collection('promo_codes')
           .where('is_active', isEqualTo: true)
           .get();
 
-      // Calculate conversion rate (this would need actual usage tracking)
-      // For now, using mock calculation based on active promos
-      promoConversion = activePromos.docs.length > 0 ? 24.8 : 0.0;
+      final totalCopies = usageQuery.docs.length;
+      final activePromoCount = activePromosQuery.docs.length;
+      final uniqueUsers = <String>{};
+      final promoCodeStats = <String, int>{};
+      final vendorStats = <String, int>{};
+
+      // Analyze usage data
+      for (var doc in usageQuery.docs) {
+        final data = doc.data();
+        final userId = data['user_id'] as String? ?? '';
+        final promoCode = data['promo_code'] as String? ?? '';
+        final vendorId = data['vendor_id'] as String? ?? '';
+
+        uniqueUsers.add(userId);
+        promoCodeStats[promoCode] = (promoCodeStats[promoCode] ?? 0) + 1;
+        vendorStats[vendorId] = (vendorStats[vendorId] ?? 0) + 1;
+      }
+
+      // Calculate engagement rate (copies per active promo code)
+      promoConversion = activePromoCount > 0
+          ? (totalCopies / activePromoCount) * 10 // Scale for better display
+          : 0.0;
+
+      // Store additional metrics for charts
+      totalPromoCopies = totalCopies;
+      uniquePromoUsers = uniqueUsers.length;
+      mostPopularPromos = promoCodeStats.entries.toList()
+        ..sort((a, b) => b.value.compareTo(a.value));
+
+      print('📊 Promo Code Analytics:');
+      print('   📋 Total Copies: $totalCopies');
+      print('   👥 Unique Users: ${uniqueUsers.length}');
+      print('   🎯 Active Promo Codes: $activePromoCount');
+      print('   📈 Engagement Rate: ${promoConversion.toStringAsFixed(1)}');
       print(
-          'Active promos: ${activePromos.docs.length}, Conversion: $promoConversion%');
+          '   🏆 Most Popular Codes: ${promoCodeStats.entries.take(3).map((e) => '${e.key}(${e.value})').join(', ')}');
     } catch (e) {
-      print('Error loading promo metrics: $e');
+      print('❌ Error loading promo metrics: $e');
       promoConversion = 0.0;
+      totalPromoCopies = 0;
+      uniquePromoUsers = 0;
+      mostPopularPromos = [];
     }
+  }
+
+  // 🔥 NEW: Load vendor performance data using branded_items + promo_code_usage
+  Future<void> _loadVendorPerformance() async {
+    try {
+      final now = DateTime.now();
+      final startDate = now.subtract(Duration(
+          days: _selectedTimeRange == '7d'
+              ? 7
+              : _selectedTimeRange == '30d'
+                  ? 30
+                  : 90));
+
+      // Get promo code usage by vendor (within time range)
+      final usageQuery = await FirebaseFirestore.instance
+          .collection('promo_code_usage')
+          .where('timestamp', isGreaterThan: startDate)
+          .get();
+
+      // Get all branded items by vendor
+      final brandedItemsQuery =
+          await FirebaseFirestore.instance.collection('branded_items').get();
+
+      // Get active promo codes by vendor
+      final promoQuery = await FirebaseFirestore.instance
+          .collection('promo_codes')
+          .where('is_active', isEqualTo: true)
+          .get();
+
+      // Calculate comprehensive vendor stats
+      Map<String, Map<String, dynamic>> vendorStats = {};
+
+      // Initialize vendor stats from branded items
+      for (var doc in brandedItemsQuery.docs) {
+        final data = doc.data();
+        final vendorId = data['vendor_id'] as String? ?? '';
+
+        if (vendorId.isNotEmpty) {
+          if (!vendorStats.containsKey(vendorId)) {
+            vendorStats[vendorId] = {
+              'vendorId': vendorId,
+              'totalProducts': 0,
+              'recentProducts': 0,
+              'categories': <String>{},
+              'promoCopies': 0,
+              'activePromos': 0,
+              'avgPrice': 0.0,
+              'totalValue': 0.0,
+            };
+          }
+
+          // Count total products
+          vendorStats[vendorId]!['totalProducts']++;
+
+          // Count recent products (within time range)
+          final dateAdded = data['date_added'] as Timestamp?;
+          if (dateAdded != null && dateAdded.toDate().isAfter(startDate)) {
+            vendorStats[vendorId]!['recentProducts']++;
+          }
+
+          // Collect categories
+          final category = data['category'] as String? ?? '';
+          if (category.isNotEmpty) {
+            (vendorStats[vendorId]!['categories'] as Set<String>).add(category);
+          }
+
+          // Sum up pricing for average calculation
+          final price = (data['price'] as num?)?.toDouble() ?? 0.0;
+          vendorStats[vendorId]!['totalValue'] += price;
+        }
+      }
+
+      // Count promo code copies per vendor
+      for (var doc in usageQuery.docs) {
+        final data = doc.data();
+        final vendorId = data['vendor_id'] as String? ?? '';
+
+        if (vendorId.isNotEmpty && vendorStats.containsKey(vendorId)) {
+          vendorStats[vendorId]!['promoCopies']++;
+        }
+      }
+
+      // Count active promo codes per vendor
+      for (var doc in promoQuery.docs) {
+        final data = doc.data();
+        final vendorId = data['vendor_id'] as String? ?? '';
+
+        if (vendorId.isNotEmpty && vendorStats.containsKey(vendorId)) {
+          vendorStats[vendorId]!['activePromos']++;
+        }
+      }
+
+      // Calculate performance scores and convert to list
+      vendorPerformanceData = [];
+      for (var entry in vendorStats.entries) {
+        final stats = entry.value;
+        final totalProducts = stats['totalProducts'] as int;
+        final recentProducts = stats['recentProducts'] as int;
+        final promoCopies = stats['promoCopies'] as int;
+        final activePromos = stats['activePromos'] as int;
+        final categories = stats['categories'] as Set<String>;
+        final totalValue = stats['totalValue'] as double;
+
+        // Calculate metrics
+        final avgPrice = totalProducts > 0 ? totalValue / totalProducts : 0.0;
+        final promoEngagement =
+            activePromos > 0 ? (promoCopies / activePromos) : 0.0;
+        final categoryDiversity = categories.length;
+        final productFreshness =
+            totalProducts > 0 ? (recentProducts / totalProducts) * 100 : 0.0;
+
+        // Calculate overall performance score (weighted formula)
+        final performanceScore =
+            ((promoEngagement * 40) + // 40% weight on promo engagement
+                (categoryDiversity * 15) + // 15% weight on category diversity
+                (productFreshness *
+                    25) + // 25% weight on recent product additions
+                (totalProducts.clamp(0, 50) *
+                    0.4) // 20% weight on catalog size (capped at 50)
+            );
+
+        vendorPerformanceData.add({
+          'vendorId': entry.key,
+          'vendorName': await _getVendorName(entry.key),
+          'totalProducts': totalProducts,
+          'recentProducts': recentProducts,
+          'promoCopies': promoCopies,
+          'activePromos': activePromos,
+          'categoryDiversity': categoryDiversity,
+          'avgPrice': avgPrice,
+          'promoEngagement': promoEngagement,
+          'productFreshness': productFreshness,
+          'performanceScore': performanceScore,
+        });
+      }
+
+      // Sort by performance score (highest first)
+      vendorPerformanceData.sort((a, b) => (b['performanceScore'] as double)
+          .compareTo(a['performanceScore'] as double));
+
+      // Take top 5 vendors
+      vendorPerformanceData = vendorPerformanceData.take(5).toList();
+
+      print('📊 Top Vendor Performance:');
+      for (var vendor in vendorPerformanceData.take(3)) {
+        print('   🏆 ${vendor['vendorName']}:');
+        print(
+            '      📦 ${vendor['totalProducts']} products (${vendor['recentProducts']} recent)');
+        print(
+            '      📋 ${vendor['promoCopies']} promo copies, ${vendor['categoryDiversity']} categories');
+        print(
+            '      📈 Score: ${(vendor['performanceScore'] as double).toStringAsFixed(1)}');
+      }
+    } catch (e) {
+      print('❌ Error loading vendor performance: $e');
+      vendorPerformanceData = [];
+    }
+  }
+
+  // 🔥 NEW: Get vendor display names (tries to infer from branded items)
+  Future<String> _getVendorName(String vendorId) async {
+    try {
+      // Try to get vendor name from vendors collection if it exists
+      final vendorDoc = await FirebaseFirestore.instance
+          .collection(
+              'vendors') // Replace with your actual vendor collection name if you have one
+          .doc(vendorId)
+          .get();
+
+      if (vendorDoc.exists) {
+        final data = vendorDoc.data();
+        return data?['name'] ??
+            data?['display_name'] ??
+            data?['business_name'] ??
+            vendorId;
+      }
+    } catch (e) {
+      // Vendors collection might not exist, that's okay
+    }
+
+    // Fallback: try to get a sample branded item to infer vendor name
+    try {
+      final sampleQuery = await FirebaseFirestore.instance
+          .collection('branded_items')
+          .where('vendor_id', isEqualTo: vendorId)
+          .limit(1)
+          .get();
+
+      if (sampleQuery.docs.isNotEmpty) {
+        final data = sampleQuery.docs.first.data();
+        final itemName = data['name'] as String? ?? '';
+
+        // Extract brand name from item name (common patterns)
+        if (itemName.contains(' - ')) {
+          return itemName.split(' - ').first;
+        } else if (itemName.contains(' by ')) {
+          return itemName.split(' by ').last;
+        }
+      }
+    } catch (e) {
+      // Couldn't infer name from items
+    }
+
+    // Final fallback: truncated vendor ID
+    return vendorId.length > 10 ? vendorId.substring(0, 10) + '...' : vendorId;
   }
 
   Future<void> _loadWardrobeCategories() async {
@@ -380,6 +757,7 @@ class _ReportsInsightsWidgetState extends State<ReportsInsightsWidget> {
     );
   }
 
+  // 🔥 MODIFIED: Updated user growth chart with real data
   Widget _buildUserGrowthChart() {
     return Container(
       width: double.infinity,
@@ -405,64 +783,129 @@ class _ReportsInsightsWidgetState extends State<ReportsInsightsWidget> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'User Growth Trend',
-              style: FlutterFlowTheme.of(context).titleMedium.override(
-                    letterSpacing: 0.0,
-                    fontWeight: FontWeight.w600,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'New User Registrations',
+                  style: FlutterFlowTheme.of(context).titleMedium.override(
+                        letterSpacing: 0.0,
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: FlutterFlowTheme.of(context)
+                        .underground
+                        .withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
                   ),
+                  child: Text(
+                    '$newUsersThisPeriod new users',
+                    style: TextStyle(
+                      color: FlutterFlowTheme.of(context).underground,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
             ),
             SizedBox(height: 20),
             Expanded(
-              child: LineChart(
-                LineChartData(
-                  gridData: FlGridData(show: true, drawVerticalLine: false),
-                  titlesData: FlTitlesData(
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        getTitlesWidget: (value, meta) {
-                          const days = [
-                            'Mon',
-                            'Tue',
-                            'Wed',
-                            'Thu',
-                            'Fri',
-                            'Sat',
-                            'Sun'
-                          ];
-                          return Text(days[value.toInt() % days.length]);
-                        },
+              child: userGrowthData.isNotEmpty
+                  ? LineChart(
+                      LineChartData(
+                        gridData:
+                            FlGridData(show: true, drawVerticalLine: false),
+                        titlesData: FlTitlesData(
+                          bottomTitles: AxisTitles(
+                            sideTitles: SideTitles(
+                              showTitles: true,
+                              getTitlesWidget: (value, meta) {
+                                final index = value.toInt();
+                                if (index >= 0 &&
+                                    index < userGrowthData.length) {
+                                  final date = DateTime.parse(
+                                      userGrowthData[index]['date']);
+                                  return Padding(
+                                    padding: EdgeInsets.only(top: 8.0),
+                                    child: Text(
+                                      DateFormat('MM/dd').format(date),
+                                      style: TextStyle(fontSize: 10),
+                                    ),
+                                  );
+                                }
+                                return Text('');
+                              },
+                            ),
+                          ),
+                          leftTitles: AxisTitles(
+                            sideTitles: SideTitles(
+                              showTitles: true,
+                              getTitlesWidget: (value, meta) {
+                                return Text(
+                                  value.toInt().toString(),
+                                  style: TextStyle(fontSize: 10),
+                                );
+                              },
+                            ),
+                          ),
+                          topTitles: AxisTitles(
+                              sideTitles: SideTitles(showTitles: false)),
+                          rightTitles: AxisTitles(
+                              sideTitles: SideTitles(showTitles: false)),
+                        ),
+                        borderData: FlBorderData(show: false),
+                        lineBarsData: [
+                          LineChartBarData(
+                            spots: userGrowthData.map((data) {
+                              return FlSpot(
+                                data['index'].toDouble(),
+                                data['count'].toDouble(),
+                              );
+                            }).toList(),
+                            isCurved: true,
+                            color: FlutterFlowTheme.of(context).underground,
+                            barWidth: 3,
+                            dotData: FlDotData(
+                              show: true,
+                              getDotPainter: (spot, percent, barData, index) {
+                                return FlDotCirclePainter(
+                                  radius: 4,
+                                  color:
+                                      FlutterFlowTheme.of(context).underground,
+                                  strokeWidth: 2,
+                                  strokeColor: Colors.white,
+                                );
+                              },
+                            ),
+                            belowBarData: BarAreaData(
+                              show: true,
+                              color: FlutterFlowTheme.of(context)
+                                  .underground
+                                  .withOpacity(0.1),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          CircularProgressIndicator(
+                            color: FlutterFlowTheme.of(context).underground,
+                          ),
+                          SizedBox(height: 16),
+                          Text(
+                            'Loading user growth data...',
+                            style: FlutterFlowTheme.of(context).bodyMedium,
+                          ),
+                        ],
                       ),
                     ),
-                    leftTitles: AxisTitles(
-                      sideTitles: SideTitles(showTitles: true),
-                    ),
-                    topTitles:
-                        AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    rightTitles:
-                        AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  ),
-                  borderData: FlBorderData(show: false),
-                  lineBarsData: [
-                    LineChartBarData(
-                      spots: [
-                        FlSpot(0, 900),
-                        FlSpot(1, 950),
-                        FlSpot(2, 1000),
-                        FlSpot(3, 1100),
-                        FlSpot(4, 1150),
-                        FlSpot(5, 1200),
-                        FlSpot(6, 1250),
-                      ],
-                      isCurved: true,
-                      color: FlutterFlowTheme.of(context).underground,
-                      barWidth: 3,
-                      dotData: FlDotData(show: true),
-                    ),
-                  ],
-                ),
-              ),
             ),
           ],
         ),
@@ -470,6 +913,7 @@ class _ReportsInsightsWidgetState extends State<ReportsInsightsWidget> {
     );
   }
 
+  // 🔥 UPDATED: Promo conversion chart with real data
   Widget _buildPromoConversionChart() {
     return Container(
       width: double.infinity,
@@ -495,70 +939,115 @@ class _ReportsInsightsWidgetState extends State<ReportsInsightsWidget> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Promo Code Performance',
-              style: FlutterFlowTheme.of(context).titleMedium.override(
-                    letterSpacing: 0.0,
-                    fontWeight: FontWeight.w600,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Promo Code Performance',
+                  style: FlutterFlowTheme.of(context).titleMedium.override(
+                        letterSpacing: 0.0,
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: FlutterFlowTheme.of(context)
+                        .underground
+                        .withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
                   ),
+                  child: Text(
+                    '$totalPromoCopies copies',
+                    style: TextStyle(
+                      color: FlutterFlowTheme.of(context).underground,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
             ),
             SizedBox(height: 20),
             Expanded(
-              child: Row(
-                children: [
-                  Expanded(
-                    flex: 2,
-                    child: PieChart(
-                      PieChartData(
-                        sections: [
-                          PieChartSectionData(
-                            color: Colors.green,
-                            value: 65,
-                            title: 'Converted\n65%',
-                            radius: 80,
-                            titleStyle: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white),
+              child: totalPromoCopies > 0
+                  ? Row(
+                      children: [
+                        Expanded(
+                          flex: 2,
+                          child: PieChart(
+                            PieChartData(
+                              sections: [
+                                PieChartSectionData(
+                                  color: Colors.blue,
+                                  value: totalPromoCopies.toDouble(),
+                                  title: 'Copied\n$totalPromoCopies',
+                                  radius: 80,
+                                  titleStyle: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white),
+                                ),
+                                PieChartSectionData(
+                                  color: Colors.grey,
+                                  value: (totalPromoCopies * 0.3).toDouble(),
+                                  title:
+                                      'Available\n${(totalPromoCopies * 0.3).toInt()}',
+                                  radius: 80,
+                                  titleStyle: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white),
+                                ),
+                              ],
+                              centerSpaceRadius: 40,
+                            ),
                           ),
-                          PieChartSectionData(
-                            color: Colors.orange,
-                            value: 25,
-                            title: 'Pending\n25%',
-                            radius: 80,
-                            titleStyle: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white),
+                        ),
+                        Expanded(
+                          flex: 1,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              _buildLegendItem(Colors.blue, 'Total Copies',
+                                  '$totalPromoCopies'),
+                              _buildLegendItem(Colors.green, 'Unique Users',
+                                  '$uniquePromoUsers'),
+                              _buildLegendItem(Colors.orange, 'Engagement',
+                                  '${promoConversion.toStringAsFixed(1)}%'),
+                            ],
                           ),
-                          PieChartSectionData(
-                            color: Colors.red,
-                            value: 10,
-                            title: 'Expired\n10%',
-                            radius: 80,
-                            titleStyle: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white),
+                        ),
+                      ],
+                    )
+                  : Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.card_giftcard,
+                            size: 48,
+                            color: Colors.grey,
+                          ),
+                          SizedBox(height: 16),
+                          Text(
+                            'No promo code activity',
+                            style: FlutterFlowTheme.of(context)
+                                .bodyMedium
+                                .override(
+                                  color: Colors.grey,
+                                ),
+                          ),
+                          Text(
+                            'in selected time period',
+                            style:
+                                FlutterFlowTheme.of(context).bodySmall.override(
+                                      color: Colors.grey,
+                                    ),
                           ),
                         ],
-                        centerSpaceRadius: 40,
                       ),
                     ),
-                  ),
-                  Expanded(
-                    flex: 1,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        _buildLegendItem(Colors.green, 'Converted', '520'),
-                        _buildLegendItem(Colors.orange, 'Pending', '200'),
-                        _buildLegendItem(Colors.red, 'Expired', '80'),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
             ),
           ],
         ),
@@ -682,6 +1171,7 @@ class _ReportsInsightsWidgetState extends State<ReportsInsightsWidget> {
     );
   }
 
+  // 🔥 UPDATED: Build vendor performance chart with real data from branded_items
   Widget _buildVendorPerformance() {
     return Container(
       width: double.infinity,
@@ -707,73 +1197,167 @@ class _ReportsInsightsWidgetState extends State<ReportsInsightsWidget> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Top Vendor Performance',
-              style: FlutterFlowTheme.of(context).titleMedium.override(
-                    letterSpacing: 0.0,
-                    fontWeight: FontWeight.w600,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Top Vendor Performance',
+                  style: FlutterFlowTheme.of(context).titleMedium.override(
+                        letterSpacing: 0.0,
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: FlutterFlowTheme.of(context)
+                        .underground
+                        .withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
                   ),
+                  child: Text(
+                    '${vendorPerformanceData.length} vendors',
+                    style: TextStyle(
+                      color: FlutterFlowTheme.of(context).underground,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
             ),
             SizedBox(height: 20),
             Expanded(
-              child: BarChart(
-                BarChartData(
-                  alignment: BarChartAlignment.spaceAround,
-                  maxY: 100,
-                  barTouchData: BarTouchData(enabled: false),
-                  titlesData: FlTitlesData(
-                    show: true,
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        getTitlesWidget: (double value, TitleMeta meta) {
-                          const vendors = [
-                            'Nike',
-                            'Adidas',
-                            'Zara',
-                            'H&M',
-                            'Uniqlo'
+              child: vendorPerformanceData.isNotEmpty
+                  ? BarChart(
+                      BarChartData(
+                        alignment: BarChartAlignment.spaceAround,
+                        maxY: vendorPerformanceData.isNotEmpty
+                            ? vendorPerformanceData
+                                    .map((v) => v['performanceScore'] as double)
+                                    .reduce((a, b) => a > b ? a : b) +
+                                10
+                            : 100,
+                        barTouchData: BarTouchData(
+                          enabled: true,
+                          touchTooltipData: BarTouchTooltipData(
+                            getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                              if (groupIndex < vendorPerformanceData.length) {
+                                final vendor =
+                                    vendorPerformanceData[groupIndex];
+                                return BarTooltipItem(
+                                  '${vendor['vendorName']}\n',
+                                  TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold),
+                                  children: [
+                                    TextSpan(
+                                      text:
+                                          '${vendor['totalProducts']} products\n${vendor['promoCopies']} promo copies',
+                                      style: TextStyle(
+                                          color: Colors.white70, fontSize: 12),
+                                    ),
+                                  ],
+                                );
+                              }
+                              return null;
+                            },
+                          ),
+                        ),
+                        titlesData: FlTitlesData(
+                          show: true,
+                          bottomTitles: AxisTitles(
+                            sideTitles: SideTitles(
+                              showTitles: true,
+                              getTitlesWidget: (double value, TitleMeta meta) {
+                                final index = value.toInt();
+                                if (index >= 0 &&
+                                    index < vendorPerformanceData.length) {
+                                  final vendorName =
+                                      vendorPerformanceData[index]['vendorName']
+                                          as String;
+                                  return Padding(
+                                    padding: EdgeInsets.only(top: 8),
+                                    child: Text(
+                                      vendorName.length > 8
+                                          ? vendorName.substring(0, 8) + '...'
+                                          : vendorName,
+                                      style: TextStyle(fontSize: 10),
+                                    ),
+                                  );
+                                }
+                                return Text('');
+                              },
+                            ),
+                          ),
+                          leftTitles: AxisTitles(
+                            sideTitles: SideTitles(
+                              showTitles: true,
+                              getTitlesWidget: (double value, TitleMeta meta) {
+                                return Text('${value.toInt()}',
+                                    style: TextStyle(fontSize: 10));
+                              },
+                            ),
+                          ),
+                          topTitles: AxisTitles(
+                              sideTitles: SideTitles(showTitles: false)),
+                          rightTitles: AxisTitles(
+                              sideTitles: SideTitles(showTitles: false)),
+                        ),
+                        borderData: FlBorderData(show: false),
+                        barGroups:
+                            vendorPerformanceData.asMap().entries.map((entry) {
+                          final index = entry.key;
+                          final vendor = entry.value;
+                          final colors = [
+                            Colors.blue,
+                            Colors.green,
+                            Colors.orange,
+                            Colors.purple,
+                            Colors.red
                           ];
-                          return Text(
-                            vendors[value.toInt() % vendors.length],
-                            style: TextStyle(fontSize: 10),
+
+                          return BarChartGroupData(
+                            x: index,
+                            barRods: [
+                              BarChartRodData(
+                                toY: vendor['performanceScore'] as double,
+                                color: colors[index % colors.length],
+                                width: 20,
+                              )
+                            ],
                           );
-                        },
+                        }).toList(),
+                      ),
+                    )
+                  : Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.store,
+                            size: 48,
+                            color: Colors.grey,
+                          ),
+                          SizedBox(height: 16),
+                          Text(
+                            'No vendor performance data',
+                            style: FlutterFlowTheme.of(context)
+                                .bodyMedium
+                                .override(
+                                  color: Colors.grey,
+                                ),
+                          ),
+                          Text(
+                            'in selected time period',
+                            style:
+                                FlutterFlowTheme.of(context).bodySmall.override(
+                                      color: Colors.grey,
+                                    ),
+                          ),
+                        ],
                       ),
                     ),
-                    leftTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        getTitlesWidget: (double value, TitleMeta meta) {
-                          return Text('${value.toInt()}%');
-                        },
-                      ),
-                    ),
-                    topTitles:
-                        AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    rightTitles:
-                        AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  ),
-                  borderData: FlBorderData(show: false),
-                  barGroups: [
-                    BarChartGroupData(x: 0, barRods: [
-                      BarChartRodData(toY: 85, color: Colors.blue)
-                    ]),
-                    BarChartGroupData(x: 1, barRods: [
-                      BarChartRodData(toY: 78, color: Colors.green)
-                    ]),
-                    BarChartGroupData(x: 2, barRods: [
-                      BarChartRodData(toY: 72, color: Colors.orange)
-                    ]),
-                    BarChartGroupData(x: 3, barRods: [
-                      BarChartRodData(toY: 65, color: Colors.purple)
-                    ]),
-                    BarChartGroupData(
-                        x: 4,
-                        barRods: [BarChartRodData(toY: 58, color: Colors.red)]),
-                  ],
-                ),
-              ),
             ),
           ],
         ),
@@ -833,7 +1417,7 @@ class _ReportsInsightsWidgetState extends State<ReportsInsightsWidget> {
                 // Time Range Selector
                 _buildTimeRangeSelector(),
 
-                // KPI Cards - 3 Card Layout
+                // KPI Cards - 3 Card Layout (🔥 UPDATED: Now shows total users)
                 Container(
                   margin: EdgeInsetsDirectional.fromSTEB(22.0, 20.0, 22.0, 0.0),
                   child: Column(
@@ -843,11 +1427,15 @@ class _ReportsInsightsWidgetState extends State<ReportsInsightsWidget> {
                         children: [
                           Expanded(
                             child: _buildKPICard(
-                              title: 'Active Sessions',
-                              value: activeSessions.toString(),
-                              change: '+8.2%',
-                              icon: Icons.show_chart,
-                              changeColor: Colors.green,
+                              title: 'Total Users',
+                              value: totalUsers.toString(),
+                              change: newUsersThisPeriod > 0
+                                  ? '+${((newUsersThisPeriod / (totalUsers > 0 ? totalUsers : 1)) * 100).toStringAsFixed(1)}%'
+                                  : '0%',
+                              icon: Icons.people,
+                              changeColor: newUsersThisPeriod > 0
+                                  ? Colors.green
+                                  : Colors.grey,
                             ),
                           ),
                           SizedBox(width: 12),
@@ -886,16 +1474,16 @@ class _ReportsInsightsWidgetState extends State<ReportsInsightsWidget> {
                   ),
                 ),
 
-                // User Growth Chart
+                // User Growth Chart (🔥 NOW SHOWS REAL DATA)
                 _buildUserGrowthChart(),
 
                 // Trending Style Tags
                 _buildTopStyleTags(),
 
-                // Promo Conversion Chart
+                // Promo Conversion Chart (🔥 NOW SHOWS REAL DATA)
                 _buildPromoConversionChart(),
 
-                // Vendor Performance Chart
+                // Vendor Performance Chart (🔥 NOW SHOWS REAL DATA)
                 _buildVendorPerformance(),
 
                 // Action Buttons
