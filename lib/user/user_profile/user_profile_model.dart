@@ -15,6 +15,10 @@ class UserProfileModel extends FlutterFlowModel<UserProfileWidget> {
   TextEditingController? passwordTextController;
   String? Function(BuildContext, String?)? passwordTextControllerValidator;
 
+  // State for body view image upload
+  bool hasUploadedNewImage = false;
+  String? uploadedImagePath;
+
   @override
   void initState(BuildContext context) {}
 
@@ -25,5 +29,21 @@ class UserProfileModel extends FlutterFlowModel<UserProfileWidget> {
 
     passwordFocusNode?.dispose();
     passwordTextController?.dispose();
+  }
+
+  // Method to handle image upload
+  void setUploadedImage(String? imagePath) {
+    uploadedImagePath = imagePath;
+    hasUploadedNewImage = imagePath != null;
+  }
+
+  // Method to save the uploaded image
+  void saveUploadedImage() {
+    if (hasUploadedNewImage && uploadedImagePath != null) {
+      // Here you would typically save to your backend/database
+      // For now, we'll just reset the upload state
+      hasUploadedNewImage = false;
+      // Keep the image path so it shows as the current image
+    }
   }
 }
