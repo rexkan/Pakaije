@@ -1,10 +1,10 @@
 import 'dart:async';
 
 import 'package:collection/collection.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '/backend/schema/util/firestore_util.dart';
 
-import 'index.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 
 class PromoAnalyticsRecord extends FirestoreRecord {
@@ -45,7 +45,9 @@ class PromoAnalyticsRecord extends FirestoreRecord {
     _eventType = snapshotData['event_type'] as String?;
     _userId = snapshotData['user_id'] as String?;
     _vendorId = snapshotData['vendor_id'] as String?;
-    _createdAt = snapshotData['created_at'] as DateTime?;
+    _createdAt = snapshotData['created_at'] is Timestamp
+        ? (snapshotData['created_at'] as Timestamp).toDate()
+        : snapshotData['created_at'] as DateTime?;
   }
 
   static CollectionReference get collection =>
