@@ -344,6 +344,54 @@ class _OutfitPlanner2WidgetState extends State<OutfitPlanner2Widget> {
     );
   }
 
+  // Modern Navigation Item Builder (copied from home page)
+  Widget _buildNavItem({
+    required BuildContext context,
+    required IconData icon,
+    required String label,
+    required bool isActive,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsetsDirectional.fromSTEB(12.0, 8.0, 12.0, 8.0),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12.0),
+          color: isActive
+              ? FlutterFlowTheme.of(context).waxFlower.withOpacity(0.2)
+              : Colors.transparent,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 24.0,
+              color: isActive
+                  ? FlutterFlowTheme.of(context).waxFlower
+                  : FlutterFlowTheme.of(context).info,
+            ),
+            SizedBox(height: 4.0),
+            Text(
+              label,
+              style: FlutterFlowTheme.of(context).bodySmall.override(
+                    font: GoogleFonts.inter(
+                      fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+                    ),
+                    color: isActive
+                        ? FlutterFlowTheme.of(context).waxFlower
+                        : FlutterFlowTheme.of(context).info,
+                    fontSize: 11.0,
+                    letterSpacing: 0.0,
+                  ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -492,175 +540,88 @@ class _OutfitPlanner2WidgetState extends State<OutfitPlanner2Widget> {
                             ),
                           ],
                         ),
+                        SizedBox(
+                            height: 100.0), // Add bottom spacing for nav bar
                       ],
                     ),
                   ),
                 ),
               ),
             ),
-            // Bottom Navigation Bar
-            Container(
-              width: double.infinity,
-              height: 75.0,
-              decoration: BoxDecoration(
-                color: FlutterFlowTheme.of(context).underground,
+          ],
+        ),
+        // Modern Bottom Navigation Bar (copied from home page)
+        bottomNavigationBar: Container(
+          decoration: BoxDecoration(
+            color: FlutterFlowTheme.of(context).underground,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 10.0,
+                offset: Offset(0, -2),
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.max,
+            ],
+          ),
+          child: SafeArea(
+            child: Padding(
+              padding: EdgeInsetsDirectional.fromSTEB(16.0, 8.0, 16.0, 8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  Row(
-                    mainAxisSize: MainAxisSize.max,
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      FlutterFlowIconButton(
-                        borderRadius: 8.0,
-                        buttonSize: 40.0,
-                        icon: Icon(Icons.home,
-                            color: FlutterFlowTheme.of(context).info,
-                            size: 24.0),
-                        onPressed: () async {
-                          context.pushNamed(HomePageWidget.routeName);
-                        },
-                      ),
-                      FlutterFlowIconButton(
-                        borderRadius: 8.0,
-                        buttonSize: 40.0,
-                        icon: Icon(Icons.dry_cleaning,
-                            color: FlutterFlowTheme.of(context).info,
-                            size: 24.0),
-                        onPressed: () async {
-                          context.pushNamed(MyWardrodeWidget.routeName);
-                        },
-                      ),
-                      FlutterFlowIconButton(
-                        borderRadius: 8.0,
-                        buttonSize: 40.0,
-                        icon: Icon(Icons.touch_app,
-                            color: FlutterFlowTheme.of(context).info,
-                            size: 24.0),
-                        onPressed: () async {
-                          context.pushNamed(OutfitMatchWidget.routeName);
-                        },
-                      ),
-                      FlutterFlowIconButton(
-                        borderRadius: 8.0,
-                        buttonSize: 40.0,
-                        icon: Icon(Icons.shopping_cart,
-                            color: FlutterFlowTheme.of(context).info,
-                            size: 24.0),
-                        onPressed: () async {
-                          context.pushNamed(BuyClothesWidget.routeName);
-                        },
-                      ),
-                      FlutterFlowIconButton(
-                        borderRadius: 8.0,
-                        buttonSize: 40.0,
-                        icon: Icon(Icons.calendar_month,
-                            color: FlutterFlowTheme.of(context).waxFlower,
-                            size: 24.0),
-                        onPressed: () async {
-                          context.pushNamed(OutfitPlanner2Widget.routeName);
-                        },
-                      ),
-                      FlutterFlowIconButton(
-                        borderRadius: 8.0,
-                        buttonSize: 40.0,
-                        icon: Icon(Icons.person,
-                            color: FlutterFlowTheme.of(context).info,
-                            size: 24.0),
-                        onPressed: () async {
-                          context.pushNamed(UserProfileWidget.routeName);
-                        },
-                      ),
-                    ],
+                  _buildNavItem(
+                    context: context,
+                    icon: Icons.home_rounded,
+                    label: FFLocalizations.of(context)
+                        .getText('juu7t29n' /* Home */),
+                    isActive: false,
+                    onTap: () => context.pushNamed(HomePageWidget.routeName),
                   ),
-                  Align(
-                    alignment: AlignmentDirectional(0.0, 1.0),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.max,
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          FFLocalizations.of(context)
-                              .getText('juu7t29n' /* Home */),
-                          style:
-                              FlutterFlowTheme.of(context).bodyMedium.override(
-                                    font: GoogleFonts.inter(
-                                        fontWeight: FontWeight.w500),
-                                    color: FlutterFlowTheme.of(context).white,
-                                    fontSize: 12.0,
-                                    letterSpacing: 0.0,
-                                  ),
-                        ),
-                        Text(
-                          FFLocalizations.of(context)
-                              .getText('j10f5yzy' /* Wardrobe */),
-                          style:
-                              FlutterFlowTheme.of(context).bodyMedium.override(
-                                    font: GoogleFonts.inter(
-                                        fontWeight: FontWeight.w500),
-                                    color: FlutterFlowTheme.of(context).white,
-                                    fontSize: 12.0,
-                                    letterSpacing: 0.0,
-                                  ),
-                        ),
-                        Text(
-                          FFLocalizations.of(context)
-                              .getText('rud9dgwq' /* Match */),
-                          style:
-                              FlutterFlowTheme.of(context).bodyMedium.override(
-                                    font: GoogleFonts.inter(
-                                        fontWeight: FontWeight.w500),
-                                    color: FlutterFlowTheme.of(context).white,
-                                    fontSize: 12.0,
-                                    letterSpacing: 0.0,
-                                  ),
-                        ),
-                        Text(
-                          FFLocalizations.of(context)
-                              .getText('addqz4ow' /* Shop */),
-                          style:
-                              FlutterFlowTheme.of(context).bodyMedium.override(
-                                    font: GoogleFonts.inter(
-                                        fontWeight: FontWeight.w500),
-                                    color: FlutterFlowTheme.of(context).white,
-                                    fontSize: 12.0,
-                                    letterSpacing: 0.0,
-                                  ),
-                        ),
-                        Text(
-                          FFLocalizations.of(context)
-                              .getText('4sm6nxfd' /* Calendar */),
-                          style: FlutterFlowTheme.of(context)
-                              .bodyMedium
-                              .override(
-                                font: GoogleFonts.inter(
-                                    fontWeight: FontWeight.w500),
-                                color: FlutterFlowTheme.of(context).waxFlower,
-                                fontSize: 12.0,
-                                letterSpacing: 0.0,
-                              ),
-                        ),
-                        Text(
-                          FFLocalizations.of(context)
-                              .getText('lswy1ody' /* Profile */),
-                          style:
-                              FlutterFlowTheme.of(context).bodyMedium.override(
-                                    font: GoogleFonts.inter(
-                                        fontWeight: FontWeight.w500),
-                                    color: FlutterFlowTheme.of(context).white,
-                                    fontSize: 12.0,
-                                    letterSpacing: 0.0,
-                                  ),
-                        ),
-                      ],
-                    ),
+                  _buildNavItem(
+                    context: context,
+                    icon: Icons.checkroom_rounded,
+                    label: FFLocalizations.of(context)
+                        .getText('j10f5yzy' /* Wardrobe */),
+                    isActive: false,
+                    onTap: () => context.pushNamed(MyWardrodeWidget.routeName),
+                  ),
+                  _buildNavItem(
+                    context: context,
+                    icon: Icons.style_rounded,
+                    label: FFLocalizations.of(context)
+                        .getText('rud9dgwq' /* Match */),
+                    isActive: false,
+                    onTap: () => context.pushNamed(OutfitMatchWidget.routeName),
+                  ),
+                  _buildNavItem(
+                    context: context,
+                    icon: Icons.shopping_bag_rounded,
+                    label: FFLocalizations.of(context)
+                        .getText('addqz4ow' /* Shop */),
+                    isActive: false,
+                    onTap: () => context.pushNamed(BuyClothesWidget.routeName),
+                  ),
+                  _buildNavItem(
+                    context: context,
+                    icon: Icons.calendar_month_rounded,
+                    label: FFLocalizations.of(context)
+                        .getText('4sm6nxfd' /* Calendar */),
+                    isActive: true, // This is the current page
+                    onTap: () {
+                      // Already on calendar page
+                    },
+                  ),
+                  _buildNavItem(
+                    context: context,
+                    icon: Icons.person_rounded,
+                    label: FFLocalizations.of(context)
+                        .getText('lswy1ody' /* Profile */),
+                    isActive: false,
+                    onTap: () => context.pushNamed(UserProfileWidget.routeName),
                   ),
                 ],
               ),
             ),
-          ],
+          ),
         ),
       ),
     );
