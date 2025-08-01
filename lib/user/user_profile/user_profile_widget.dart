@@ -31,9 +31,11 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
     super.initState();
     _model = createModel(context, () => UserProfileModel());
 
-    // Model's initState will load user data automatically
-
-    WidgetsBinding.instance.addPostFrameCallback((_) => safeSetState(() {}));
+    // Clean up any invalid image URLs when the page loads
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      safeSetState(() {});
+      _model.cleanUpInvalidImageUrl();
+    });
   }
 
   @override
@@ -49,6 +51,8 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
       final XFile? image = await picker.pickImage(
         source: ImageSource.gallery,
         imageQuality: 80,
+        maxWidth: 800,
+        maxHeight: 1200,
       );
 
       if (image != null) {
@@ -60,8 +64,9 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content:
-                Text('Image uploaded successfully! Click Save to confirm.'),
+                Text('Image selected! Click Save to upload to your profile.'),
             backgroundColor: FlutterFlowTheme.of(context).underground,
+            duration: Duration(seconds: 3),
           ),
         );
       }
@@ -69,7 +74,7 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
       // Show error message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Failed to upload image. Please try again.'),
+          content: Text('Failed to select image. Please try again.'),
           backgroundColor: FlutterFlowTheme.of(context).error,
         ),
       );
@@ -86,7 +91,7 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Body view image saved successfully!'),
+            content: Text('Body image uploaded successfully!'),
             backgroundColor: FlutterFlowTheme.of(context).underground,
           ),
         );
@@ -197,6 +202,110 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
         }
       }
     }
+  }
+
+  // Helper method to build the image display widget
+  Widget _buildImageDisplay() {
+    // Priority 1: Show locally selected image (before saving)
+    String? localPath = _model.getLocalImagePath();
+    if (localPath != null) {
+      return Image.file(
+        File(localPath),
+        width: 180.0,
+        height: 300.0,
+        fit: BoxFit.cover,
+      );
+    }
+
+    // Priority 2: Show saved network image
+    String networkUrl = _model.getUserProfileImage();
+    if (networkUrl.isNotEmpty) {
+      return Image.network(
+        networkUrl,
+        width: 180.0,
+        height: 300.0,
+        fit: BoxFit.cover,
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return Container(
+            width: 180.0,
+            height: 300.0,
+            color: Colors.grey[100],
+            child: Center(
+              child: CircularProgressIndicator(
+                color: FlutterFlowTheme.of(context).underground,
+                value: loadingProgress.expectedTotalBytes != null
+                    ? loadingProgress.cumulativeBytesLoaded /
+                        loadingProgress.expectedTotalBytes!
+                    : null,
+              ),
+            ),
+          );
+        },
+        errorBuilder: (context, error, stackTrace) {
+          return Container(
+            width: 180.0,
+            height: 300.0,
+            color: Colors.grey[100],
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.error_outline,
+                  size: 32.0,
+                  color: Colors.grey[600],
+                ),
+                SizedBox(height: 8.0),
+                Text(
+                  'Failed to load image',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12.0,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          );
+        },
+      );
+    }
+
+    // Priority 3: Show placeholder
+    return Container(
+      width: 180.0,
+      height: 300.0,
+      color: Colors.grey[50],
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.person_outline,
+            size: 64.0,
+            color: Colors.grey[400],
+          ),
+          SizedBox(height: 16.0),
+          Text(
+            'No body image uploaded',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 14.0,
+              fontWeight: FontWeight.w500,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          SizedBox(height: 8.0),
+          Text(
+            'Upload an image to see it here',
+            style: TextStyle(
+              color: Colors.grey[500],
+              fontSize: 12.0,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -673,7 +782,7 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
                                     ),
                                   ),
                                   SizedBox(height: 15.0),
-                                  // Single centered image - now showing user's image
+                                  // Image display with fixed logic
                                   Center(
                                     child: Container(
                                       width: 180.0,
@@ -699,145 +808,12 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
                                       child: ClipRRect(
                                         borderRadius:
                                             BorderRadius.circular(6.0),
-                                        child: _model.isLocalImage()
-                                            ? Image.file(
-                                                File(_model.uploadedImagePath!),
-                                                width: 180.0,
-                                                height: 300.0,
-                                                fit: BoxFit.cover,
-                                              )
-                                            : _model.hasBodyImage()
-                                                ? Image.network(
-                                                    _model
-                                                        .getUserProfileImage(),
-                                                    width: 180.0,
-                                                    height: 300.0,
-                                                    fit: BoxFit.cover,
-                                                    loadingBuilder: (context,
-                                                        child,
-                                                        loadingProgress) {
-                                                      if (loadingProgress ==
-                                                          null) return child;
-                                                      return Container(
-                                                        width: 180.0,
-                                                        height: 300.0,
-                                                        color: Colors.grey[100],
-                                                        child: Center(
-                                                          child:
-                                                              CircularProgressIndicator(
-                                                            color: FlutterFlowTheme
-                                                                    .of(context)
-                                                                .underground,
-                                                            value: loadingProgress
-                                                                        .expectedTotalBytes !=
-                                                                    null
-                                                                ? loadingProgress
-                                                                        .cumulativeBytesLoaded /
-                                                                    loadingProgress
-                                                                        .expectedTotalBytes!
-                                                                : null,
-                                                          ),
-                                                        ),
-                                                      );
-                                                    },
-                                                    errorBuilder: (context,
-                                                        error, stackTrace) {
-                                                      return Container(
-                                                        width: 180.0,
-                                                        height: 300.0,
-                                                        color: Colors.grey[100],
-                                                        child: Column(
-                                                          mainAxisAlignment:
-                                                              MainAxisAlignment
-                                                                  .center,
-                                                          children: [
-                                                            Icon(
-                                                              Icons
-                                                                  .error_outline,
-                                                              size: 32.0,
-                                                              color: Colors
-                                                                  .grey[600],
-                                                            ),
-                                                            SizedBox(
-                                                                height: 8.0),
-                                                            Text(
-                                                              'Failed to load image',
-                                                              style: TextStyle(
-                                                                color: Colors
-                                                                    .grey[600],
-                                                                fontSize: 12.0,
-                                                              ),
-                                                              textAlign:
-                                                                  TextAlign
-                                                                      .center,
-                                                            ),
-                                                          ],
-                                                        ),
-                                                      );
-                                                    },
-                                                  )
-                                                : Image.network(
-                                                    _model.getDefaultBodyImage(),
-                                                    width: 180.0,
-                                                    height: 300.0,
-                                                    fit: BoxFit.cover,
-                                                    errorBuilder: (context,
-                                                        error, stackTrace) {
-                                                      return Container(
-                                                        width: 180.0,
-                                                        height: 300.0,
-                                                        color: Colors.grey[50],
-                                                        child: Column(
-                                                          mainAxisAlignment:
-                                                              MainAxisAlignment
-                                                                  .center,
-                                                          children: [
-                                                            Icon(
-                                                              Icons
-                                                                  .person_outline,
-                                                              size: 64.0,
-                                                              color: Colors
-                                                                  .grey[400],
-                                                            ),
-                                                            SizedBox(
-                                                                height: 16.0),
-                                                            Text(
-                                                              'No body image uploaded',
-                                                              style: TextStyle(
-                                                                color: Colors
-                                                                    .grey[600],
-                                                                fontSize: 14.0,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .w500,
-                                                              ),
-                                                              textAlign:
-                                                                  TextAlign
-                                                                      .center,
-                                                            ),
-                                                            SizedBox(
-                                                                height: 8.0),
-                                                            Text(
-                                                              'Upload an image to see it here',
-                                                              style: TextStyle(
-                                                                color: Colors
-                                                                    .grey[500],
-                                                                fontSize: 12.0,
-                                                              ),
-                                                              textAlign:
-                                                                  TextAlign
-                                                                      .center,
-                                                            ),
-                                                          ],
-                                                        ),
-                                                      );
-                                                    },
-                                                  ),
+                                        child: _buildImageDisplay(),
                                       ),
                                     ),
                                   ),
                                   SizedBox(height: 15.0),
-                                  // Updated button section with both Upload and Save buttons
+                                  // Button section with improved logic
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.end,
                                     children: [
@@ -878,10 +854,11 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
                                       SizedBox(width: 10.0),
                                       // Save Button
                                       FFButtonWidget(
-                                        onPressed: _model.hasUploadedNewImage &&
-                                                !_model.isSavingImage
-                                            ? _saveImage
-                                            : null,
+                                        onPressed:
+                                            (_model.hasNewImageToSave() &&
+                                                    !_model.isSavingImage)
+                                                ? _saveImage
+                                                : null,
                                         text: _model.isSavingImage
                                             ? 'Saving...'
                                             : 'Save',
@@ -894,8 +871,8 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
                                           iconPadding:
                                               EdgeInsetsDirectional.fromSTEB(
                                                   0.0, 0.0, 0.0, 0.0),
-                                          color: _model.hasUploadedNewImage &&
-                                                  !_model.isSavingImage
+                                          color: (_model.hasNewImageToSave() &&
+                                                  !_model.isSavingImage)
                                               ? FlutterFlowTheme.of(context)
                                                   .waxFlower
                                               : Colors.grey[400],
@@ -910,7 +887,7 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
                                                 fontSize: 14.0,
                                                 letterSpacing: 0.0,
                                               ),
-                                          elevation: _model.hasUploadedNewImage
+                                          elevation: _model.hasNewImageToSave()
                                               ? 2.0
                                               : 0.0,
                                           borderRadius:

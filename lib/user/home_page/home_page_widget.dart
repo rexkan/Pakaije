@@ -1,3 +1,4 @@
+// Add these imports at the top of your file
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
@@ -14,6 +15,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import '/backend/backend.dart'; // Firebase backend integration
+import '/auth/firebase_auth/auth_util.dart'; // Add this import for logout functionality
 
 class HomePageWidget extends StatefulWidget {
   const HomePageWidget({super.key});
@@ -32,7 +34,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
   String? temperature;
   late String currentDate;
 
-  // NEW: Smart suggestion variables
+  // Smart suggestion variables
   SuggestionSettingsRecord? suggestionSettings;
   String smartSuggestion = "Loading personalized suggestions...";
   Map<String, dynamic>? fullWeatherData;
@@ -55,7 +57,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
     });
   }
 
-  // NEW: Load suggestion settings from Firebase using the schema
+  // Load suggestion settings from Firebase
   Future<void> _loadSuggestionSettings() async {
     try {
       print('🔄 Loading suggestion settings...');
@@ -69,7 +71,6 @@ class _HomePageWidgetState extends State<HomePageWidget> {
             'Temperature ranges: Cold(${suggestionSettings!.weatherTempColdMin}-${suggestionSettings!.weatherTempColdMax}), Warm(${suggestionSettings!.weatherTempWarmMin}-${suggestionSettings!.weatherTempWarmMax}), Hot(${suggestionSettings!.weatherTempHotMin}+)');
       } else {
         print('⚠️ No suggestion settings found, will use defaults');
-        // Set default settings if none exist
         setState(() {
           smartSuggestion =
               "Default weather suggestions enabled - personalized settings not configured by admin yet.";
@@ -85,11 +86,10 @@ class _HomePageWidgetState extends State<HomePageWidget> {
     }
   }
 
-  // UPDATED: Get temperature and generate smart suggestions
+  // Get temperature and generate smart suggestions
   Future<void> getTemperature() async {
     final city = 'Kuala Lumpur';
-    final apiKey =
-        'e94a49d026651e92567ebe5d78715d81'; // Use the same API key as admin
+    final apiKey = 'e94a49d026651e92567ebe5d78715d81';
     final url =
         'https://api.openweathermap.org/data/2.5/weather?q=$city&appid=$apiKey&units=metric';
 
@@ -103,7 +103,6 @@ class _HomePageWidgetState extends State<HomePageWidget> {
           temperature = data['main']['temp'].toStringAsFixed(1);
           fullWeatherData = data;
 
-          // Generate smart suggestion based on settings and weather
           if (suggestionSettings != null) {
             smartSuggestion = _generateSmartSuggestion(data);
             print(
@@ -131,10 +130,9 @@ class _HomePageWidgetState extends State<HomePageWidget> {
     }
   }
 
-  // NEW: Generate smart suggestions using the schema
+  // Generate smart suggestions
   String _generateSmartSuggestion(Map<String, dynamic> weather) {
     if (suggestionSettings == null) {
-      // Fallback to basic suggestions without admin settings
       final temp = (weather['main']?['temp'] as num?)?.round() ?? 0;
       final description =
           weather['weather']?[0]?['main']?.toString().toLowerCase() ?? '';
@@ -156,7 +154,6 @@ class _HomePageWidgetState extends State<HomePageWidget> {
 
     List<String> suggestions = [];
 
-    // Temperature-based suggestions using schema fields
     if (temp <= suggestionSettings!.weatherTempColdMax) {
       suggestions.add(
           "🧥 Cold weather detected (${temp}°C) - wear warm layers, jacket, and closed shoes");
@@ -169,7 +166,6 @@ class _HomePageWidgetState extends State<HomePageWidget> {
           "☀️ Hot weather (${temp}°C) - wear light colors, UV protection, and stay hydrated");
     }
 
-    // Condition-based suggestions using schema settings
     if (suggestionSettings!.weatherHumidityAlert && humidity > 80) {
       suggestions.add(
           "💧 High humidity (${humidity}%) - choose moisture-wicking fabrics and avoid heavy materials");
@@ -198,6 +194,55 @@ class _HomePageWidgetState extends State<HomePageWidget> {
     }
 
     return suggestions.join('\n\n');
+  }
+
+  // NEW: Logout functionality matching admin dashboard design
+  Future<void> _showLogoutConfirmation() async {
+    final shouldLogout = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Logout'),
+          content: Text('Are you sure you want to logout?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text('Logout'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldLogout == true) {
+      await _performLogout();
+    }
+  }
+
+  // NEW: Perform logout matching admin dashboard
+  Future<void> _performLogout() async {
+    try {
+      // Add your logout logic here
+      // For example:
+      await authManager.signOut();
+      context.pushReplacementNamed(LoginPageWidget.routeName);
+      print('User logged out');
+    } catch (e) {
+      print('Error during logout: $e');
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error logging out. Please try again.'),
+            backgroundColor: Colors.red[600],
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -240,6 +285,24 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                   ),
             ),
           ),
+          // NEW: Add logout button matching admin dashboard design
+          actions: [
+            Padding(
+              padding: EdgeInsetsDirectional.fromSTEB(0.0, 0.0, 12.0, 0.0),
+              child: FlutterFlowIconButton(
+                borderColor: Colors.transparent,
+                borderRadius: 30.0,
+                borderWidth: 1.0,
+                buttonSize: 60.0,
+                icon: Icon(
+                  Icons.logout,
+                  color: FlutterFlowTheme.of(context).underground,
+                  size: 26.0,
+                ),
+                onPressed: _showLogoutConfirmation,
+              ),
+            ),
+          ],
           centerTitle: false,
           elevation: 0.0,
         ),
@@ -253,6 +316,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                     mainAxisSize: MainAxisSize.max,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Welcome Card Section
                       Padding(
                         padding: EdgeInsetsDirectional.fromSTEB(
                             16.0, 12.0, 16.0, 0.0),
@@ -310,7 +374,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                 ),
                                 Text(
                                   FFLocalizations.of(context).getText(
-                                    '7ylrldap' /* hope you enjoy the virtual war... */,
+                                    '7ylrldap' /* hope you enjoy the virtual wardrobe */,
                                   ),
                                   style: FlutterFlowTheme.of(context)
                                       .titleMedium
@@ -513,7 +577,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                   ],
                                 ),
 
-                                // ENHANCED OUTFIT SUGGEST SECTION
+                                // Outfit Suggest Section
                                 Padding(
                                   padding: EdgeInsetsDirectional.fromSTEB(
                                       0.0, 12.0, 0.0, 0.0),
@@ -777,6 +841,8 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                           ),
                         ),
                       ),
+
+                      // Quick Action Section
                       Padding(
                         padding: EdgeInsetsDirectional.fromSTEB(
                             16.0, 12.0, 0.0, 0.0),
@@ -787,22 +853,9 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                           style: FlutterFlowTheme.of(context)
                               .titleMedium
                               .override(
-                                font: GoogleFonts.interTight(
-                                  fontWeight: FlutterFlowTheme.of(context)
-                                      .titleMedium
-                                      .fontWeight,
-                                  fontStyle: FlutterFlowTheme.of(context)
-                                      .titleMedium
-                                      .fontStyle,
-                                ),
+                                font: GoogleFonts.interTight(),
                                 color: FlutterFlowTheme.of(context).underground,
                                 letterSpacing: 0.0,
-                                fontWeight: FlutterFlowTheme.of(context)
-                                    .titleMedium
-                                    .fontWeight,
-                                fontStyle: FlutterFlowTheme.of(context)
-                                    .titleMedium
-                                    .fontStyle,
                               ),
                         ),
                       ),
@@ -831,22 +884,9 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                 textStyle: FlutterFlowTheme.of(context)
                                     .titleSmall
                                     .override(
-                                      font: GoogleFonts.interTight(
-                                        fontWeight: FlutterFlowTheme.of(context)
-                                            .titleSmall
-                                            .fontWeight,
-                                        fontStyle: FlutterFlowTheme.of(context)
-                                            .titleSmall
-                                            .fontStyle,
-                                      ),
+                                      font: GoogleFonts.interTight(),
                                       color: Colors.white,
                                       letterSpacing: 0.0,
-                                      fontWeight: FlutterFlowTheme.of(context)
-                                          .titleSmall
-                                          .fontWeight,
-                                      fontStyle: FlutterFlowTheme.of(context)
-                                          .titleSmall
-                                          .fontStyle,
                                     ),
                                 elevation: 0.0,
                                 borderRadius: BorderRadius.circular(8.0),
@@ -870,22 +910,9 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                 textStyle: FlutterFlowTheme.of(context)
                                     .titleSmall
                                     .override(
-                                      font: GoogleFonts.interTight(
-                                        fontWeight: FlutterFlowTheme.of(context)
-                                            .titleSmall
-                                            .fontWeight,
-                                        fontStyle: FlutterFlowTheme.of(context)
-                                            .titleSmall
-                                            .fontStyle,
-                                      ),
+                                      font: GoogleFonts.interTight(),
                                       color: Colors.white,
                                       letterSpacing: 0.0,
-                                      fontWeight: FlutterFlowTheme.of(context)
-                                          .titleSmall
-                                          .fontWeight,
-                                      fontStyle: FlutterFlowTheme.of(context)
-                                          .titleSmall
-                                          .fontStyle,
                                     ),
                                 elevation: 0.0,
                                 borderRadius: BorderRadius.circular(8.0),
@@ -894,6 +921,8 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                           ],
                         ),
                       ),
+
+                      // Trending Items Section
                       Padding(
                         padding: EdgeInsetsDirectional.fromSTEB(
                             16.0, 12.0, 0.0, 0.0),
@@ -904,31 +933,21 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                           style: FlutterFlowTheme.of(context)
                               .titleMedium
                               .override(
-                                font: GoogleFonts.interTight(
-                                  fontWeight: FlutterFlowTheme.of(context)
-                                      .titleMedium
-                                      .fontWeight,
-                                  fontStyle: FlutterFlowTheme.of(context)
-                                      .titleMedium
-                                      .fontStyle,
-                                ),
+                                font: GoogleFonts.interTight(),
                                 color: FlutterFlowTheme.of(context).underground,
                                 letterSpacing: 0.0,
-                                fontWeight: FlutterFlowTheme.of(context)
-                                    .titleMedium
-                                    .fontWeight,
-                                fontStyle: FlutterFlowTheme.of(context)
-                                    .titleMedium
-                                    .fontStyle,
                               ),
                         ),
                       ),
+
+                      // Trending Items List
                       ListView(
                         padding: EdgeInsets.zero,
                         primary: false,
                         shrinkWrap: true,
                         scrollDirection: Axis.vertical,
                         children: [
+                          // Basic tee item
                           Padding(
                             padding: EdgeInsetsDirectional.fromSTEB(
                                 16.0, 5.0, 16.0, 0.0),
@@ -982,38 +1001,18 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                   .getText(
                                                 '5tcd6ojt' /* Basic tee */,
                                               ),
-                                              style: FlutterFlowTheme.of(
-                                                      context)
-                                                  .titleLarge
-                                                  .override(
-                                                    font:
-                                                        GoogleFonts.interTight(
-                                                      fontWeight:
-                                                          FlutterFlowTheme.of(
-                                                                  context)
-                                                              .titleLarge
-                                                              .fontWeight,
-                                                      fontStyle:
-                                                          FlutterFlowTheme.of(
-                                                                  context)
-                                                              .titleLarge
-                                                              .fontStyle,
-                                                    ),
-                                                    color: FlutterFlowTheme.of(
-                                                            context)
-                                                        .underground,
-                                                    letterSpacing: 0.0,
-                                                    fontWeight:
-                                                        FlutterFlowTheme.of(
-                                                                context)
-                                                            .titleLarge
-                                                            .fontWeight,
-                                                    fontStyle:
-                                                        FlutterFlowTheme.of(
-                                                                context)
-                                                            .titleLarge
-                                                            .fontStyle,
-                                                  ),
+                                              style:
+                                                  FlutterFlowTheme.of(context)
+                                                      .titleLarge
+                                                      .override(
+                                                        font: GoogleFonts
+                                                            .interTight(),
+                                                        color:
+                                                            FlutterFlowTheme.of(
+                                                                    context)
+                                                                .underground,
+                                                        letterSpacing: 0.0,
+                                                      ),
                                             ),
                                             Padding(
                                               padding: EdgeInsetsDirectional
@@ -1021,41 +1020,20 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                               child: AutoSizeText(
                                                 FFLocalizations.of(context)
                                                     .getText(
-                                                  'p2v94voy' /* A wonderfully delicious 2 patt... */,
+                                                  'p2v94voy' /* A wonderfully delicious 2 patty burger */,
                                                 ),
                                                 textAlign: TextAlign.start,
                                                 style: FlutterFlowTheme.of(
                                                         context)
                                                     .bodySmall
                                                     .override(
-                                                      font: GoogleFonts.inter(
-                                                        fontWeight:
-                                                            FlutterFlowTheme.of(
-                                                                    context)
-                                                                .bodySmall
-                                                                .fontWeight,
-                                                        fontStyle:
-                                                            FlutterFlowTheme.of(
-                                                                    context)
-                                                                .bodySmall
-                                                                .fontStyle,
-                                                      ),
+                                                      font: GoogleFonts.inter(),
                                                       color:
                                                           FlutterFlowTheme.of(
                                                                   context)
                                                               .underground,
                                                       fontSize: 12.0,
                                                       letterSpacing: 0.0,
-                                                      fontWeight:
-                                                          FlutterFlowTheme.of(
-                                                                  context)
-                                                              .bodySmall
-                                                              .fontWeight,
-                                                      fontStyle:
-                                                          FlutterFlowTheme.of(
-                                                                  context)
-                                                              .bodySmall
-                                                              .fontStyle,
                                                     ),
                                               ),
                                             ),
@@ -1088,6 +1066,8 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                               ),
                             ),
                           ),
+
+                          // Long pants item
                           Padding(
                             padding: EdgeInsetsDirectional.fromSTEB(
                                 16.0, 12.0, 16.0, 0.0),
@@ -1139,40 +1119,20 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                             Text(
                                               FFLocalizations.of(context)
                                                   .getText(
-                                                'pzoni9ux' /* Long pands */,
+                                                'pzoni9ux' /* Long pants */,
                                               ),
-                                              style: FlutterFlowTheme.of(
-                                                      context)
-                                                  .titleLarge
-                                                  .override(
-                                                    font:
-                                                        GoogleFonts.interTight(
-                                                      fontWeight:
-                                                          FlutterFlowTheme.of(
-                                                                  context)
-                                                              .titleLarge
-                                                              .fontWeight,
-                                                      fontStyle:
-                                                          FlutterFlowTheme.of(
-                                                                  context)
-                                                              .titleLarge
-                                                              .fontStyle,
-                                                    ),
-                                                    color: FlutterFlowTheme.of(
-                                                            context)
-                                                        .underground,
-                                                    letterSpacing: 0.0,
-                                                    fontWeight:
-                                                        FlutterFlowTheme.of(
-                                                                context)
-                                                            .titleLarge
-                                                            .fontWeight,
-                                                    fontStyle:
-                                                        FlutterFlowTheme.of(
-                                                                context)
-                                                            .titleLarge
-                                                            .fontStyle,
-                                                  ),
+                                              style:
+                                                  FlutterFlowTheme.of(context)
+                                                      .titleLarge
+                                                      .override(
+                                                        font: GoogleFonts
+                                                            .interTight(),
+                                                        color:
+                                                            FlutterFlowTheme.of(
+                                                                    context)
+                                                                .underground,
+                                                        letterSpacing: 0.0,
+                                                      ),
                                             ),
                                             Padding(
                                               padding: EdgeInsetsDirectional
@@ -1180,41 +1140,20 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                               child: AutoSizeText(
                                                 FFLocalizations.of(context)
                                                     .getText(
-                                                  '4wwcnrjk' /* Learn how to brew a delicious ... */,
+                                                  '4wwcnrjk' /* Learn how to brew a delicious pourover */,
                                                 ),
                                                 textAlign: TextAlign.start,
                                                 style: FlutterFlowTheme.of(
                                                         context)
                                                     .bodySmall
                                                     .override(
-                                                      font: GoogleFonts.inter(
-                                                        fontWeight:
-                                                            FlutterFlowTheme.of(
-                                                                    context)
-                                                                .bodySmall
-                                                                .fontWeight,
-                                                        fontStyle:
-                                                            FlutterFlowTheme.of(
-                                                                    context)
-                                                                .bodySmall
-                                                                .fontStyle,
-                                                      ),
+                                                      font: GoogleFonts.inter(),
                                                       color:
                                                           FlutterFlowTheme.of(
                                                                   context)
                                                               .underground,
                                                       fontSize: 12.0,
                                                       letterSpacing: 0.0,
-                                                      fontWeight:
-                                                          FlutterFlowTheme.of(
-                                                                  context)
-                                                              .bodySmall
-                                                              .fontWeight,
-                                                      fontStyle:
-                                                          FlutterFlowTheme.of(
-                                                                  context)
-                                                              .bodySmall
-                                                              .fontStyle,
                                                     ),
                                               ),
                                             ),
@@ -1257,7 +1196,8 @@ class _HomePageWidgetState extends State<HomePageWidget> {
             ],
           ),
         ),
-        // Modern Bottom Navigation Bar
+
+        // Bottom Navigation Bar
         bottomNavigationBar: Container(
           decoration: BoxDecoration(
             color: FlutterFlowTheme.of(context).underground,
@@ -1280,7 +1220,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                     icon: Icons.home_rounded,
                     label: FFLocalizations.of(context)
                         .getText('syg4oh76' /* Home */),
-                    isActive: true, // This is the current page
+                    isActive: true,
                     onTap: () {
                       // Already on home page
                     },

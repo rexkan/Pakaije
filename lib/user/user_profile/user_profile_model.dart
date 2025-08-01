@@ -109,11 +109,11 @@ class UserProfileModel extends FlutterFlowModel<UserProfileWidget> {
     try {
       isSavingImage = true;
 
-      // Create a reference to Firebase Storage with a unique path
+      // UPDATED: Create a reference to Firebase Storage with corrected path
       final storageRef = FirebaseStorage.instance.ref();
       final timestamp = DateTime.now().millisecondsSinceEpoch;
-      final imageRef = storageRef.child(
-          'user_body_images/${currentUser!.uid}/body_image_$timestamp.jpg');
+      final imageRef = storageRef
+          .child('users/${currentUser!.uid}/body_image_$timestamp.jpg');
 
       // Upload the image file to Firebase Storage
       final File imageFile = File(uploadedImagePath!);
@@ -148,6 +148,7 @@ class UserProfileModel extends FlutterFlowModel<UserProfileWidget> {
 
       await userDocRef.update({
         'front_body_image_url': downloadURL,
+        'updated_time': FieldValue.serverTimestamp(),
       });
 
       print('User document updated with new image URL');
@@ -198,6 +199,7 @@ class UserProfileModel extends FlutterFlowModel<UserProfileWidget> {
 
       // Update Firestore document if there are changes
       if (updateData.isNotEmpty) {
+        updateData['updated_time'] = FieldValue.serverTimestamp();
         await userDocRef.update(updateData);
 
         // Reload user data
@@ -226,23 +228,28 @@ class UserProfileModel extends FlutterFlowModel<UserProfileWidget> {
     }
   }
 
-  // Helper method to get user's profile image
+  // FIXED: Helper method to get user's profile image URL (network images only)
   String getUserProfileImage() {
-    // If there's a newly uploaded image that hasn't been saved yet, show it
-    if (hasUploadedNewImage && uploadedImagePath != null) {
-      return uploadedImagePath!;
-    }
-
-    // If user has a saved body image URL, return it
-    if (currentUser?.frontBodyImageUrl.isNotEmpty == true) {
+    // Only return valid HTTPS URLs for network images
+    if (currentUser?.frontBodyImageUrl != null &&
+        currentUser!.frontBodyImageUrl.isNotEmpty &&
+        currentUser!.frontBodyImageUrl.startsWith('https://')) {
       return currentUser!.frontBodyImageUrl;
     }
 
-    // Return empty string to indicate no image
+    // Return empty string to indicate no valid network image
     return '';
   }
 
-  // Helper method to check if image is from local file
+  // FIXED: Helper method to get local image path (for newly selected images)
+  String? getLocalImagePath() {
+    if (hasUploadedNewImage && uploadedImagePath != null) {
+      return uploadedImagePath;
+    }
+    return null;
+  }
+
+  // FIXED: Helper method to check if image is from local file
   bool isLocalImage() {
     return hasUploadedNewImage && uploadedImagePath != null;
   }
@@ -262,14 +269,50 @@ class UserProfileModel extends FlutterFlowModel<UserProfileWidget> {
     return currentUser?.displayName ?? 'User';
   }
 
-  // Helper method to check if there's a valid body image
+  // FIXED: Helper method to check if there's a valid body image (network URL)
   bool hasBodyImage() {
-    return (currentUser?.frontBodyImageUrl.isNotEmpty == true) ||
-        (hasUploadedNewImage && uploadedImagePath != null);
+    return currentUser?.frontBodyImageUrl != null &&
+        currentUser!.frontBodyImageUrl.isNotEmpty &&
+        currentUser!.frontBodyImageUrl.startsWith('https://');
+  }
+
+  // FIXED: Helper method to check if we have a newly uploaded image ready to save
+  bool hasNewImageToSave() {
+    return hasUploadedNewImage && uploadedImagePath != null;
   }
 
   // Helper method to get default placeholder image
   String getDefaultBodyImage() {
     return 'https://thumbs.dreamstime.com/b/minimal-black-outline-icon-standing-adult-man-front-view-isolated-white-background-concept-human-body-shape-anatomy-figure-386293482.jpg';
+  }
+
+  // ADDED: Helper method to clean up invalid image URLs from database
+  Future<void> cleanUpInvalidImageUrl() async {
+    if (currentUser == null) return;
+
+    try {
+      // Check if the current URL is a local path (invalid)
+      if (currentUser!.frontBodyImageUrl.isNotEmpty &&
+          !currentUser!.frontBodyImageUrl.startsWith('https://')) {
+        print('Found invalid image URL: ${currentUser!.frontBodyImageUrl}');
+
+        // Remove the invalid URL from Firestore
+        final userDocRef = FirebaseFirestore.instance
+            .collection('users')
+            .doc(currentUser!.uid);
+
+        await userDocRef.update({
+          'front_body_image_url': '',
+          'updated_time': FieldValue.serverTimestamp(),
+        });
+
+        print('Invalid image URL cleaned up');
+
+        // Reload user data
+        await loadCurrentUserData();
+      }
+    } catch (e) {
+      print('Error cleaning up invalid image URL: $e');
+    }
   }
 }
