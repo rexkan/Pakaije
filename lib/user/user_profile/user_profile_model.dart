@@ -1,4 +1,6 @@
 import 'package:pakaije/backend/schema/users_record.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'dart:io';
 
 import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
@@ -23,11 +25,15 @@ class UserProfileModel extends FlutterFlowModel<UserProfileWidget> {
   // State for body view image upload
   bool hasUploadedNewImage = false;
   String? uploadedImagePath;
+  bool isSavingImage = false;
 
   // User data state
   UsersRecord? currentUser;
   bool isLoadingUser = true;
   String? errorMessage;
+
+  // Logout state
+  bool isLoggingOut = false;
 
   @override
   void initState(BuildContext context) {
@@ -92,7 +98,7 @@ class UserProfileModel extends FlutterFlowModel<UserProfileWidget> {
     hasUploadedNewImage = imagePath != null;
   }
 
-  // Method to save the uploaded image to Firestore
+  // Method to upload image to Firebase Storage and save URL to Firestore
   Future<void> saveUploadedImage() async {
     if (!hasUploadedNewImage ||
         uploadedImagePath == null ||
@@ -101,30 +107,63 @@ class UserProfileModel extends FlutterFlowModel<UserProfileWidget> {
     }
 
     try {
-      // Here you would typically upload the image to Firebase Storage first
-      // and get the download URL, then update the user document
+      isSavingImage = true;
 
-      // For now, we'll just update the local state
-      // In a real implementation, you would:
-      // 1. Upload image to Firebase Storage
-      // 2. Get the download URL
-      // 3. Update the user document with the new image URL
+      // Create a reference to Firebase Storage with a unique path
+      final storageRef = FirebaseStorage.instance.ref();
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final imageRef = storageRef.child(
+          'user_body_images/${currentUser!.uid}/body_image_$timestamp.jpg');
 
+      // Upload the image file to Firebase Storage
+      final File imageFile = File(uploadedImagePath!);
+
+      // Check if file exists
+      if (!await imageFile.exists()) {
+        throw Exception('Image file not found');
+      }
+
+      print('Uploading image to Firebase Storage...');
+      final UploadTask uploadTask = imageRef.putFile(
+        imageFile,
+        SettableMetadata(
+          contentType: 'image/jpeg',
+          customMetadata: {
+            'uploaded_by': currentUser!.uid,
+            'upload_time': DateTime.now().toIso8601String(),
+          },
+        ),
+      );
+
+      // Wait for upload to complete
+      final TaskSnapshot snapshot = await uploadTask;
+
+      // Get the download URL
+      final String downloadURL = await snapshot.ref.getDownloadURL();
+      print('Image uploaded successfully. Download URL: $downloadURL');
+
+      // Update the user document in Firestore with the new image URL
       final userDocRef =
           FirebaseFirestore.instance.collection('users').doc(currentUser!.uid);
 
-      // Update the document (replace with actual image URL from Firebase Storage)
       await userDocRef.update({
-        'front_body_image_url':
-            uploadedImagePath, // This should be the Firebase Storage URL
+        'front_body_image_url': downloadURL,
       });
+
+      print('User document updated with new image URL');
 
       // Update local state
       hasUploadedNewImage = false;
+      uploadedImagePath = null;
+      isSavingImage = false;
 
       // Reload user data to reflect changes
       await loadCurrentUserData();
+
+      print('User data reloaded successfully');
     } catch (e) {
+      isSavingImage = false;
+      print('Error saving image: $e');
       throw Exception('Failed to save image: $e');
     }
   }
@@ -172,18 +211,35 @@ class UserProfileModel extends FlutterFlowModel<UserProfileWidget> {
     }
   }
 
+  // Method to handle user logout
+  Future<void> logoutUser() async {
+    try {
+      isLoggingOut = true;
+
+      // Sign out from Firebase Auth
+      await FirebaseAuth.instance.signOut();
+
+      isLoggingOut = false;
+    } catch (e) {
+      isLoggingOut = false;
+      throw Exception('Failed to logout: $e');
+    }
+  }
+
   // Helper method to get user's profile image
   String getUserProfileImage() {
+    // If there's a newly uploaded image that hasn't been saved yet, show it
     if (hasUploadedNewImage && uploadedImagePath != null) {
       return uploadedImagePath!;
     }
 
+    // If user has a saved body image URL, return it
     if (currentUser?.frontBodyImageUrl.isNotEmpty == true) {
       return currentUser!.frontBodyImageUrl;
     }
 
-    // Default image
-    return 'https://thumbs.dreamstime.com/b/minimal-black-outline-icon-standing-adult-man-front-view-isolated-white-background-concept-human-body-shape-anatomy-figure-386293482.jpg';
+    // Return empty string to indicate no image
+    return '';
   }
 
   // Helper method to check if image is from local file
@@ -204,5 +260,16 @@ class UserProfileModel extends FlutterFlowModel<UserProfileWidget> {
   // Helper method to get display name
   String getDisplayName() {
     return currentUser?.displayName ?? 'User';
+  }
+
+  // Helper method to check if there's a valid body image
+  bool hasBodyImage() {
+    return (currentUser?.frontBodyImageUrl.isNotEmpty == true) ||
+        (hasUploadedNewImage && uploadedImagePath != null);
+  }
+
+  // Helper method to get default placeholder image
+  String getDefaultBodyImage() {
+    return 'https://thumbs.dreamstime.com/b/minimal-black-outline-icon-standing-adult-man-front-view-isolated-white-background-concept-human-body-shape-anatomy-figure-386293482.jpg';
   }
 }

@@ -131,6 +131,74 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
     }
   }
 
+  // Method to handle logout
+  void _handleLogout() async {
+    // Show confirmation dialog
+    final bool? shouldLogout = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(
+            'Logout',
+            style: FlutterFlowTheme.of(context).headlineSmall.override(
+                  font: GoogleFonts.inter(fontWeight: FontWeight.bold),
+                ),
+          ),
+          content: Text(
+            'Are you sure you want to logout?',
+            style: FlutterFlowTheme.of(context).bodyMedium,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text(
+                'Cancel',
+                style: TextStyle(
+                  color: FlutterFlowTheme.of(context).underground,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text(
+                'Logout',
+                style: TextStyle(
+                  color: FlutterFlowTheme.of(context).error,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldLogout == true) {
+      try {
+        await _model.logoutUser();
+
+        // Navigate to login page and clear navigation stack
+        if (mounted) {
+          // Replace 'LoginPage' with your actual login page route name
+          Navigator.of(context).pushNamedAndRemoveUntil(
+            'LoginPage', // Replace with your actual login route name
+            (Route<dynamic> route) => false,
+          );
+        }
+      } catch (e) {
+        // Show error message
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to logout: ${e.toString()}'),
+              backgroundColor: FlutterFlowTheme.of(context).error,
+            ),
+          );
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -178,7 +246,39 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
                       FlutterFlowTheme.of(context).headlineMedium.fontStyle,
                 ),
           ),
-          actions: [],
+          actions: [
+            // Logout Button
+            Padding(
+              padding: EdgeInsetsDirectional.fromSTEB(0.0, 0.0, 16.0, 0.0),
+              child: _model.isLoggingOut
+                  ? Container(
+                      width: 40.0,
+                      height: 40.0,
+                      child: Center(
+                        child: SizedBox(
+                          width: 20.0,
+                          height: 20.0,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2.0,
+                          ),
+                        ),
+                      ),
+                    )
+                  : FlutterFlowIconButton(
+                      borderColor: Colors.transparent,
+                      borderRadius: 30.0,
+                      borderWidth: 1.0,
+                      buttonSize: 60.0,
+                      icon: Icon(
+                        Icons.logout_rounded,
+                        color: Colors.white,
+                        size: 24.0,
+                      ),
+                      onPressed: _handleLogout,
+                    ),
+            ),
+          ],
           centerTitle: true,
           elevation: 2.0,
         ),
@@ -575,34 +675,165 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
                                   SizedBox(height: 15.0),
                                   // Single centered image - now showing user's image
                                   Center(
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(8.0),
-                                      child: _model.isLocalImage()
-                                          ? Image.file(
-                                              File(_model.uploadedImagePath!),
-                                              width: 180.0,
-                                              height: 300.0,
-                                              fit: BoxFit.cover,
-                                            )
-                                          : Image.network(
-                                              _model.getUserProfileImage(),
-                                              width: 180.0,
-                                              height: 300.0,
-                                              fit: BoxFit.cover,
-                                              errorBuilder:
-                                                  (context, error, stackTrace) {
-                                                return Container(
-                                                  width: 180.0,
-                                                  height: 300.0,
-                                                  color: Colors.grey[300],
-                                                  child: Icon(
-                                                    Icons.person,
-                                                    size: 64.0,
-                                                    color: Colors.grey[600],
+                                    child: Container(
+                                      width: 180.0,
+                                      height: 300.0,
+                                      decoration: BoxDecoration(
+                                        borderRadius:
+                                            BorderRadius.circular(8.0),
+                                        border: Border.all(
+                                          color: FlutterFlowTheme.of(context)
+                                              .underground
+                                              .withOpacity(0.3),
+                                          width: 2.0,
+                                        ),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            blurRadius: 8.0,
+                                            color:
+                                                Colors.black.withOpacity(0.1),
+                                            offset: Offset(0.0, 4.0),
+                                          ),
+                                        ],
+                                      ),
+                                      child: ClipRRect(
+                                        borderRadius:
+                                            BorderRadius.circular(6.0),
+                                        child: _model.isLocalImage()
+                                            ? Image.file(
+                                                File(_model.uploadedImagePath!),
+                                                width: 180.0,
+                                                height: 300.0,
+                                                fit: BoxFit.cover,
+                                              )
+                                            : _model.hasBodyImage()
+                                                ? Image.network(
+                                                    _model
+                                                        .getUserProfileImage(),
+                                                    width: 180.0,
+                                                    height: 300.0,
+                                                    fit: BoxFit.cover,
+                                                    loadingBuilder: (context,
+                                                        child,
+                                                        loadingProgress) {
+                                                      if (loadingProgress ==
+                                                          null) return child;
+                                                      return Container(
+                                                        width: 180.0,
+                                                        height: 300.0,
+                                                        color: Colors.grey[100],
+                                                        child: Center(
+                                                          child:
+                                                              CircularProgressIndicator(
+                                                            color: FlutterFlowTheme
+                                                                    .of(context)
+                                                                .underground,
+                                                            value: loadingProgress
+                                                                        .expectedTotalBytes !=
+                                                                    null
+                                                                ? loadingProgress
+                                                                        .cumulativeBytesLoaded /
+                                                                    loadingProgress
+                                                                        .expectedTotalBytes!
+                                                                : null,
+                                                          ),
+                                                        ),
+                                                      );
+                                                    },
+                                                    errorBuilder: (context,
+                                                        error, stackTrace) {
+                                                      return Container(
+                                                        width: 180.0,
+                                                        height: 300.0,
+                                                        color: Colors.grey[100],
+                                                        child: Column(
+                                                          mainAxisAlignment:
+                                                              MainAxisAlignment
+                                                                  .center,
+                                                          children: [
+                                                            Icon(
+                                                              Icons
+                                                                  .error_outline,
+                                                              size: 32.0,
+                                                              color: Colors
+                                                                  .grey[600],
+                                                            ),
+                                                            SizedBox(
+                                                                height: 8.0),
+                                                            Text(
+                                                              'Failed to load image',
+                                                              style: TextStyle(
+                                                                color: Colors
+                                                                    .grey[600],
+                                                                fontSize: 12.0,
+                                                              ),
+                                                              textAlign:
+                                                                  TextAlign
+                                                                      .center,
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      );
+                                                    },
+                                                  )
+                                                : Image.network(
+                                                    _model.getDefaultBodyImage(),
+                                                    width: 180.0,
+                                                    height: 300.0,
+                                                    fit: BoxFit.cover,
+                                                    errorBuilder: (context,
+                                                        error, stackTrace) {
+                                                      return Container(
+                                                        width: 180.0,
+                                                        height: 300.0,
+                                                        color: Colors.grey[50],
+                                                        child: Column(
+                                                          mainAxisAlignment:
+                                                              MainAxisAlignment
+                                                                  .center,
+                                                          children: [
+                                                            Icon(
+                                                              Icons
+                                                                  .person_outline,
+                                                              size: 64.0,
+                                                              color: Colors
+                                                                  .grey[400],
+                                                            ),
+                                                            SizedBox(
+                                                                height: 16.0),
+                                                            Text(
+                                                              'No body image uploaded',
+                                                              style: TextStyle(
+                                                                color: Colors
+                                                                    .grey[600],
+                                                                fontSize: 14.0,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w500,
+                                                              ),
+                                                              textAlign:
+                                                                  TextAlign
+                                                                      .center,
+                                                            ),
+                                                            SizedBox(
+                                                                height: 8.0),
+                                                            Text(
+                                                              'Upload an image to see it here',
+                                                              style: TextStyle(
+                                                                color: Colors
+                                                                    .grey[500],
+                                                                fontSize: 12.0,
+                                                              ),
+                                                              textAlign:
+                                                                  TextAlign
+                                                                      .center,
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      );
+                                                    },
                                                   ),
-                                                );
-                                              },
-                                            ),
+                                      ),
                                     ),
                                   ),
                                   SizedBox(height: 15.0),
@@ -619,7 +850,7 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
                                         ),
                                         options: FFButtonOptions(
                                           width: 100.0,
-                                          height: 30.0,
+                                          height: 35.0,
                                           padding:
                                               EdgeInsetsDirectional.fromSTEB(
                                                   16.0, 0.0, 16.0, 0.0),
@@ -633,29 +864,13 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
                                               .titleSmall
                                               .override(
                                                 font: GoogleFonts.interTight(
-                                                  fontWeight:
-                                                      FlutterFlowTheme.of(
-                                                              context)
-                                                          .titleSmall
-                                                          .fontWeight,
-                                                  fontStyle:
-                                                      FlutterFlowTheme.of(
-                                                              context)
-                                                          .titleSmall
-                                                          .fontStyle,
+                                                  fontWeight: FontWeight.w600,
                                                 ),
                                                 color: Colors.white,
+                                                fontSize: 14.0,
                                                 letterSpacing: 0.0,
-                                                fontWeight:
-                                                    FlutterFlowTheme.of(context)
-                                                        .titleSmall
-                                                        .fontWeight,
-                                                fontStyle:
-                                                    FlutterFlowTheme.of(context)
-                                                        .titleSmall
-                                                        .fontStyle,
                                               ),
-                                          elevation: 0.0,
+                                          elevation: 2.0,
                                           borderRadius:
                                               BorderRadius.circular(8.0),
                                         ),
@@ -663,20 +878,24 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
                                       SizedBox(width: 10.0),
                                       // Save Button
                                       FFButtonWidget(
-                                        onPressed: _model.hasUploadedNewImage
+                                        onPressed: _model.hasUploadedNewImage &&
+                                                !_model.isSavingImage
                                             ? _saveImage
                                             : null,
-                                        text: 'Save',
+                                        text: _model.isSavingImage
+                                            ? 'Saving...'
+                                            : 'Save',
                                         options: FFButtonOptions(
                                           width: 100.0,
-                                          height: 30.0,
+                                          height: 35.0,
                                           padding:
                                               EdgeInsetsDirectional.fromSTEB(
                                                   16.0, 0.0, 16.0, 0.0),
                                           iconPadding:
                                               EdgeInsetsDirectional.fromSTEB(
                                                   0.0, 0.0, 0.0, 0.0),
-                                          color: _model.hasUploadedNewImage
+                                          color: _model.hasUploadedNewImage &&
+                                                  !_model.isSavingImage
                                               ? FlutterFlowTheme.of(context)
                                                   .waxFlower
                                               : Colors.grey[400],
@@ -685,29 +904,15 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
                                               .titleSmall
                                               .override(
                                                 font: GoogleFonts.interTight(
-                                                  fontWeight:
-                                                      FlutterFlowTheme.of(
-                                                              context)
-                                                          .titleSmall
-                                                          .fontWeight,
-                                                  fontStyle:
-                                                      FlutterFlowTheme.of(
-                                                              context)
-                                                          .titleSmall
-                                                          .fontStyle,
+                                                  fontWeight: FontWeight.w600,
                                                 ),
                                                 color: Colors.white,
+                                                fontSize: 14.0,
                                                 letterSpacing: 0.0,
-                                                fontWeight:
-                                                    FlutterFlowTheme.of(context)
-                                                        .titleSmall
-                                                        .fontWeight,
-                                                fontStyle:
-                                                    FlutterFlowTheme.of(context)
-                                                        .titleSmall
-                                                        .fontStyle,
                                               ),
-                                          elevation: 0.0,
+                                          elevation: _model.hasUploadedNewImage
+                                              ? 2.0
+                                              : 0.0,
                                           borderRadius:
                                               BorderRadius.circular(8.0),
                                         ),
