@@ -240,23 +240,6 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                   ),
             ),
           ),
-          actions: [
-            Padding(
-              padding: EdgeInsetsDirectional.fromSTEB(0.0, 0.0, 15.0, 0.0),
-              child: FlutterFlowIconButton(
-                borderRadius: 8.0,
-                buttonSize: 60.0,
-                icon: Icon(
-                  Icons.person_sharp,
-                  color: FlutterFlowTheme.of(context).underground,
-                  size: 40.0,
-                ),
-                onPressed: () async {
-                  context.pushNamed(UserProfileWidget.routeName);
-                },
-              ),
-            ),
-          ],
           centerTitle: false,
           elevation: 0.0,
         ),
