@@ -214,7 +214,6 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
                             ? _buildClothingGrid()
                             : _buildClothingList(),
                       ),
-                      SizedBox(height: 100.0), // Add bottom spacing for nav bar
                     ],
                   ),
                 ),

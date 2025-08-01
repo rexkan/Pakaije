@@ -289,7 +289,7 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
                         ),
                       ),
                       Container(
-                        height: 400.0, // Fixed height for the grid
+                        height: 590.0, // Fixed height for the grid
                         child: Padding(
                           padding: EdgeInsetsDirectional.fromSTEB(
                               15.0, 0.0, 15.0, 0.0),
@@ -718,39 +718,6 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
                           ),
                         ),
                       ),
-                      Padding(
-                        padding: EdgeInsetsDirectional.fromSTEB(
-                            0.0, 25.0, 0.0, 25.0),
-                        child: FFButtonWidget(
-                          onPressed: () {
-                            print('View Matched Outfit button pressed ...');
-                          },
-                          text: FFLocalizations.of(context).getText(
-                            'yveetctd' /* View Matched Outfit */,
-                          ),
-                          options: FFButtonOptions(
-                            width: 200.0,
-                            height: 40.0,
-                            padding: EdgeInsetsDirectional.fromSTEB(
-                                16.0, 0.0, 16.0, 0.0),
-                            iconPadding: EdgeInsetsDirectional.fromSTEB(
-                                0.0, 0.0, 0.0, 0.0),
-                            color: FlutterFlowTheme.of(context).underground,
-                            textStyle: FlutterFlowTheme.of(context)
-                                .titleSmall
-                                .override(
-                                  fontFamily:
-                                      GoogleFonts.interTight().fontFamily,
-                                  color: Colors.white,
-                                  fontSize: 16.0,
-                                  letterSpacing: 0.0,
-                                ),
-                            elevation: 0.0,
-                            borderRadius: BorderRadius.circular(16.0),
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: 100.0), // Add bottom spacing for nav bar
                     ],
                   ),
                 ),
