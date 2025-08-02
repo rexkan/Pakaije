@@ -69,23 +69,33 @@ class _HomePageWidgetState extends State<HomePageWidget> {
     try {
       print('🔄 Loading trending items...');
 
-      // Query the first 6 branded items, ordered by date_added (newest first)
+      // Query branded items with status filtering to exclude deleted products
       final trendingItemsQuery = await queryBrandedItemsRecordOnce(
-        queryBuilder: (query) =>
-            query.orderBy('date_added', descending: true).limit(6),
+        queryBuilder: (query) => query
+            // ADDED: Filter out deleted products
+            .where('status', isNotEqualTo: 'removed_for_violation')
+            .orderBy('date_added', descending: true)
+            .limit(6),
       );
 
+      // ADDED: Additional client-side filtering as safety net
+      final filteredItems = trendingItemsQuery.where((item) {
+        // Filter out products that are deleted or have removal timestamp
+        return item.status != 'removed_for_violation' && item.removedAt == null;
+      }).toList();
+
       setState(() {
-        trendingItems = trendingItemsQuery;
+        trendingItems = filteredItems;
         isLoadingTrendingItems = false;
       });
 
-      print('✅ Loaded ${trendingItems.length} trending items');
+      print('✅ Loaded ${trendingItems.length} active trending items');
 
       // Print details for debugging
       for (int i = 0; i < trendingItems.length; i++) {
         final item = trendingItems[i];
-        print('Item ${i + 1}: ${item.name} (${item.itemId})');
+        print(
+            'Item ${i + 1}: ${item.name} (${item.itemId}) - Status: ${item.status}');
       }
     } catch (e) {
       print('❌ Error loading trending items: $e');
