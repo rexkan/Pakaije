@@ -378,6 +378,9 @@ class _VirtualTryOnSettingWidgetState extends State<VirtualTryOnSettingWidget>
                           queryBuilder: (brandedItemsRecord) =>
                               brandedItemsRecord
                                   .where('vendor_id', isEqualTo: currentUserUid)
+                                  // ADDED: Filter out deleted products
+                                  .where('status',
+                                      isNotEqualTo: 'removed_for_violation')
                                   .orderBy('date_added', descending: true),
                         ),
                         builder: (context, snapshot) {
@@ -396,11 +399,28 @@ class _VirtualTryOnSettingWidgetState extends State<VirtualTryOnSettingWidget>
                             );
                           }
 
-                          List<BrandedItemsRecord> products = snapshot.data!;
+                          // ADDED: Additional client-side filtering as safety net
+                          List<BrandedItemsRecord> products =
+                              snapshot.data!.where((product) {
+                            // Filter out products that are deleted or have removal timestamp
+                            return product.status != 'removed_for_violation' &&
+                                product.removedAt == null;
+                          }).toList();
 
                           // Empty state
                           if (products.isEmpty) {
-                            return Center(
+                            return Container(
+                              width: double.infinity,
+                              padding: EdgeInsets.symmetric(vertical: 40.0),
+                              decoration: BoxDecoration(
+                                color: FlutterFlowTheme.of(context)
+                                    .secondaryBackground,
+                                borderRadius: BorderRadius.circular(12.0),
+                                border: Border.all(
+                                  color: FlutterFlowTheme.of(context).alternate,
+                                  width: 1.0,
+                                ),
+                              ),
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
@@ -412,7 +432,7 @@ class _VirtualTryOnSettingWidgetState extends State<VirtualTryOnSettingWidget>
                                   ),
                                   SizedBox(height: 16.0),
                                   Text(
-                                    'No products found',
+                                    'No active products found', // UPDATED: Changed text
                                     style: FlutterFlowTheme.of(context)
                                         .headlineSmall
                                         .override(
@@ -420,6 +440,7 @@ class _VirtualTryOnSettingWidgetState extends State<VirtualTryOnSettingWidget>
                                           color: FlutterFlowTheme.of(context)
                                               .secondaryText,
                                           letterSpacing: 0.0,
+                                          fontWeight: FontWeight.w600,
                                         ),
                                   ),
                                   SizedBox(height: 8.0),

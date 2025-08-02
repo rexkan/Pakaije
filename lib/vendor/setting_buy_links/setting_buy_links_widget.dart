@@ -403,6 +403,9 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
                                   brandedItemsRecord
                                       .where('vendor_id',
                                           isEqualTo: currentUserUid)
+                                      // ADDED: Filter out deleted products
+                                      .where('status',
+                                          isNotEqualTo: 'removed_for_violation')
                                       .orderBy('date_added', descending: true),
                             ),
                             builder: (context, snapshot) {
@@ -420,8 +423,15 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
                                   ),
                                 );
                               }
+
+                              // ADDED: Additional client-side filtering as safety net
                               List<BrandedItemsRecord> products =
-                                  snapshot.data!;
+                                  snapshot.data!.where((product) {
+                                // Filter out products that are deleted or have removal timestamp
+                                return product.status !=
+                                        'removed_for_violation' &&
+                                    product.removedAt == null;
+                              }).toList();
 
                               // Empty state
                               if (products.isEmpty) {
@@ -449,7 +459,7 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
                                       ),
                                       SizedBox(height: 24.0),
                                       Text(
-                                        'No products found',
+                                        'No active products found', // UPDATED: Changed text
                                         style: FlutterFlowTheme.of(context)
                                             .headlineSmall
                                             .override(
