@@ -3,6 +3,8 @@ import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
+import '/backend/schema/structs/index.dart';
+import '/backend/backend.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -65,6 +67,9 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
 
   // This will hold the passed ClothingItem data
   ClothingItem? _selectedItem;
+
+  // Report dialog controller
+  final TextEditingController _reportReasonController = TextEditingController();
 
   final animationsMap = <String, AnimationInfo>{};
 
@@ -167,6 +172,7 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
   @override
   void dispose() {
     _model.dispose();
+    _reportReasonController.dispose();
     super.dispose();
   }
 
@@ -243,6 +249,23 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
       ),
       centerTitle: true,
       elevation: 2.0,
+      actions: [
+        // Report button
+        FlutterFlowIconButton(
+          borderColor: Colors.transparent,
+          borderRadius: 30.0,
+          borderWidth: 1.0,
+          buttonSize: 60.0,
+          icon: Icon(
+            Icons.flag_outlined,
+            color: Colors.white,
+            size: 24.0,
+          ),
+          onPressed: () {
+            _showReportDialog();
+          },
+        ),
+      ],
     );
   }
 
@@ -553,6 +576,246 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
           fontWeight: FontWeight.bold,
           letterSpacing: 0.5,
         ),
+      ),
+    );
+  }
+
+  void _showReportDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.0),
+          ),
+          title: Row(
+            children: [
+              Icon(
+                Icons.flag,
+                color: Colors.red,
+                size: 28.0,
+              ),
+              const SizedBox(width: 12.0),
+              Text(
+                'Report Content',
+                style: FlutterFlowTheme.of(context).headlineSmall.override(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20.0,
+                    ),
+              ),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Item Name
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Item Name = ',
+                      style: FlutterFlowTheme.of(context).bodyMedium.override(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16.0,
+                          ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        _currentItem.name,
+                        style: FlutterFlowTheme.of(context).bodyMedium.override(
+                              fontSize: 16.0,
+                            ),
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 16.0),
+
+                // Item ID
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Item ID = ',
+                      style: FlutterFlowTheme.of(context).bodyMedium.override(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16.0,
+                          ),
+                    ),
+                    Text(
+                      _currentItem.id,
+                      style: FlutterFlowTheme.of(context).bodyMedium.override(
+                            fontSize: 16.0,
+                            fontFamily: 'monospace',
+                            color: FlutterFlowTheme.of(context).underground,
+                          ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 16.0),
+
+                // Reason
+                Text(
+                  'Reason',
+                  style: FlutterFlowTheme.of(context).bodyMedium.override(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 16.0,
+                      ),
+                ),
+                const SizedBox(height: 8.0),
+                TextField(
+                  controller: _reportReasonController,
+                  maxLines: 4,
+                  decoration: InputDecoration(
+                    hintText:
+                        'Please describe why you are reporting this product...',
+                    hintStyle: FlutterFlowTheme.of(context).bodyMedium.override(
+                          color: FlutterFlowTheme.of(context).secondaryText,
+                        ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12.0),
+                      borderSide: BorderSide(
+                        color: FlutterFlowTheme.of(context).alternate,
+                        width: 1.0,
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12.0),
+                      borderSide: BorderSide(
+                        color: FlutterFlowTheme.of(context).underground,
+                        width: 2.0,
+                      ),
+                    ),
+                    filled: true,
+                    fillColor: FlutterFlowTheme.of(context).primaryBackground,
+                    contentPadding: const EdgeInsets.all(16.0),
+                  ),
+                  textCapitalization: TextCapitalization.sentences,
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                _reportReasonController.clear();
+                Navigator.of(context).pop();
+              },
+              child: Text(
+                'Cancel',
+                style: FlutterFlowTheme.of(context).bodyMedium.override(
+                      color: FlutterFlowTheme.of(context).secondaryText,
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                _submitReport();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12.0),
+                ),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 24.0, vertical: 12.0),
+              ),
+              child: Text(
+                'Submit Report',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _submitReport() {
+    if (_reportReasonController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Please provide a reason for reporting.'),
+          backgroundColor: Colors.orange,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.0),
+          ),
+        ),
+      );
+      return;
+    }
+
+    // Here you would typically save the report to Firebase
+    // For now, we'll just show a success message
+
+    // Example of how to create the report data:
+    /*
+    final reportData = createContentReportsRecordData(
+      reportId: 'report_${DateTime.now().millisecondsSinceEpoch}',
+      itemId: _currentItem.id,
+      reporterId: 'current_user_id', // Get from your auth system
+      reason: _reportReasonController.text.trim(),
+      status: 'pending',
+      timestamp: DateTime.now(),
+    );
+    
+    // Save to Firebase
+    ContentReportsRecord.collection.add(reportData);
+    */
+
+    Navigator.of(context).pop();
+    _reportReasonController.clear();
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(
+              Icons.check_circle,
+              color: Colors.white,
+              size: 24.0,
+            ),
+            const SizedBox(width: 12.0),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Report Submitted',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16.0,
+                    ),
+                  ),
+                  Text(
+                    'Thank you for helping keep our community safe.',
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.9),
+                      fontSize: 14.0,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: Colors.green,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12.0),
+        ),
+        duration: const Duration(seconds: 4),
       ),
     );
   }
