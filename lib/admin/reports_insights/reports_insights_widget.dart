@@ -6,7 +6,14 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:intl/intl.dart'; // 🔥 ADDED FOR DATE FORMATTING
+import 'package:intl/intl.dart';
+import 'package:flutter/services.dart';
+import 'dart:io';
+import 'dart:convert';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:http/http.dart' as http;
 import 'reports_insights_model.dart';
 export 'reports_insights_model.dart';
 
@@ -33,19 +40,18 @@ class _ReportsInsightsWidgetState extends State<ReportsInsightsWidget> {
   int contentReports = 0;
   double promoConversion = 0.0;
   List<Map<String, dynamic>> wardrobeCategories = [];
-  List<Map<String, dynamic>> userGrowthData =
-      []; // 🔥 MODIFIED: Now holds real data
+  List<Map<String, dynamic>> userGrowthData = [];
 
-  // 🔥 ADDED: User statistics
+  // User statistics
   int totalUsers = 0;
   int newUsersThisPeriod = 0;
 
-  // 🔥 ADDED: Promo code statistics
+  // Promo code statistics
   int totalPromoCopies = 0;
   int uniquePromoUsers = 0;
   List<MapEntry<String, int>> mostPopularPromos = [];
 
-  // 🔥 ADDED: Vendor performance statistics
+  // Vendor performance statistics
   List<Map<String, dynamic>> vendorPerformanceData = [];
 
   @override
@@ -55,6 +61,524 @@ class _ReportsInsightsWidgetState extends State<ReportsInsightsWidget> {
     _loadDashboardData();
   }
 
+  // 🔥 SIMPLIFIED: Download CSV and show success message
+  Future<void> _downloadCSV() async {
+    try {
+      print('📊 Starting CSV generation...');
+
+      // Show loading indicator
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                    strokeWidth: 2, color: Colors.white),
+              ),
+              SizedBox(width: 16),
+              Expanded(child: Text('📊 Generating CSV report...')),
+            ],
+          ),
+          duration: Duration(seconds: 2),
+        ),
+      );
+
+      // Create CSV header
+      String csvContent = 'Date,Category,Metric,Value\n';
+
+      final now = DateTime.now();
+      final dateStr = DateFormat('yyyy-MM-dd').format(now);
+
+      // Add KPI data
+      csvContent += '$dateStr,KPI,Total Users,$totalUsers\n';
+      csvContent += '$dateStr,KPI,New Users This Period,$newUsersThisPeriod\n';
+      csvContent += '$dateStr,KPI,Total Outfits,$totalOutfits\n';
+      csvContent += '$dateStr,KPI,Content Reports,$contentReports\n';
+      csvContent += '$dateStr,KPI,Active Sessions,$activeSessions\n';
+      csvContent += '$dateStr,KPI,Total Promo Uses,$totalPromoCopies\n';
+      csvContent += '$dateStr,KPI,Unique Promo Users,$uniquePromoUsers\n';
+      csvContent +=
+          '$dateStr,KPI,Promo Conversion Rate,${promoConversion.toStringAsFixed(2)}\n';
+
+      // Add user growth data
+      for (var data in userGrowthData) {
+        csvContent +=
+            '${data['date']},User Growth,Daily New Users,${data['count']}\n';
+      }
+
+      // Add vendor performance data
+      for (var vendor in vendorPerformanceData) {
+        final vendorName = vendor['vendorName'].toString().replaceAll(',', ' ');
+        csvContent +=
+            '$dateStr,Vendor Performance,$vendorName Products,${vendor['totalProducts']}\n';
+        csvContent +=
+            '$dateStr,Vendor Performance,$vendorName Promo Usage,${vendor['totalPromoUsage']}\n';
+        csvContent +=
+            '$dateStr,Vendor Performance,$vendorName Active Promos,${vendor['activePromos']}\n';
+        csvContent +=
+            '$dateStr,Vendor Performance,$vendorName Performance Score,${(vendor['performanceScore'] as double).toStringAsFixed(2)}\n';
+      }
+
+      // Add wardrobe categories
+      for (var category in wardrobeCategories) {
+        final categoryName = category['name'].toString().replaceAll(',', ' ');
+        csvContent +=
+            '$dateStr,Wardrobe Categories,$categoryName Items,${category['count']}\n';
+      }
+
+      // Add top promo codes
+      for (var promo in mostPopularPromos.take(10)) {
+        final promoCode = promo.key.replaceAll(',', ' ');
+        csvContent += '$dateStr,Promo Codes,$promoCode Uses,${promo.value}\n';
+      }
+
+      // Save file
+      final directory = await getApplicationDocumentsDirectory();
+      final timestamp = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
+      final fileName = 'pakaije_analytics_${_selectedTimeRange}_$timestamp.csv';
+      final file = File('${directory.path}/$fileName');
+
+      await file.writeAsString(csvContent);
+
+      print('✅ CSV saved: ${file.path}');
+      print('📊 CSV contains ${csvContent.split('\n').length - 1} data rows');
+
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '✅ CSV Report Generated Successfully!',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 4),
+              Text('📁 File: $fileName'),
+              Text('📊 Data Points: ${_calculateDataPoints()}'),
+              Text('💾 Saved to device storage'),
+            ],
+          ),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 5),
+          action: SnackBarAction(
+            label: 'Share',
+            textColor: Colors.white,
+            onPressed: () async {
+              await Share.shareXFiles([XFile(file.path)]);
+            },
+          ),
+        ),
+      );
+    } catch (e) {
+      print('❌ Error generating CSV: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('❌ Error generating CSV: ${e.toString()}'),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 3),
+        ),
+      );
+    }
+  }
+
+  // 🔥 SIMPLIFIED: Export Summary and show success message
+  Future<void> _exportSummary() async {
+    try {
+      print('📋 Starting summary report generation...');
+
+      // Show loading indicator
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                    strokeWidth: 2, color: Colors.white),
+              ),
+              SizedBox(width: 16),
+              Expanded(child: Text('📋 Generating summary report...')),
+            ],
+          ),
+          duration: Duration(seconds: 2),
+        ),
+      );
+
+      // Generate comprehensive summary report
+      String summaryContent = _generateDetailedSummary();
+
+      // Save file
+      final directory = await getApplicationDocumentsDirectory();
+      final timestamp = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
+      final fileName = 'pakaije_summary_${_selectedTimeRange}_$timestamp.txt';
+      final file = File('${directory.path}/$fileName');
+
+      await file.writeAsString(summaryContent);
+
+      print('✅ Summary saved: ${file.path}');
+      print('📋 Summary contains ${summaryContent.length} characters');
+
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '✅ Summary Report Generated Successfully!',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 4),
+              Text('📄 File: $fileName'),
+              Text('📊 Health Score: ${_calculateHealthScore()}'),
+              Text('📈 User Growth: ${_calculateUserGrowthTrend()}'),
+              Text('💾 Saved to device storage'),
+            ],
+          ),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 5),
+          action: SnackBarAction(
+            label: 'Share',
+            textColor: Colors.white,
+            onPressed: () async {
+              await Share.shareXFiles([XFile(file.path)]);
+            },
+          ),
+        ),
+      );
+    } catch (e) {
+      print('❌ Error generating summary: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('❌ Error generating summary: ${e.toString()}'),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 3),
+        ),
+      );
+    }
+  }
+
+  // 🔥 Generate detailed summary report
+  String _generateDetailedSummary() {
+    final now = DateTime.now();
+    final reportDate =
+        DateFormat('EEEE, MMMM d, yyyy \'at\' HH:mm').format(now);
+
+    // Calculate additional insights
+    final userGrowthTrend = _calculateUserGrowthTrend();
+    final topVendor =
+        vendorPerformanceData.isNotEmpty ? vendorPerformanceData.first : null;
+    final topCategory =
+        wardrobeCategories.isNotEmpty ? wardrobeCategories.first : null;
+    final recommendations = _generateRecommendations();
+
+    return '''
+═══════════════════════════════════════════════════════════
+                PAKAIJE ANALYTICS SUMMARY REPORT
+═══════════════════════════════════════════════════════════
+
+Generated: $reportDate
+Analysis Period: $_selectedTimeRange
+Data Source: Firebase Analytics Dashboard
+
+═══════════════════════════════════════════════════════════
+                        EXECUTIVE SUMMARY
+═══════════════════════════════════════════════════════════
+
+Platform Overview:
+• Total Registered Users: ${totalUsers.toString().padLeft(8)} users
+• New User Acquisitions: ${newUsersThisPeriod.toString().padLeft(8)} users (this period)
+• Active Sessions: ${activeSessions.toString().padLeft(8)} concurrent
+• Content Created: ${totalOutfits.toString().padLeft(8)} outfits
+• Moderation Reports: ${contentReports.toString().padLeft(8)} reports
+
+User Growth Trend: $userGrowthTrend
+
+═══════════════════════════════════════════════════════════
+                        USER ANALYTICS
+═══════════════════════════════════════════════════════════
+
+Registration Trends:
+${_formatUserGrowthDetails()}
+
+User Engagement:
+• Average Session Activity: ${activeSessions > 0 ? (activeSessions / (totalUsers > 0 ? totalUsers : 1) * 100).toStringAsFixed(1) : '0.0'}%
+• Content Creation Rate: ${totalUsers > 0 ? (totalOutfits / totalUsers).toStringAsFixed(1) : '0.0'} outfits per user
+• Platform Health Score: ${_calculateHealthScore()}
+
+═══════════════════════════════════════════════════════════
+                      VENDOR ECOSYSTEM
+═══════════════════════════════════════════════════════════
+
+Vendor Performance Summary:
+• Active Vendors: ${vendorPerformanceData.length} vendors
+${topVendor != null ? '• Top Performing Vendor: ${topVendor['vendorName']} (Score: ${(topVendor['performanceScore'] as double).toStringAsFixed(1)})' : '• No vendor performance data available'}
+
+Detailed Vendor Rankings:
+${_formatVendorDetails()}
+
+═══════════════════════════════════════════════════════════
+                    PROMOTIONAL ANALYTICS
+═══════════════════════════════════════════════════════════
+
+Promo Code Performance:
+• Total Promo Uses: ${totalPromoCopies.toString().padLeft(8)} uses
+• Estimated Unique Users: ${uniquePromoUsers.toString().padLeft(8)} users
+• Average Uses per Code: ${promoConversion.toStringAsFixed(1).padLeft(8)}
+• Conversion Efficiency: ${totalPromoCopies > 0 ? ((uniquePromoUsers / totalPromoCopies) * 100).toStringAsFixed(1) : '0.0'}%
+
+Top Performing Promo Codes:
+${_formatPromoDetails()}
+
+═══════════════════════════════════════════════════════════
+                    CONTENT ANALYTICS
+═══════════════════════════════════════════════════════════
+
+Wardrobe Category Distribution:
+${topCategory != null ? '• Most Popular Category: ${topCategory['name']} (${topCategory['count']} items)' : '• No category data available'}
+
+Category Breakdown:
+${_formatCategoryDetails()}
+
+Content Moderation:
+• Report Volume: ${contentReports} reports (${_getReportVolumeAssessment()})
+• Platform Safety: ${contentReports < 5 ? 'GOOD' : contentReports < 15 ? 'MODERATE' : 'NEEDS ATTENTION'}
+
+═══════════════════════════════════════════════════════════
+                    STRATEGIC INSIGHTS
+═══════════════════════════════════════════════════════════
+
+Key Performance Indicators:
+• User Acquisition: ${newUsersThisPeriod > 10 ? 'STRONG' : newUsersThisPeriod > 3 ? 'MODERATE' : 'NEEDS IMPROVEMENT'}
+• Vendor Engagement: ${vendorPerformanceData.length > 5 ? 'HEALTHY' : vendorPerformanceData.length > 2 ? 'GROWING' : 'DEVELOPING'}
+• Promo Effectiveness: ${totalPromoCopies > 50 ? 'HIGH' : totalPromoCopies > 10 ? 'MODERATE' : 'LOW'}
+• Content Quality: ${contentReports < 5 ? 'EXCELLENT' : contentReports < 15 ? 'GOOD' : 'CONCERNING'}
+
+═══════════════════════════════════════════════════════════
+                      RECOMMENDATIONS
+═══════════════════════════════════════════════════════════
+
+$recommendations
+
+═══════════════════════════════════════════════════════════
+                        APPENDIX
+═══════════════════════════════════════════════════════════
+
+Technical Details:
+• Report Generation Time: ${DateTime.now().millisecondsSinceEpoch}ms
+• Data Points Analyzed: ${_calculateDataPoints()}
+• Analysis Depth: Comprehensive Multi-Source
+• Confidence Level: ${_calculateConfidenceLevel()}
+
+For technical support or data inquiries, please contact the analytics team.
+
+═══════════════════════════════════════════════════════════
+                      END OF REPORT
+═══════════════════════════════════════════════════════════
+''';
+  }
+
+  // Helper methods for summary generation
+  String _calculateUserGrowthTrend() {
+    if (userGrowthData.length < 2) return 'Insufficient data';
+
+    final recent = userGrowthData.length >= 3
+        ? userGrowthData
+            .sublist(userGrowthData.length - 3)
+            .map((d) => d['count'] as int)
+            .toList()
+        : userGrowthData.map((d) => d['count'] as int).toList();
+    final earlier = userGrowthData.length >= 3
+        ? userGrowthData.sublist(0, 3).map((d) => d['count'] as int).toList()
+        : userGrowthData.map((d) => d['count'] as int).toList();
+
+    final recentAvg =
+        recent.isNotEmpty ? recent.reduce((a, b) => a + b) / recent.length : 0;
+    final earlierAvg = earlier.isNotEmpty
+        ? earlier.reduce((a, b) => a + b) / earlier.length
+        : 0;
+
+    if (recentAvg > earlierAvg * 1.2) return 'INCREASING';
+    if (recentAvg < earlierAvg * 0.8) return 'DECREASING';
+    return 'STABLE';
+  }
+
+  String _formatUserGrowthDetails() {
+    if (userGrowthData.isEmpty) return '• No user growth data available';
+
+    return userGrowthData.map((data) {
+      final date = DateTime.parse(data['date']);
+      final count = data['count'] as int;
+      final dayName = DateFormat('EEE').format(date);
+      return '• $dayName ${DateFormat('MM/dd').format(date)}: ${count.toString().padLeft(3)} new users';
+    }).join('\n');
+  }
+
+  String _formatVendorDetails() {
+    if (vendorPerformanceData.isEmpty)
+      return '• No vendor performance data available';
+
+    return vendorPerformanceData.toList().asMap().entries.map((entry) {
+      final index = entry.key + 1;
+      final vendor = entry.value;
+      return '${index.toString().padLeft(2)}. ${vendor['vendorName']} - ${vendor['totalProducts']} products, ${vendor['totalPromoUsage']} promo uses';
+    }).join('\n');
+  }
+
+  String _formatPromoDetails() {
+    if (mostPopularPromos.isEmpty)
+      return '• No promo code usage data available';
+
+    return mostPopularPromos.take(5).toList().asMap().entries.map((entry) {
+      final index = entry.key + 1;
+      final promo = entry.value;
+      return '${index.toString().padLeft(2)}. ${promo.key}: ${promo.value.toString().padLeft(3)} uses';
+    }).join('\n');
+  }
+
+  String _formatCategoryDetails() {
+    if (wardrobeCategories.isEmpty) return '• No category data available';
+
+    return wardrobeCategories.take(5).toList().asMap().entries.map((entry) {
+      final index = entry.key + 1;
+      final category = entry.value;
+      return '${index.toString().padLeft(2)}. ${category['name']}: ${category['count'].toString().padLeft(3)} items';
+    }).join('\n');
+  }
+
+  String _getReportVolumeAssessment() {
+    if (contentReports == 0) return 'No reports - monitor engagement';
+    if (contentReports < 5) return 'Low volume - healthy community';
+    if (contentReports < 15) return 'Moderate volume - normal activity';
+    return 'High volume - review moderation policies';
+  }
+
+  String _calculateHealthScore() {
+    int score = 0;
+
+    // User growth (30 points)
+    if (newUsersThisPeriod > 10)
+      score += 30;
+    else if (newUsersThisPeriod > 3)
+      score += 20;
+    else if (newUsersThisPeriod > 0) score += 10;
+
+    // Content creation (25 points)
+    if (totalOutfits > 50)
+      score += 25;
+    else if (totalOutfits > 20)
+      score += 20;
+    else if (totalOutfits > 5) score += 10;
+
+    // Vendor engagement (25 points)
+    if (vendorPerformanceData.length > 5)
+      score += 25;
+    else if (vendorPerformanceData.length > 2)
+      score += 15;
+    else if (vendorPerformanceData.length > 0) score += 10;
+
+    // Community health (20 points)
+    if (contentReports < 5)
+      score += 20;
+    else if (contentReports < 15) score += 10;
+
+    return '$score/100 ${score > 80 ? '(EXCELLENT)' : score > 60 ? '(GOOD)' : score > 40 ? '(FAIR)' : '(NEEDS IMPROVEMENT)'}';
+  }
+
+  String _generateRecommendations() {
+    List<String> recommendations = [];
+
+    // User acquisition recommendations
+    if (newUsersThisPeriod == 0) {
+      recommendations.add(
+          '🎯 CRITICAL: Implement user acquisition campaigns - zero new users detected');
+      recommendations.add('   • Launch social media marketing campaigns');
+      recommendations.add('   • Consider referral programs or incentives');
+      recommendations
+          .add('   • Review onboarding flow for conversion barriers');
+    } else if (newUsersThisPeriod < 5) {
+      recommendations.add('📈 User Growth: Boost acquisition efforts');
+      recommendations.add('   • Analyze successful acquisition channels');
+      recommendations.add('   • Optimize app store presence and SEO');
+    } else {
+      recommendations
+          .add('✅ User Growth: Maintaining healthy acquisition rate');
+    }
+
+    // Vendor ecosystem recommendations
+    if (vendorPerformanceData.isEmpty) {
+      recommendations
+          .add('🏪 URGENT: Focus on vendor onboarding and activation');
+      recommendations.add('   • Develop vendor recruitment strategy');
+      recommendations.add('   • Create vendor success programs');
+    } else if (vendorPerformanceData.length < 3) {
+      recommendations.add('🏪 Vendor Ecosystem: Expand vendor base');
+      recommendations.add('   • Target key fashion categories');
+      recommendations.add('   • Improve vendor tools and analytics');
+    }
+
+    // Promo code recommendations
+    if (totalPromoCopies == 0) {
+      recommendations
+          .add('🎫 Promo Strategy: Increase promo code visibility and usage');
+      recommendations.add('   • Improve promo code placement in UI');
+      recommendations.add('   • Create promo code discovery features');
+      recommendations.add('   • Train vendors on effective promo strategies');
+    } else if (promoConversion < 2) {
+      recommendations.add('🎫 Promo Optimization: Improve conversion rates');
+      recommendations.add('   • Simplify promo code redemption process');
+      recommendations.add('   • Add promo code value propositions');
+    }
+
+    // Content moderation recommendations
+    if (contentReports > 15) {
+      recommendations
+          .add('⚠️  Content Moderation: High report volume requires attention');
+      recommendations.add('   • Review and update community guidelines');
+      recommendations.add('   • Increase moderation team capacity');
+      recommendations.add('   • Implement automated content filtering');
+    } else if (contentReports == 0) {
+      recommendations
+          .add('👁️  Community Engagement: Monitor reporting system usage');
+      recommendations.add('   • Ensure users know how to report issues');
+      recommendations.add('   • Verify reporting system functionality');
+    }
+
+    // Content creation recommendations
+    if (totalOutfits < 10) {
+      recommendations
+          .add('👗 Content Creation: Encourage more outfit creation');
+      recommendations.add('   • Add outfit creation tutorials');
+      recommendations.add('   • Implement outfit challenges or contests');
+      recommendations.add('   • Improve outfit creation tools');
+    }
+
+    return recommendations.isNotEmpty
+        ? recommendations.join('\n')
+        : '✅ All metrics performing well - continue current strategies';
+  }
+
+  int _calculateDataPoints() {
+    return userGrowthData.length +
+        vendorPerformanceData.length +
+        wardrobeCategories.length +
+        mostPopularPromos.length +
+        8; // KPI metrics
+  }
+
+  String _calculateConfidenceLevel() {
+    final dataPoints = _calculateDataPoints();
+    if (dataPoints > 50) return 'HIGH (>50 data points)';
+    if (dataPoints > 20) return 'MEDIUM (20-50 data points)';
+    return 'LOW (<20 data points)';
+  }
+
   // Load data from Firestore
   Future<void> _loadDashboardData() async {
     try {
@@ -62,10 +586,10 @@ class _ReportsInsightsWidgetState extends State<ReportsInsightsWidget> {
         _loadActiveSessionsData(),
         _loadOutfitMetrics(),
         _loadContentReports(),
-        _loadPromoMetrics(), // 🔥 NOW USES REAL PROMO DATA
+        _loadPromoMetrics(),
         _loadWardrobeCategories(),
-        _loadUserGrowthData(), // 🔥 ADDED: Load user growth data
-        _loadVendorPerformance(), // 🔥 ADDED: Load vendor performance data
+        _loadUserGrowthData(),
+        _loadVendorPerformance(),
       ]);
       setState(() {}); // Refresh UI with loaded data
     } catch (e) {
@@ -286,7 +810,7 @@ class _ReportsInsightsWidgetState extends State<ReportsInsightsWidget> {
     }
   }
 
-  // 🔥 UPDATED: Load real promo metrics from promo_code_usage collection
+  // 🔥 UPDATED: Load promo metrics from discount_codes collection using usage_count
   Future<void> _loadPromoMetrics() async {
     try {
       final now = DateTime.now();
@@ -297,56 +821,151 @@ class _ReportsInsightsWidgetState extends State<ReportsInsightsWidget> {
                   ? 30
                   : 90));
 
-      // Get all promo code copies in the selected time range
-      final usageQuery = await FirebaseFirestore.instance
-          .collection('promo_code_usage')
-          .where('timestamp', isGreaterThan: startDate)
+      print('📊 Loading promo metrics for ${_selectedTimeRange}...');
+      print(
+          '📅 Date range: ${DateFormat('yyyy-MM-dd').format(startDate)} to ${DateFormat('yyyy-MM-dd').format(now)}');
+
+      // Get all discount codes
+      final allPromoCodesQuery =
+          await FirebaseFirestore.instance.collection('discount_codes').get();
+
+      // Get recently created promo codes (within time range)
+      final recentPromoCodesQuery = await FirebaseFirestore.instance
+          .collection('discount_codes')
+          .where('created_at', isGreaterThan: startDate)
           .get();
 
-      // Get total active promo codes for comparison
-      final activePromosQuery = await FirebaseFirestore.instance
-          .collection('promo_codes')
-          .where('is_active', isEqualTo: true)
-          .get();
+      print('📋 Found ${allPromoCodesQuery.docs.length} total promo codes');
+      print('📋 Found ${recentPromoCodesQuery.docs.length} recent promo codes');
 
-      final totalCopies = usageQuery.docs.length;
-      final activePromoCount = activePromosQuery.docs.length;
-      final uniqueUsers = <String>{};
-      final promoCodeStats = <String, int>{};
-      final vendorStats = <String, int>{};
+      // Calculate comprehensive metrics
+      int totalUsageCount = 0;
+      int activePromoCount = 0;
+      int recentUsageCount = 0;
+      Set<String> vendorsWithActivity = <String>{};
+      Map<String, int> promoCodeStats = <String, int>{};
+      Map<String, Map<String, dynamic>> vendorStats =
+          <String, Map<String, dynamic>>{};
 
-      // Analyze usage data
-      for (var doc in usageQuery.docs) {
+      // Analyze all promo codes
+      for (var doc in allPromoCodesQuery.docs) {
         final data = doc.data();
-        final userId = data['user_id'] as String? ?? '';
-        final promoCode = data['promo_code'] as String? ?? '';
+        final code = data['code'] as String? ?? '';
         final vendorId = data['vendor_id'] as String? ?? '';
+        final usageCount = (data['usage_count'] as num?)?.toInt() ?? 0;
+        final isActive = data['is_active'] as bool? ?? false;
+        final createdAt = data['created_at'] as Timestamp?;
 
-        uniqueUsers.add(userId);
-        promoCodeStats[promoCode] = (promoCodeStats[promoCode] ?? 0) + 1;
-        vendorStats[vendorId] = (vendorStats[vendorId] ?? 0) + 1;
+        // Count active promo codes
+        if (isActive) {
+          activePromoCount++;
+        }
+
+        // Track total usage
+        totalUsageCount += usageCount;
+
+        // Track recent usage (codes created in time range)
+        if (createdAt != null && createdAt.toDate().isAfter(startDate)) {
+          recentUsageCount += usageCount;
+        }
+
+        // Track vendor activity
+        if (usageCount > 0 && vendorId.isNotEmpty) {
+          vendorsWithActivity.add(vendorId);
+
+          // Initialize vendor stats if not exists
+          if (!vendorStats.containsKey(vendorId)) {
+            vendorStats[vendorId] = {
+              'totalCodes': 0,
+              'totalUsage': 0,
+              'activeCodes': 0,
+              'bestPerformingCode': '',
+              'bestPerformingUsage': 0,
+            };
+          }
+
+          // Update vendor stats
+          vendorStats[vendorId]!['totalCodes'] =
+              (vendorStats[vendorId]!['totalCodes'] as int) + 1;
+          vendorStats[vendorId]!['totalUsage'] =
+              (vendorStats[vendorId]!['totalUsage'] as int) + usageCount;
+
+          if (isActive) {
+            vendorStats[vendorId]!['activeCodes'] =
+                (vendorStats[vendorId]!['activeCodes'] as int) + 1;
+          }
+
+          // Track best performing code per vendor
+          if (usageCount >
+              (vendorStats[vendorId]!['bestPerformingUsage'] as int)) {
+            vendorStats[vendorId]!['bestPerformingCode'] = code;
+            vendorStats[vendorId]!['bestPerformingUsage'] = usageCount;
+          }
+        }
+
+        // Track individual code performance
+        if (usageCount > 0) {
+          promoCodeStats[code] = usageCount;
+        }
       }
 
-      // Calculate engagement rate (copies per active promo code)
+      // Calculate engagement rate (average usage per active code)
       promoConversion = activePromoCount > 0
-          ? (totalCopies / activePromoCount) * 10 // Scale for better display
+          ? (totalUsageCount / activePromoCount) *
+              10 // Scale for better display
           : 0.0;
 
-      // Store additional metrics for charts
-      totalPromoCopies = totalCopies;
-      uniquePromoUsers = uniqueUsers.length;
+      // Estimate unique users (rough estimate: 80% of usage count, as some users might copy multiple times)
+      final estimatedUniqueUsers = (totalUsageCount * 0.8).round();
+
+      // Store metrics for UI
+      totalPromoCopies = totalUsageCount;
+      uniquePromoUsers = estimatedUniqueUsers;
       mostPopularPromos = promoCodeStats.entries.toList()
         ..sort((a, b) => b.value.compareTo(a.value));
 
-      print('📊 Promo Code Analytics:');
-      print('   📋 Total Copies: $totalCopies');
-      print('   👥 Unique Users: ${uniqueUsers.length}');
+      print('📊 Promo Code Analytics Summary:');
+      print('   📋 Total Usage Count: $totalUsageCount');
       print('   🎯 Active Promo Codes: $activePromoCount');
       print('   📈 Engagement Rate: ${promoConversion.toStringAsFixed(1)}');
-      print(
-          '   🏆 Most Popular Codes: ${promoCodeStats.entries.take(3).map((e) => '${e.key}(${e.value})').join(', ')}');
+      print('   🏪 Vendors with Activity: ${vendorsWithActivity.length}');
+      print('   🏆 Top Performing Codes:');
+
+      for (var entry in mostPopularPromos.take(5)) {
+        print('      ${entry.key}: ${entry.value} uses');
+      }
+
+      print('   🏪 Top Performing Vendors:');
+      final sortedVendors = vendorStats.entries.toList()
+        ..sort((a, b) => (b.value['totalUsage'] as int)
+            .compareTo(a.value['totalUsage'] as int));
+
+      for (var entry in sortedVendors.take(3)) {
+        final stats = entry.value;
+        print(
+            '      ${entry.key}: ${stats['totalUsage']} total uses, ${stats['activeCodes']} active codes');
+      }
+
+      // Additional insights
+      if (totalUsageCount > 0) {
+        final avgUsagePerCode = activePromoCount > 0
+            ? (totalUsageCount / activePromoCount).toStringAsFixed(1)
+            : '0';
+        final vendorParticipationRate = vendorStats.isNotEmpty
+            ? ((vendorsWithActivity.length / vendorStats.length) * 100)
+                .toStringAsFixed(1)
+            : '0';
+
+        print('   📊 Additional Insights:');
+        print('      Average uses per active code: $avgUsagePerCode');
+        print('      Vendor participation rate: $vendorParticipationRate%');
+        print(
+            '      Recent activity (${_selectedTimeRange}): $recentUsageCount uses');
+      }
     } catch (e) {
       print('❌ Error loading promo metrics: $e');
+
+      // Set default values on error
       promoConversion = 0.0;
       totalPromoCopies = 0;
       uniquePromoUsers = 0;
@@ -354,7 +973,7 @@ class _ReportsInsightsWidgetState extends State<ReportsInsightsWidget> {
     }
   }
 
-  // 🔥 NEW: Load vendor performance data using branded_items + promo_code_usage
+  // 🔥 UPDATED: Enhanced vendor performance method that uses discount_codes data
   Future<void> _loadVendorPerformance() async {
     try {
       final now = DateTime.now();
@@ -365,21 +984,15 @@ class _ReportsInsightsWidgetState extends State<ReportsInsightsWidget> {
                   ? 30
                   : 90));
 
-      // Get promo code usage by vendor (within time range)
-      final usageQuery = await FirebaseFirestore.instance
-          .collection('promo_code_usage')
-          .where('timestamp', isGreaterThan: startDate)
-          .get();
+      print('📊 Loading vendor performance for ${_selectedTimeRange}...');
 
       // Get all branded items by vendor
       final brandedItemsQuery =
           await FirebaseFirestore.instance.collection('branded_items').get();
 
-      // Get active promo codes by vendor
-      final promoQuery = await FirebaseFirestore.instance
-          .collection('promo_codes')
-          .where('is_active', isEqualTo: true)
-          .get();
+      // Get all discount codes with usage data
+      final discountCodesQuery =
+          await FirebaseFirestore.instance.collection('discount_codes').get();
 
       // Calculate comprehensive vendor stats
       Map<String, Map<String, dynamic>> vendorStats = {};
@@ -396,10 +1009,13 @@ class _ReportsInsightsWidgetState extends State<ReportsInsightsWidget> {
               'totalProducts': 0,
               'recentProducts': 0,
               'categories': <String>{},
-              'promoCopies': 0,
+              'totalPromoUsage': 0,
               'activePromos': 0,
+              'totalPromosCreated': 0,
               'avgPrice': 0.0,
               'totalValue': 0.0,
+              'bestPerformingPromo': '',
+              'bestPromoUsage': 0,
             };
           }
 
@@ -424,23 +1040,31 @@ class _ReportsInsightsWidgetState extends State<ReportsInsightsWidget> {
         }
       }
 
-      // Count promo code copies per vendor
-      for (var doc in usageQuery.docs) {
+      // Add promo code performance data
+      for (var doc in discountCodesQuery.docs) {
         final data = doc.data();
         final vendorId = data['vendor_id'] as String? ?? '';
+        final usageCount = (data['usage_count'] as num?)?.toInt() ?? 0;
+        final isActive = data['is_active'] as bool? ?? false;
+        final code = data['code'] as String? ?? '';
 
         if (vendorId.isNotEmpty && vendorStats.containsKey(vendorId)) {
-          vendorStats[vendorId]!['promoCopies']++;
-        }
-      }
+          // Count total promo codes created
+          vendorStats[vendorId]!['totalPromosCreated']++;
 
-      // Count active promo codes per vendor
-      for (var doc in promoQuery.docs) {
-        final data = doc.data();
-        final vendorId = data['vendor_id'] as String? ?? '';
+          // Count active promo codes
+          if (isActive) {
+            vendorStats[vendorId]!['activePromos']++;
+          }
 
-        if (vendorId.isNotEmpty && vendorStats.containsKey(vendorId)) {
-          vendorStats[vendorId]!['activePromos']++;
+          // Sum up promo usage
+          vendorStats[vendorId]!['totalPromoUsage'] += usageCount;
+
+          // Track best performing promo
+          if (usageCount > (vendorStats[vendorId]!['bestPromoUsage'] as int)) {
+            vendorStats[vendorId]!['bestPerformingPromo'] = code;
+            vendorStats[vendorId]!['bestPromoUsage'] = usageCount;
+          }
         }
       }
 
@@ -450,25 +1074,34 @@ class _ReportsInsightsWidgetState extends State<ReportsInsightsWidget> {
         final stats = entry.value;
         final totalProducts = stats['totalProducts'] as int;
         final recentProducts = stats['recentProducts'] as int;
-        final promoCopies = stats['promoCopies'] as int;
+        final totalPromoUsage = stats['totalPromoUsage'] as int;
         final activePromos = stats['activePromos'] as int;
+        final totalPromosCreated = stats['totalPromosCreated'] as int;
         final categories = stats['categories'] as Set<String>;
         final totalValue = stats['totalValue'] as double;
+
+        // Skip vendors with no activity
+        if (totalProducts == 0 && totalPromosCreated == 0) continue;
 
         // Calculate metrics
         final avgPrice = totalProducts > 0 ? totalValue / totalProducts : 0.0;
         final promoEngagement =
-            activePromos > 0 ? (promoCopies / activePromos) : 0.0;
+            activePromos > 0 ? (totalPromoUsage / activePromos) : 0.0;
         final categoryDiversity = categories.length;
         final productFreshness =
             totalProducts > 0 ? (recentProducts / totalProducts) * 100 : 0.0;
+        final promoSuccessRate = totalPromosCreated > 0
+            ? (activePromos / totalPromosCreated) * 100
+            : 0.0;
 
         // Calculate overall performance score (weighted formula)
-        final performanceScore =
-            ((promoEngagement * 40) + // 40% weight on promo engagement
+        final performanceScore = ((promoEngagement *
+                    30) + // 30% weight on promo engagement (usage per active promo)
+                (totalPromoUsage * 0.5) + // Direct weight on total usage
                 (categoryDiversity * 15) + // 15% weight on category diversity
                 (productFreshness *
-                    25) + // 25% weight on recent product additions
+                    20) + // 20% weight on recent product additions
+                (promoSuccessRate * 15) + // 15% weight on promo success rate
                 (totalProducts.clamp(0, 50) *
                     0.4) // 20% weight on catalog size (capped at 50)
             );
@@ -478,13 +1111,17 @@ class _ReportsInsightsWidgetState extends State<ReportsInsightsWidget> {
           'vendorName': await _getVendorName(entry.key),
           'totalProducts': totalProducts,
           'recentProducts': recentProducts,
-          'promoCopies': promoCopies,
+          'totalPromoUsage': totalPromoUsage,
           'activePromos': activePromos,
+          'totalPromosCreated': totalPromosCreated,
           'categoryDiversity': categoryDiversity,
           'avgPrice': avgPrice,
           'promoEngagement': promoEngagement,
           'productFreshness': productFreshness,
+          'promoSuccessRate': promoSuccessRate,
           'performanceScore': performanceScore,
+          'bestPerformingPromo': stats['bestPerformingPromo'],
+          'bestPromoUsage': stats['bestPromoUsage'],
         });
       }
 
@@ -495,13 +1132,15 @@ class _ReportsInsightsWidgetState extends State<ReportsInsightsWidget> {
       // Take top 5 vendors
       vendorPerformanceData = vendorPerformanceData.take(5).toList();
 
-      print('📊 Top Vendor Performance:');
+      print('📊 Top Vendor Performance (Updated with Promo Usage):');
       for (var vendor in vendorPerformanceData.take(3)) {
         print('   🏆 ${vendor['vendorName']}:');
         print(
             '      📦 ${vendor['totalProducts']} products (${vendor['recentProducts']} recent)');
         print(
-            '      📋 ${vendor['promoCopies']} promo copies, ${vendor['categoryDiversity']} categories');
+            '      📋 ${vendor['totalPromoUsage']} total promo uses, ${vendor['activePromos']} active promos');
+        print(
+            '      🎯 Best promo: ${vendor['bestPerformingPromo']} (${vendor['bestPromoUsage']} uses)');
         print(
             '      📈 Score: ${(vendor['performanceScore'] as double).toStringAsFixed(1)}');
       }
@@ -511,25 +1150,54 @@ class _ReportsInsightsWidgetState extends State<ReportsInsightsWidget> {
     }
   }
 
-  // 🔥 NEW: Get vendor display names (tries to infer from branded items)
+  // 🔥 FIXED: Get vendor display names from users collection
   Future<String> _getVendorName(String vendorId) async {
     try {
-      // Try to get vendor name from vendors collection if it exists
-      final vendorDoc = await FirebaseFirestore.instance
-          .collection(
-              'vendors') // Replace with your actual vendor collection name if you have one
-          .doc(vendorId)
+      // Query the users collection where uid matches vendorId and role is Vendor
+      final vendorQuery = await FirebaseFirestore.instance
+          .collection('users')
+          .where('uid', isEqualTo: vendorId)
+          .where('role', isEqualTo: 'Vendor')
+          .limit(1)
           .get();
 
-      if (vendorDoc.exists) {
-        final data = vendorDoc.data();
-        return data?['name'] ??
-            data?['display_name'] ??
-            data?['business_name'] ??
-            vendorId;
+      if (vendorQuery.docs.isNotEmpty) {
+        final userData = vendorQuery.docs.first.data();
+        final displayName = userData['display_name'] as String? ?? '';
+
+        if (displayName.isNotEmpty) {
+          print('✅ Found vendor name: $displayName for ID: $vendorId');
+          return displayName;
+        }
       }
+
+      // Alternative approach: Query by document ID if uid is the document ID
+      try {
+        final vendorDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(vendorId)
+            .get();
+
+        if (vendorDoc.exists) {
+          final userData = vendorDoc.data();
+          final role = userData?['role'] as String? ?? '';
+
+          if (role == 'Vendor') {
+            final displayName = userData?['display_name'] as String? ?? '';
+            if (displayName.isNotEmpty) {
+              print(
+                  '✅ Found vendor name (by doc ID): $displayName for ID: $vendorId');
+              return displayName;
+            }
+          }
+        }
+      } catch (e) {
+        print('⚠️ Could not query vendor by doc ID: $e');
+      }
+
+      print('⚠️ No vendor found with ID: $vendorId');
     } catch (e) {
-      // Vendors collection might not exist, that's okay
+      print('❌ Error getting vendor name for ID $vendorId: $e');
     }
 
     // Fallback: try to get a sample branded item to infer vendor name
@@ -546,17 +1214,24 @@ class _ReportsInsightsWidgetState extends State<ReportsInsightsWidget> {
 
         // Extract brand name from item name (common patterns)
         if (itemName.contains(' - ')) {
-          return itemName.split(' - ').first;
+          final inferredName = itemName.split(' - ').first;
+          print('📝 Inferred vendor name from item: $inferredName');
+          return inferredName;
         } else if (itemName.contains(' by ')) {
-          return itemName.split(' by ').last;
+          final inferredName = itemName.split(' by ').last;
+          print('📝 Inferred vendor name from item: $inferredName');
+          return inferredName;
         }
       }
     } catch (e) {
-      // Couldn't infer name from items
+      print('❌ Error inferring vendor name from items: $e');
     }
 
     // Final fallback: truncated vendor ID
-    return vendorId.length > 10 ? vendorId.substring(0, 10) + '...' : vendorId;
+    final fallbackName =
+        vendorId.length > 12 ? vendorId.substring(0, 12) + '...' : vendorId;
+    print('📝 Using fallback name: $fallbackName');
+    return fallbackName;
   }
 
   Future<void> _loadWardrobeCategories() async {
@@ -757,7 +1432,6 @@ class _ReportsInsightsWidgetState extends State<ReportsInsightsWidget> {
     );
   }
 
-  // 🔥 MODIFIED: Updated user growth chart with real data
   Widget _buildUserGrowthChart() {
     return Container(
       width: double.infinity,
@@ -913,11 +1587,10 @@ class _ReportsInsightsWidgetState extends State<ReportsInsightsWidget> {
     );
   }
 
-  // 🔥 UPDATED: Promo conversion chart with real data
   Widget _buildPromoConversionChart() {
     return Container(
       width: double.infinity,
-      height: 300.0,
+      height: 320.0,
       margin: EdgeInsetsDirectional.fromSTEB(22.0, 20.0, 22.0, 0.0),
       decoration: BoxDecoration(
         color: FlutterFlowTheme.of(context).blankCanvas,
@@ -943,7 +1616,7 @@ class _ReportsInsightsWidgetState extends State<ReportsInsightsWidget> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Promo Code Performance',
+                  'Promo Code Analytics',
                   style: FlutterFlowTheme.of(context).titleMedium.override(
                         letterSpacing: 0.0,
                         fontWeight: FontWeight.w600,
@@ -958,7 +1631,7 @@ class _ReportsInsightsWidgetState extends State<ReportsInsightsWidget> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    '$totalPromoCopies copies',
+                    '$totalPromoCopies total uses',
                     style: TextStyle(
                       color: FlutterFlowTheme.of(context).underground,
                       fontSize: 12,
@@ -981,7 +1654,7 @@ class _ReportsInsightsWidgetState extends State<ReportsInsightsWidget> {
                                 PieChartSectionData(
                                   color: Colors.blue,
                                   value: totalPromoCopies.toDouble(),
-                                  title: 'Copied\n$totalPromoCopies',
+                                  title: 'Used\n$totalPromoCopies',
                                   radius: 80,
                                   titleStyle: TextStyle(
                                       fontSize: 12,
@@ -989,13 +1662,23 @@ class _ReportsInsightsWidgetState extends State<ReportsInsightsWidget> {
                                       color: Colors.white),
                                 ),
                                 PieChartSectionData(
-                                  color: Colors.grey,
-                                  value: (totalPromoCopies * 0.3).toDouble(),
-                                  title:
-                                      'Available\n${(totalPromoCopies * 0.3).toInt()}',
+                                  color: Colors.green,
+                                  value: uniquePromoUsers.toDouble(),
+                                  title: 'Users\n$uniquePromoUsers',
                                   radius: 80,
                                   titleStyle: TextStyle(
                                       fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white),
+                                ),
+                                PieChartSectionData(
+                                  color: Colors.orange,
+                                  value: promoConversion,
+                                  title:
+                                      'Engagement\n${promoConversion.toStringAsFixed(1)}',
+                                  radius: 80,
+                                  titleStyle: TextStyle(
+                                      fontSize: 11,
                                       fontWeight: FontWeight.bold,
                                       color: Colors.white),
                                 ),
@@ -1009,12 +1692,33 @@ class _ReportsInsightsWidgetState extends State<ReportsInsightsWidget> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              _buildLegendItem(Colors.blue, 'Total Copies',
+                              _buildLegendItem(Colors.blue, 'Total Uses',
                                   '$totalPromoCopies'),
-                              _buildLegendItem(Colors.green, 'Unique Users',
+                              _buildLegendItem(Colors.green, 'Est. Users',
                                   '$uniquePromoUsers'),
-                              _buildLegendItem(Colors.orange, 'Engagement',
-                                  '${promoConversion.toStringAsFixed(1)}%'),
+                              _buildLegendItem(Colors.orange, 'Avg Uses/Code',
+                                  '${promoConversion.toStringAsFixed(1)}'),
+                              if (mostPopularPromos.isNotEmpty)
+                                Padding(
+                                  padding: EdgeInsets.only(top: 12),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text('Top Promo:',
+                                          style: TextStyle(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.bold)),
+                                      Text('${mostPopularPromos.first.key}',
+                                          style: TextStyle(fontSize: 10)),
+                                      Text(
+                                          '${mostPopularPromos.first.value} uses',
+                                          style: TextStyle(
+                                              fontSize: 10,
+                                              color: Colors.grey)),
+                                    ],
+                                  ),
+                                ),
                             ],
                           ),
                         ),
@@ -1031,7 +1735,7 @@ class _ReportsInsightsWidgetState extends State<ReportsInsightsWidget> {
                           ),
                           SizedBox(height: 16),
                           Text(
-                            'No promo code activity',
+                            'No promo code usage data',
                             style: FlutterFlowTheme.of(context)
                                 .bodyMedium
                                 .override(
@@ -1039,7 +1743,7 @@ class _ReportsInsightsWidgetState extends State<ReportsInsightsWidget> {
                                 ),
                           ),
                           Text(
-                            'in selected time period',
+                            'Promo codes not being used yet',
                             style:
                                 FlutterFlowTheme.of(context).bodySmall.override(
                                       color: Colors.grey,
@@ -1171,7 +1875,6 @@ class _ReportsInsightsWidgetState extends State<ReportsInsightsWidget> {
     );
   }
 
-  // 🔥 UPDATED: Build vendor performance chart with real data from branded_items
   Widget _buildVendorPerformance() {
     return Container(
       width: double.infinity,
@@ -1253,7 +1956,7 @@ class _ReportsInsightsWidgetState extends State<ReportsInsightsWidget> {
                                   children: [
                                     TextSpan(
                                       text:
-                                          '${vendor['totalProducts']} products\n${vendor['promoCopies']} promo copies',
+                                          '${vendor['totalProducts']} products\n${vendor['totalPromoUsage']} promo uses',
                                       style: TextStyle(
                                           color: Colors.white70, fontSize: 12),
                                     ),
@@ -1417,7 +2120,7 @@ class _ReportsInsightsWidgetState extends State<ReportsInsightsWidget> {
                 // Time Range Selector
                 _buildTimeRangeSelector(),
 
-                // KPI Cards - 3 Card Layout (🔥 UPDATED: Now shows total users)
+                // KPI Cards - 3 Card Layout
                 Container(
                   margin: EdgeInsetsDirectional.fromSTEB(22.0, 20.0, 22.0, 0.0),
                   child: Column(
@@ -1474,19 +2177,19 @@ class _ReportsInsightsWidgetState extends State<ReportsInsightsWidget> {
                   ),
                 ),
 
-                // User Growth Chart (🔥 NOW SHOWS REAL DATA)
+                // User Growth Chart
                 _buildUserGrowthChart(),
 
                 // Trending Style Tags
                 _buildTopStyleTags(),
 
-                // Promo Conversion Chart (🔥 NOW SHOWS REAL DATA)
+                // Promo Conversion Chart
                 _buildPromoConversionChart(),
 
-                // Vendor Performance Chart (🔥 NOW SHOWS REAL DATA)
+                // Vendor Performance Chart
                 _buildVendorPerformance(),
 
-                // Action Buttons
+                // 🔥 SIMPLIFIED: Action Buttons with Local File Generation
                 Container(
                   width: double.infinity,
                   margin:
@@ -1497,11 +2200,10 @@ class _ReportsInsightsWidgetState extends State<ReportsInsightsWidget> {
                         children: [
                           Expanded(
                             child: FFButtonWidget(
-                              onPressed: () {
-                                print('Download CSV pressed ...');
-                              },
-                              text: 'Download CSV',
-                              icon: Icon(Icons.download, size: 18),
+                              onPressed:
+                                  _downloadCSV, // 🔥 Generates CSV locally
+                              text: 'Generate CSV Report',
+                              icon: Icon(Icons.file_download, size: 18),
                               options: FFButtonOptions(
                                 height: 44.0,
                                 color: FlutterFlowTheme.of(context).underground,
@@ -1519,11 +2221,10 @@ class _ReportsInsightsWidgetState extends State<ReportsInsightsWidget> {
                           SizedBox(width: 12),
                           Expanded(
                             child: FFButtonWidget(
-                              onPressed: () {
-                                print('Export Summary pressed ...');
-                              },
-                              text: 'Export Summary',
-                              icon: Icon(Icons.file_download, size: 18),
+                              onPressed:
+                                  _exportSummary, // 🔥 Generates summary locally
+                              text: 'Generate Summary',
+                              icon: Icon(Icons.assessment, size: 18),
                               options: FFButtonOptions(
                                 height: 44.0,
                                 color: Color(0xAE9E5696),
