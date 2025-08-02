@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
@@ -265,18 +266,35 @@ class _OutfitMatchWidgetState extends State<OutfitMatchWidget> {
                   item.imageUrl);
 
           if (processedUrl != null) {
+            // Delete the original image from Firebase Storage first
+            try {
+              if (item.imageUrl.contains('firebase')) {
+                // Extract the file path from the original URL
+                final ref = FirebaseStorage.instance.refFromURL(item.imageUrl);
+                await ref.delete();
+                print('🗑️ Deleted original image: ${item.imageUrl}');
+              }
+            } catch (e) {
+              print('⚠️ Could not delete original image: $e');
+              // Continue anyway - we still want to update with the enhanced image
+            }
+
+            // Update the document - replace original imageUrl with enhanced image
             await FirebaseFirestore.instance
                 .collection('wardrobe_items')
                 .doc(item.reference.id)
                 .update({
-              'processed_image_url': processedUrl,
+              'image_url': processedUrl, // Replace original image URL
+              'original_image_url':
+                  item.imageUrl, // Keep backup of original URL
               'has_transparent_bg': true,
               'processing_status': 'completed',
               'updated_time': FieldValue.serverTimestamp(),
             });
 
             processedCount++;
-            print('✅ Successfully processed item: ${item.reference.id}');
+            print(
+                '✅ Successfully processed and replaced image for item: ${item.reference.id}');
           } else {
             // Mark as failed
             await FirebaseFirestore.instance
@@ -341,8 +359,10 @@ class _OutfitMatchWidgetState extends State<OutfitMatchWidget> {
                       style: TextStyle(fontSize: 12)),
                   Text('• Takes 1-2 minutes per item',
                       style: TextStyle(fontSize: 12)),
-                  Text('• Only processes items without transparent backgrounds',
-                      style: TextStyle(fontSize: 12)),
+                  Text('• Will replace original images with enhanced versions',
+                      style: TextStyle(fontSize: 12, color: Colors.orange)),
+                  Text('• Original images will be permanently deleted',
+                      style: TextStyle(fontSize: 12, color: Colors.red)),
                 ],
               ),
               actions: [
@@ -902,17 +922,103 @@ class _OutfitMatchWidgetState extends State<OutfitMatchWidget> {
                                       : _buildThumbnailPositionedItems(400.0)),
 
                                   // Size control overlay (changed from lighting control)
-                                  if (isRealisticView &&
-                                      userBodyImageUrl != null &&
-                                      selectedItems.values
-                                          .any((item) => item != null))
-                                    _buildSizeControls(),
                                 ],
                               ),
                             ),
                           ],
                         ),
                       ),
+
+                      // Size Controls Section - New separate section
+                      if (!isLoading &&
+                          isRealisticView &&
+                          userBodyImageUrl != null &&
+                          selectedItems.values.any((item) => item != null))
+                        Container(
+                          width: double.infinity,
+                          margin: EdgeInsetsDirectional.fromSTEB(
+                              16.0, 20.0, 16.0, 0.0),
+                          decoration: BoxDecoration(
+                            color: FlutterFlowTheme.of(context)
+                                .secondaryBackground,
+                            borderRadius: BorderRadius.circular(16.0),
+                            boxShadow: [
+                              BoxShadow(
+                                blurRadius: 4.0,
+                                color: Color(0x0F000000),
+                                offset: Offset(0.0, 2.0),
+                              ),
+                            ],
+                          ),
+                          child: Padding(
+                            padding: EdgeInsetsDirectional.fromSTEB(
+                                16.0, 16.0, 16.0, 16.0),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Container(
+                                      padding: EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: FlutterFlowTheme.of(context)
+                                            .primary
+                                            .withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Icon(
+                                        Icons.tune_rounded,
+                                        color: FlutterFlowTheme.of(context)
+                                            .primary,
+                                        size: 18,
+                                      ),
+                                    ),
+                                    SizedBox(width: 12),
+                                    Text(
+                                      'Adjust Size',
+                                      style: FlutterFlowTheme.of(context)
+                                          .bodyLarge
+                                          .override(
+                                            fontFamily:
+                                                FlutterFlowTheme.of(context)
+                                                    .bodyLargeFamily,
+                                            fontWeight: FontWeight.w600,
+                                            letterSpacing: 0.0,
+                                          ),
+                                    ),
+                                    Spacer(),
+                                    InkWell(
+                                      onTap: () {
+                                        setState(() {
+                                          itemSizeScales = {
+                                            'Tops': 1.0,
+                                            'Bottoms': 1.0,
+                                            'Shoes': 1.0,
+                                          };
+                                        });
+                                      },
+                                      child: Text(
+                                        'Reset All',
+                                        style: TextStyle(
+                                          color: FlutterFlowTheme.of(context)
+                                              .primary,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(height: 12),
+                                ...selectedItems.entries
+                                    .where((entry) => entry.value != null)
+                                    .map((entry) =>
+                                        _buildIndividualSizeControl(entry.key)),
+                              ],
+                            ),
+                          ),
+                        ),
 
                       // Wardrobe Items Section
                       if (!isLoading) ...[
@@ -1486,11 +1592,6 @@ class _OutfitMatchWidgetState extends State<OutfitMatchWidget> {
           final processedUrl = data['processed_image_url'] as String?;
           hasTransparentBg = data['has_transparent_bg'] as bool? ?? false;
           processingStatus = data['processing_status'] as String? ?? 'none';
-
-          // Use processed image if available and in realistic view
-          if (isRealisticView && hasTransparentBg && processedUrl != null) {
-            imageUrl = processedUrl;
-          }
         }
 
         return Stack(
