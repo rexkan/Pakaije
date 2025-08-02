@@ -773,7 +773,7 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
               ),
             ),
 
-            // Simplified Content Section
+            // Content Section - Removed description, improved price layout
             Container(
               padding: const EdgeInsets.all(16.0),
               child: Column(
@@ -789,42 +789,14 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
                           letterSpacing: 0.0,
                           fontSize: 16.0,
                         ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4.0),
-                  Text(
-                    item.description,
-                    style: FlutterFlowTheme.of(context).bodySmall.override(
-                          fontFamily: GoogleFonts.inter().fontFamily,
-                          color: FlutterFlowTheme.of(context).secondaryText,
-                          letterSpacing: 0.0,
-                          fontSize: 12.0,
-                        ),
-                    maxLines: 1,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 12.0),
 
-                  // Price Section only
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  // Inline Price Section with original price between offer price
+                  Row(
                     children: [
-                      if (item.originalPrice.isNotEmpty && item.isOnSale) ...[
-                        Text(
-                          item.originalPrice,
-                          style: FlutterFlowTheme.of(context)
-                              .bodySmall
-                              .override(
-                                fontFamily: GoogleFonts.inter().fontFamily,
-                                color:
-                                    FlutterFlowTheme.of(context).secondaryText,
-                                fontSize: 12.0,
-                                decoration: TextDecoration.lineThrough,
-                              ),
-                        ),
-                        const SizedBox(height: 2.0),
-                      ],
                       Text(
                         item.price,
                         style: FlutterFlowTheme.of(context)
@@ -837,6 +809,21 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
                               letterSpacing: 0.0,
                             ),
                       ),
+                      if (item.originalPrice.isNotEmpty && item.isOnSale) ...[
+                        const SizedBox(width: 8.0),
+                        Text(
+                          item.originalPrice,
+                          style: FlutterFlowTheme.of(context)
+                              .bodySmall
+                              .override(
+                                fontFamily: GoogleFonts.inter().fontFamily,
+                                color:
+                                    FlutterFlowTheme.of(context).secondaryText,
+                                fontSize: 14.0,
+                                decoration: TextDecoration.lineThrough,
+                              ),
+                        ),
+                      ],
                     ],
                   ),
                 ],
@@ -948,7 +935,7 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
 
               const SizedBox(width: 16.0),
 
-              // Content
+              // Content - Removed description
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -960,17 +947,6 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
                             fontWeight: FontWeight.w600,
                             letterSpacing: 0.0,
                           ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4.0),
-                    Text(
-                      item.description,
-                      style: FlutterFlowTheme.of(context).bodySmall.override(
-                            fontFamily: GoogleFonts.inter().fontFamily,
-                            color: FlutterFlowTheme.of(context).secondaryText,
-                            letterSpacing: 0.0,
-                          ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -978,32 +954,42 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
                 ),
               ),
 
-              // Price Section only
+              // Inline Price Section with original price between offer price
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  if (item.originalPrice.isNotEmpty && item.isOnSale) ...[
-                    Text(
-                      item.originalPrice,
-                      style: FlutterFlowTheme.of(context).bodySmall.override(
-                            fontFamily: GoogleFonts.inter().fontFamily,
-                            color: FlutterFlowTheme.of(context).secondaryText,
-                            fontSize: 12.0,
-                            decoration: TextDecoration.lineThrough,
-                          ),
-                    ),
-                    const SizedBox(height: 4.0),
-                  ],
-                  Text(
-                    item.price,
-                    style: FlutterFlowTheme.of(context).headlineSmall.override(
-                          fontFamily: GoogleFonts.interTight().fontFamily,
-                          color: FlutterFlowTheme.of(context).underground,
-                          fontSize: 18.0,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 0.0,
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        item.price,
+                        style: FlutterFlowTheme.of(context)
+                            .headlineSmall
+                            .override(
+                              fontFamily: GoogleFonts.interTight().fontFamily,
+                              color: FlutterFlowTheme.of(context).underground,
+                              fontSize: 18.0,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.0,
+                            ),
+                      ),
+                      if (item.originalPrice.isNotEmpty && item.isOnSale) ...[
+                        const SizedBox(width: 8.0),
+                        Text(
+                          item.originalPrice,
+                          style: FlutterFlowTheme.of(context)
+                              .bodySmall
+                              .override(
+                                fontFamily: GoogleFonts.inter().fontFamily,
+                                color:
+                                    FlutterFlowTheme.of(context).secondaryText,
+                                fontSize: 14.0,
+                                decoration: TextDecoration.lineThrough,
+                              ),
                         ),
+                      ],
+                    ],
                   ),
                 ],
               ),
