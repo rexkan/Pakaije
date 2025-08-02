@@ -30,6 +30,11 @@ class BrandedItemsRecord extends FirestoreRecord {
   String get name => _name ?? '';
   bool hasName() => _name != null;
 
+  // "item_id" field.
+  String? _itemId;
+  String get itemId => _itemId ?? '';
+  bool hasItemId() => _itemId != null;
+
   // "description" field.
   String? _description;
   String get description => _description ?? '';
@@ -74,6 +79,7 @@ class BrandedItemsRecord extends FirestoreRecord {
     _vendorId = snapshotData['vendor_id'] as String?;
     _imageUrl = snapshotData['image_url'] as String?;
     _name = snapshotData['name'] as String?;
+    _itemId = snapshotData['item_id'] as String?;
     _description = snapshotData['description'] as String?;
     _price = castToType<double>(snapshotData['price']);
     _category = snapshotData['category'] as String?;
@@ -122,6 +128,7 @@ Map<String, dynamic> createBrandedItemsRecordData({
   String? vendorId,
   String? imageUrl,
   String? name,
+  String? itemId,
   String? description,
   double? price,
   String? category,
@@ -133,6 +140,7 @@ Map<String, dynamic> createBrandedItemsRecordData({
       'vendor_id': vendorId,
       'image_url': imageUrl,
       'name': name,
+      'item_id': itemId,
       'description': description,
       'price': price,
       'category': category,

@@ -15,10 +15,14 @@ class AddProductModel extends FlutterFlowModel<AddProductWidget> {
   TextEditingController? itemNameTextController;
   String? Function(BuildContext, String?)? itemNameTextControllerValidator;
 
-  // State field(s) for Category widget.
-  FocusNode? categoryFocusNode;
-  TextEditingController? categoryTextController;
-  String? Function(BuildContext, String?)? categoryTextControllerValidator;
+  // State field(s) for ItemId widget.
+  FocusNode? itemIdFocusNode;
+  TextEditingController? itemIdTextController;
+  String? Function(BuildContext, String?)? itemIdTextControllerValidator;
+
+  // State field(s) for Category dropdown widget.
+  String? categoryDropDownValue;
+  FormFieldController<String>? categoryDropDownValueController;
 
   // State field(s) for Price widget.
   FocusNode? priceFocusNode;
@@ -63,10 +67,11 @@ class AddProductModel extends FlutterFlowModel<AddProductWidget> {
     itemNameFocusNode?.dispose();
     itemNameTextController?.dispose();
 
-    categoryFocusNode?.dispose();
-    categoryTextController?.dispose();
+    // Dispose ItemId controllers
+    itemIdFocusNode?.dispose();
+    itemIdTextController?.dispose();
 
-    // Dispose new controllers
+    // Dispose other controllers
     priceFocusNode?.dispose();
     priceTextController?.dispose();
 

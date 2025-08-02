@@ -40,10 +40,14 @@ class _AddProductWidgetState extends State<AddProductWidget> {
     _model.itemNameTextController ??= TextEditingController();
     _model.itemNameFocusNode ??= FocusNode();
 
-    _model.categoryTextController ??= TextEditingController();
-    _model.categoryFocusNode ??= FocusNode();
+    // Initialize ItemId text controllers
+    _model.itemIdTextController ??= TextEditingController();
+    _model.itemIdFocusNode ??= FocusNode();
 
-    // Initialize missing text controllers
+    // Initialize category dropdown
+    _model.categoryDropDownValueController = FormFieldController<String>(null);
+
+    // Initialize other text controllers
     _model.priceTextController ??= TextEditingController();
     _model.priceFocusNode ??= FocusNode();
 
@@ -154,7 +158,7 @@ class _AddProductWidgetState extends State<AddProductWidget> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Product Images',
+          'Product Image',
           style: FlutterFlowTheme.of(context).headlineSmall.override(
                 fontFamily: 'Inter Tight',
                 letterSpacing: 0.0,
@@ -162,27 +166,18 @@ class _AddProductWidgetState extends State<AddProductWidget> {
               ),
         ),
         SizedBox(height: 16.0),
-        Row(
-          children: [
-            Expanded(
-              child: _buildImageUploadCard(isMain: true),
-            ),
-            SizedBox(width: 12.0),
-            Expanded(
-              child: _buildImageUploadCard(isMain: false),
-            ),
-          ],
-        ),
+        _buildSingleImageUploadCard(),
       ],
     );
   }
 
-  Widget _buildImageUploadCard({required bool isMain}) {
+  Widget _buildSingleImageUploadCard() {
     return Container(
-      height: 200.0,
+      width: double.infinity,
+      height: 250.0,
       decoration: BoxDecoration(
         color: FlutterFlowTheme.of(context).secondaryBackground,
-        borderRadius: BorderRadius.circular(12.0),
+        borderRadius: BorderRadius.circular(16.0),
         border: Border.all(
           color: FlutterFlowTheme.of(context).alternate,
           width: 2.0,
@@ -190,8 +185,9 @@ class _AddProductWidgetState extends State<AddProductWidget> {
       ),
       child: Stack(
         children: [
+          // Image Display
           ClipRRect(
-            borderRadius: BorderRadius.circular(10.0),
+            borderRadius: BorderRadius.circular(14.0),
             child: _model.uploadedLocalFile != null &&
                     _model.uploadedLocalFile.bytes?.isNotEmpty == true
                 ? Image.memory(
@@ -200,84 +196,173 @@ class _AddProductWidgetState extends State<AddProductWidget> {
                     height: double.infinity,
                     fit: BoxFit.cover,
                   )
-                : Image.asset(
-                    'assets/images/white_shoes.jpeg',
+                : Container(
                     width: double.infinity,
                     height: double.infinity,
-                    fit: BoxFit.cover,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.add_photo_alternate_outlined,
+                          size: 64.0,
+                          color: FlutterFlowTheme.of(context).secondaryText,
+                        ),
+                        SizedBox(height: 16.0),
+                        Text(
+                          'Add Product Image',
+                          style: FlutterFlowTheme.of(context)
+                              .bodyLarge
+                              .override(
+                                fontFamily: 'Inter',
+                                color:
+                                    FlutterFlowTheme.of(context).secondaryText,
+                                letterSpacing: 0.0,
+                                fontWeight: FontWeight.w500,
+                              ),
+                        ),
+                        SizedBox(height: 8.0),
+                        Text(
+                          'Tap to select an image',
+                          style: FlutterFlowTheme.of(context)
+                              .bodySmall
+                              .override(
+                                fontFamily: 'Inter',
+                                color:
+                                    FlutterFlowTheme.of(context).secondaryText,
+                                letterSpacing: 0.0,
+                              ),
+                        ),
+                      ],
+                    ),
                   ),
           ),
-          if (isMain)
-            Positioned(
-              top: 8.0,
-              left: 8.0,
-              child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-                decoration: BoxDecoration(
-                  color: FlutterFlowTheme.of(context).primary,
-                  borderRadius: BorderRadius.circular(12.0),
-                ),
-                child: Text(
-                  'Main',
-                  style: FlutterFlowTheme.of(context).bodySmall.override(
-                        fontFamily: 'Inter',
-                        color: Colors.white,
-                        letterSpacing: 0.0,
-                        fontSize: 10.0,
-                      ),
-                ),
-              ),
-            ),
-          Positioned(
-            bottom: 8.0,
-            right: 8.0,
-            child: Container(
+
+          // Loading Overlay
+          if (_model.isDataUploading)
+            Container(
+              width: double.infinity,
+              height: double.infinity,
               decoration: BoxDecoration(
                 color: Colors.black54,
-                borderRadius: BorderRadius.circular(20.0),
+                borderRadius: BorderRadius.circular(14.0),
               ),
-              child: IconButton(
-                icon: Icon(Icons.edit, color: Colors.white, size: 20.0),
-                onPressed: () async {
-                  final selectedMedia = await selectMediaWithSourceBottomSheet(
-                    context: context,
-                    allowPhoto: true,
-                    allowVideo: false,
-                  );
-
-                  if (selectedMedia != null &&
-                      selectedMedia.every(
-                          (m) => validateFileFormat(m.storagePath, context))) {
-                    setState(() => _model.isDataUploading = true);
-                    var selectedUploadedFiles = <FFUploadedFile>[];
-
-                    try {
-                      selectedUploadedFiles = selectedMedia
-                          .map((m) => FFUploadedFile(
-                                name: m.storagePath.split('/').last,
-                                bytes: m.bytes,
-                                height: m.dimensions?.height,
-                                width: m.dimensions?.width,
-                                blurHash: m.blurHash,
-                              ))
-                          .toList();
-                    } finally {
-                      _model.isDataUploading = false;
-                    }
-
-                    if (selectedUploadedFiles.isNotEmpty) {
-                      setState(() {
-                        _model.uploadedLocalFile = selectedUploadedFiles.first;
-                      });
-                    }
-                  }
-                },
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(
+                      color: FlutterFlowTheme.of(context).primary,
+                    ),
+                    SizedBox(height: 16.0),
+                    Text(
+                      'Uploading...',
+                      style: FlutterFlowTheme.of(context).bodyMedium.override(
+                            fontFamily: 'Inter',
+                            color: Colors.white,
+                            letterSpacing: 0.0,
+                          ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
+
+          // Edit/Add Button
+          if (_model.uploadedLocalFile != null &&
+              _model.uploadedLocalFile.bytes?.isNotEmpty == true)
+            Positioned(
+              top: 12.0,
+              right: 12.0,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.black54,
+                  borderRadius: BorderRadius.circular(25.0),
+                ),
+                child: IconButton(
+                  icon: Icon(Icons.edit, color: Colors.white, size: 20.0),
+                  onPressed: _selectImage,
+                ),
+              ),
+            ),
+
+          // Remove Button
+          if (_model.uploadedLocalFile != null &&
+              _model.uploadedLocalFile.bytes?.isNotEmpty == true)
+            Positioned(
+              top: 12.0,
+              left: 12.0,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.red.withOpacity(0.8),
+                  borderRadius: BorderRadius.circular(25.0),
+                ),
+                child: IconButton(
+                  icon: Icon(Icons.delete, color: Colors.white, size: 20.0),
+                  onPressed: () {
+                    setState(() {
+                      _model.uploadedLocalFile = FFUploadedFile(
+                        name: '',
+                        bytes: Uint8List.fromList([]),
+                      );
+                    });
+                  },
+                ),
+              ),
+            ),
+
+          // Tap Area for Image Selection
+          if (_model.uploadedLocalFile == null ||
+              _model.uploadedLocalFile.bytes?.isEmpty == true)
+            Positioned.fill(
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(14.0),
+                  onTap: _selectImage,
+                  child: Container(),
+                ),
+              ),
+            ),
         ],
       ),
     );
+  }
+
+// Helper method for image selection
+  Future<void> _selectImage() async {
+    final selectedMedia = await selectMediaWithSourceBottomSheet(
+      context: context,
+      allowPhoto: true,
+      allowVideo: false,
+    );
+
+    if (selectedMedia != null &&
+        selectedMedia
+            .every((m) => validateFileFormat(m.storagePath, context))) {
+      setState(() => _model.isDataUploading = true);
+
+      var selectedUploadedFiles = <FFUploadedFile>[];
+
+      try {
+        selectedUploadedFiles = selectedMedia
+            .map((m) => FFUploadedFile(
+                  name: m.storagePath.split('/').last,
+                  bytes: m.bytes,
+                  height: m.dimensions?.height,
+                  width: m.dimensions?.width,
+                  blurHash: m.blurHash,
+                ))
+            .toList();
+      } finally {
+        _model.isDataUploading = false;
+      }
+
+      if (selectedUploadedFiles.isNotEmpty) {
+        setState(() {
+          _model.uploadedLocalFile = selectedUploadedFiles.first;
+        });
+      }
+    }
   }
 
   Widget _buildProductDetailsSection() {
@@ -294,7 +379,10 @@ class _AddProductWidgetState extends State<AddProductWidget> {
         ),
         SizedBox(height: 16.0),
 
-        // Item Name Field
+        // Add this TextFormField in _buildProductDetailsSection()
+// right after the "Product Details" header and before the Item ID field
+
+// Product Name Field
         TextFormField(
           controller: _model.itemNameTextController,
           focusNode: _model.itemNameFocusNode,
@@ -302,7 +390,7 @@ class _AddProductWidgetState extends State<AddProductWidget> {
           textCapitalization: TextCapitalization.words,
           obscureText: false,
           decoration: InputDecoration(
-            labelText: 'Item Name',
+            labelText: 'Product Name',
             labelStyle: FlutterFlowTheme.of(context).labelMedium.override(
                   fontFamily: 'Inter',
                   letterSpacing: 0.0,
@@ -351,7 +439,10 @@ class _AddProductWidgetState extends State<AddProductWidget> {
               ),
           validator: (value) {
             if (value == null || value.isEmpty) {
-              return 'Item name is required';
+              return 'Product name is required';
+            }
+            if (value.length < 2) {
+              return 'Product name must be at least 2 characters';
             }
             return null;
           },
@@ -359,20 +450,20 @@ class _AddProductWidgetState extends State<AddProductWidget> {
 
         SizedBox(height: 16.0),
 
-        // Category Field
+// Item ID Field
         TextFormField(
-          controller: _model.categoryTextController,
-          focusNode: _model.categoryFocusNode,
+          controller: _model.itemIdTextController,
+          focusNode: _model.itemIdFocusNode,
           autofocus: false,
-          textCapitalization: TextCapitalization.words,
+          textCapitalization: TextCapitalization.characters,
           obscureText: false,
           decoration: InputDecoration(
-            labelText: 'Category',
+            labelText: 'Item ID',
             labelStyle: FlutterFlowTheme.of(context).labelMedium.override(
                   fontFamily: 'Inter',
                   letterSpacing: 0.0,
                 ),
-            hintText: 'Enter product category',
+            hintText: 'Enter unique item ID (e.g., SKU123)',
             hintStyle: FlutterFlowTheme.of(context).labelMedium.override(
                   fontFamily: 'Inter',
                   letterSpacing: 0.0,
@@ -416,10 +507,103 @@ class _AddProductWidgetState extends State<AddProductWidget> {
               ),
           validator: (value) {
             if (value == null || value.isEmpty) {
-              return 'Category is required';
+              return 'Item ID is required';
+            }
+            if (value.length < 3) {
+              return 'Item ID must be at least 3 characters';
             }
             return null;
           },
+        ),
+
+        SizedBox(height: 16.0),
+
+        // Category Field
+        Container(
+          width: double.infinity,
+          child: DropdownButtonFormField<String>(
+            value: _model.categoryDropDownValue,
+            hint: Text(
+              'Select product category',
+              style: FlutterFlowTheme.of(context).labelMedium.override(
+                    fontFamily: 'Inter',
+                    letterSpacing: 0.0,
+                  ),
+            ),
+            items: ['Tops', 'Bottoms', 'Shoes']
+                .map((String category) => DropdownMenuItem<String>(
+                      value: category,
+                      child: Text(
+                        category,
+                        style: FlutterFlowTheme.of(context).bodyLarge.override(
+                              fontFamily: 'Inter',
+                              letterSpacing: 0.0,
+                            ),
+                      ),
+                    ))
+                .toList(),
+            decoration: InputDecoration(
+              labelText: 'Category',
+              labelStyle: FlutterFlowTheme.of(context).labelMedium.override(
+                    fontFamily: 'Inter',
+                    letterSpacing: 0.0,
+                  ),
+              enabledBorder: OutlineInputBorder(
+                borderSide: BorderSide(
+                  color: FlutterFlowTheme.of(context).alternate,
+                  width: 2.0,
+                ),
+                borderRadius: BorderRadius.circular(12.0),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderSide: BorderSide(
+                  color: FlutterFlowTheme.of(context).primary,
+                  width: 2.0,
+                ),
+                borderRadius: BorderRadius.circular(12.0),
+              ),
+              errorBorder: OutlineInputBorder(
+                borderSide: BorderSide(
+                  color: FlutterFlowTheme.of(context).error,
+                  width: 2.0,
+                ),
+                borderRadius: BorderRadius.circular(12.0),
+              ),
+              focusedErrorBorder: OutlineInputBorder(
+                borderSide: BorderSide(
+                  color: FlutterFlowTheme.of(context).error,
+                  width: 2.0,
+                ),
+                borderRadius: BorderRadius.circular(12.0),
+              ),
+              filled: true,
+              fillColor: FlutterFlowTheme.of(context).secondaryBackground,
+              contentPadding:
+                  EdgeInsetsDirectional.fromSTEB(16.0, 20.0, 16.0, 20.0),
+            ),
+            onChanged: (String? newValue) {
+              setState(() {
+                _model.categoryDropDownValue = newValue;
+              });
+            },
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Category is required';
+              }
+              return null;
+            },
+            dropdownColor: FlutterFlowTheme.of(context).secondaryBackground,
+            elevation: 8,
+            style: FlutterFlowTheme.of(context).bodyLarge.override(
+                  fontFamily: 'Inter',
+                  letterSpacing: 0.0,
+                ),
+            icon: Icon(
+              Icons.keyboard_arrow_down,
+              color: FlutterFlowTheme.of(context).secondaryText,
+              size: 24,
+            ),
+          ),
         ),
 
         SizedBox(height: 16.0),
@@ -778,7 +962,8 @@ class _AddProductWidgetState extends State<AddProductWidget> {
                 .add(createBrandedItemsRecordData(
               vendorId: currentUserUid,
               name: _model.itemNameTextController?.text ?? '',
-              category: _model.categoryTextController?.text ?? '',
+              itemId: _model.itemIdTextController?.text ?? '',
+              category: _model.categoryDropDownValue ?? '',
               price: double.tryParse(_model.priceTextController?.text ?? '0') ??
                   0.0,
               productUrl: _model.buyLinkTextController?.text ?? '',
