@@ -1,12 +1,15 @@
-// Enhanced Widget File - outfit_planner2_widget.dart
 import '/flutter_flow/flutter_flow_calendar.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
+import '/backend/backend.dart';
+import '/auth/firebase_auth/auth_util.dart';
 import '/index.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'dart:math' as math;
 import 'outfit_planner2_model.dart';
 export 'outfit_planner2_model.dart';
 
@@ -24,18 +27,18 @@ class _OutfitPlanner2WidgetState extends State<OutfitPlanner2Widget> {
   late OutfitPlanner2Model _model;
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
-  bool _isInitialLoad = true; // Track if this is initial load
+  bool _calendarInitialized = false;
 
   @override
   void initState() {
     super.initState();
     _model = createModel(context, () => OutfitPlanner2Model());
 
-    // Set a delay to mark initial load as complete
-    Future.delayed(Duration(milliseconds: 500), () {
+    // Initialize calendar after a delay
+    Future.delayed(const Duration(milliseconds: 500), () {
       if (mounted) {
         setState(() {
-          _isInitialLoad = false;
+          _calendarInitialized = true;
         });
       }
     });
@@ -47,11 +50,11 @@ class _OutfitPlanner2WidgetState extends State<OutfitPlanner2Widget> {
     super.dispose();
   }
 
-  // Show outfit selection popup (simplified version)
+  // Show outfit selection popup
   void _showOutfitSelectionDialog(DateTime selectedDate) {
     showDialog(
       context: context,
-      builder: (BuildContext context) {
+      builder: (BuildContext dialogContext) {
         return Dialog(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16.0),
@@ -59,7 +62,7 @@ class _OutfitPlanner2WidgetState extends State<OutfitPlanner2Widget> {
           child: Container(
             width: MediaQuery.of(context).size.width * 0.9,
             height: MediaQuery.of(context).size.height * 0.7,
-            padding: EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -67,18 +70,21 @@ class _OutfitPlanner2WidgetState extends State<OutfitPlanner2Widget> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      'Select Outfit for ${DateFormat('MMM dd, yyyy').format(selectedDate)}',
-                      style:
-                          FlutterFlowTheme.of(context).headlineSmall.override(
-                                font: GoogleFonts.interTight(),
-                                color: FlutterFlowTheme.of(context).underground,
-                                fontSize: 18.0,
-                                fontWeight: FontWeight.w600,
-                              ),
+                    Expanded(
+                      child: Text(
+                        'Select Outfit for ${DateFormat('MMM dd, yyyy').format(selectedDate)}',
+                        style: FlutterFlowTheme.of(context)
+                            .headlineSmall
+                            .override(
+                              fontFamily: 'Inter Tight',
+                              color: FlutterFlowTheme.of(context).primaryText,
+                              fontSize: 18.0,
+                              fontWeight: FontWeight.w600,
+                            ),
+                      ),
                     ),
                     IconButton(
-                      onPressed: () => Navigator.of(context).pop(),
+                      onPressed: () => Navigator.of(dialogContext).pop(),
                       icon: Icon(
                         Icons.close,
                         color: FlutterFlowTheme.of(context).secondaryText,
@@ -87,139 +93,347 @@ class _OutfitPlanner2WidgetState extends State<OutfitPlanner2Widget> {
                   ],
                 ),
 
-                Divider(height: 20.0),
+                const Divider(height: 20.0),
 
-                // Simplified Outfit Grid - Only image and name
-                Expanded(
-                  child: GridView.builder(
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 12.0,
-                      mainAxisSpacing: 12.0,
-                      childAspectRatio: 0.9,
-                    ),
-                    itemCount: _model.availableOutfits.length,
-                    itemBuilder: (context, index) {
-                      final outfit = _model.availableOutfits[index];
-                      final isSelected =
-                          _model.getOutfitForDate(selectedDate)?.id ==
-                              outfit.id;
-
-                      return GestureDetector(
-                        onTap: () {
-                          _model.addPlannedOutfit(selectedDate, outfit);
-                          Navigator.of(context).pop();
-                          setState(() {});
-
-                          // Show success message
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                  'Outfit planned for ${DateFormat('MMM dd').format(selectedDate)}!'),
-                              backgroundColor:
-                                  FlutterFlowTheme.of(context).waxFlower,
-                              duration: Duration(seconds: 2),
+                // Show existing selection if any
+                FutureBuilder<OutfitsRecord?>(
+                  future: _model.getOutfitForDate(selectedDate),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData && snapshot.data != null) {
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 16.0),
+                        padding: const EdgeInsets.all(12.0),
+                        decoration: BoxDecoration(
+                          color: FlutterFlowTheme.of(context).accent3,
+                          borderRadius: BorderRadius.circular(12.0),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.info_outline,
+                              color: FlutterFlowTheme.of(context).tertiary,
+                              size: 20.0,
                             ),
-                          );
-                        },
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: FlutterFlowTheme.of(context)
-                                .secondaryBackground,
-                            borderRadius: BorderRadius.circular(12.0),
-                            border: Border.all(
-                              color: isSelected
-                                  ? FlutterFlowTheme.of(context).waxFlower
-                                  : FlutterFlowTheme.of(context).alternate,
-                              width: isSelected ? 3.0 : 1.0,
+                            const SizedBox(width: 8.0),
+                            Expanded(
+                              child: Text(
+                                'Current: ${snapshot.data!.name}',
+                                style: FlutterFlowTheme.of(context)
+                                    .bodyMedium
+                                    .override(
+                                      fontFamily: 'Inter',
+                                      color:
+                                          FlutterFlowTheme.of(context).tertiary,
+                                    ),
+                              ),
                             ),
-                            boxShadow: [
-                              BoxShadow(
-                                blurRadius: 4.0,
-                                color: Color(0x1A000000),
-                                offset: Offset(0.0, 2.0),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              // Outfit Image
-                              Expanded(
-                                flex: 4,
-                                child: Container(
-                                  width: double.infinity,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.vertical(
-                                      top: Radius.circular(12.0),
-                                    ),
-                                  ),
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.vertical(
-                                      top: Radius.circular(12.0),
-                                    ),
-                                    child: Image.asset(
-                                      outfit.imagePath,
-                                      fit: BoxFit.cover,
-                                      errorBuilder:
-                                          (context, error, stackTrace) {
-                                        return Container(
-                                          color: FlutterFlowTheme.of(context)
-                                              .alternate,
-                                          child: Icon(
-                                            Icons.image_not_supported,
-                                            size: 50.0,
-                                            color: FlutterFlowTheme.of(context)
-                                                .secondaryText,
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                  ),
-                                ),
-                              ),
-
-                              // Outfit Name Only
-                              Container(
-                                width: double.infinity,
-                                padding: EdgeInsets.all(8.0),
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      outfit.name,
-                                      style: FlutterFlowTheme.of(context)
-                                          .titleSmall
-                                          .override(
-                                            font: GoogleFonts.interTight(),
-                                            color: FlutterFlowTheme.of(context)
-                                                .underground,
-                                            fontSize: 14.0,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                      textAlign: TextAlign.center,
-                                    ),
-                                    if (isSelected)
-                                      Padding(
-                                        padding: EdgeInsets.only(top: 4.0),
-                                        child: Icon(
-                                          Icons.check_circle,
-                                          color: FlutterFlowTheme.of(context)
-                                              .waxFlower,
-                                          size: 16.0,
-                                        ),
+                            TextButton(
+                              onPressed: () async {
+                                final success = await _model
+                                    .removePlannedOutfit(selectedDate);
+                                if (success) {
+                                  if (dialogContext.mounted) {
+                                    Navigator.of(dialogContext).pop();
+                                  }
+                                  if (mounted) {
+                                    setState(() {});
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content:
+                                            const Text('Outfit plan removed!'),
+                                        backgroundColor:
+                                            FlutterFlowTheme.of(context).error,
                                       ),
-                                  ],
+                                    );
+                                  }
+                                }
+                              },
+                              child: Text(
+                                'Remove',
+                                style: TextStyle(
+                                  color: FlutterFlowTheme.of(context).error,
                                 ),
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       );
-                    },
-                  ),
+                    }
+                    return const SizedBox.shrink();
+                  },
+                ),
+
+                // Loading state or outfit grid
+                Expanded(
+                  child: _model.isLoadingOutfits
+                      ? Center(
+                          child: CircularProgressIndicator(
+                            color: FlutterFlowTheme.of(context).primary,
+                          ),
+                        )
+                      : _model.availableOutfits.isEmpty
+                          ? Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.checkroom_outlined,
+                                    size: 64.0,
+                                    color: FlutterFlowTheme.of(context)
+                                        .secondaryText,
+                                  ),
+                                  const SizedBox(height: 16.0),
+                                  Text(
+                                    'No outfits available',
+                                    style: FlutterFlowTheme.of(context)
+                                        .titleMedium
+                                        .override(
+                                          fontFamily: 'Inter Tight',
+                                          color: FlutterFlowTheme.of(context)
+                                              .secondaryText,
+                                        ),
+                                  ),
+                                  const SizedBox(height: 8.0),
+                                  Text(
+                                    'Create some outfits first!',
+                                    style: FlutterFlowTheme.of(context)
+                                        .bodyMedium
+                                        .override(
+                                          fontFamily: 'Inter',
+                                          color: FlutterFlowTheme.of(context)
+                                              .secondaryText,
+                                        ),
+                                  ),
+                                ],
+                              ),
+                            )
+                          : GridView.builder(
+                              gridDelegate:
+                                  const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                crossAxisSpacing: 12.0,
+                                mainAxisSpacing: 12.0,
+                                childAspectRatio: 0.8,
+                              ),
+                              itemCount: _model.availableOutfits.length,
+                              itemBuilder: (context, index) {
+                                final outfit = _model.availableOutfits[index];
+
+                                return FutureBuilder<OutfitsRecord?>(
+                                  future: _model.getOutfitForDate(selectedDate),
+                                  builder: (context, snapshot) {
+                                    final isSelected = snapshot.hasData &&
+                                        snapshot.data?.reference.id ==
+                                            outfit.reference.id;
+
+                                    return GestureDetector(
+                                      onTap: () async {
+                                        // Show loading dialog
+                                        showDialog(
+                                          context: dialogContext,
+                                          barrierDismissible: false,
+                                          builder: (loadingContext) => Center(
+                                            child: CircularProgressIndicator(
+                                              color:
+                                                  FlutterFlowTheme.of(context)
+                                                      .primary,
+                                            ),
+                                          ),
+                                        );
+
+                                        // Save to Firebase
+                                        final success =
+                                            await _model.addPlannedOutfit(
+                                                selectedDate, outfit);
+
+                                        // Close loading dialog
+                                        if (dialogContext.mounted) {
+                                          Navigator.of(dialogContext).pop();
+                                        }
+
+                                        if (success) {
+                                          // Close selection dialog
+                                          if (dialogContext.mounted) {
+                                            Navigator.of(dialogContext).pop();
+                                          }
+
+                                          if (mounted) {
+                                            setState(() {});
+                                            // Show success message
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(
+                                              SnackBar(
+                                                content: Text(
+                                                  'Outfit "${outfit.name}" planned for ${DateFormat('MMM dd').format(selectedDate)}!',
+                                                ),
+                                                backgroundColor:
+                                                    FlutterFlowTheme.of(context)
+                                                        .primary,
+                                                duration:
+                                                    const Duration(seconds: 2),
+                                              ),
+                                            );
+                                          }
+                                        } else {
+                                          if (mounted) {
+                                            // Show error message
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(
+                                              SnackBar(
+                                                content: const Text(
+                                                    'Failed to save outfit plan. Please try again.'),
+                                                backgroundColor:
+                                                    FlutterFlowTheme.of(context)
+                                                        .error,
+                                              ),
+                                            );
+                                          }
+                                        }
+                                      },
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          color: FlutterFlowTheme.of(context)
+                                              .secondaryBackground,
+                                          borderRadius:
+                                              BorderRadius.circular(12.0),
+                                          border: Border.all(
+                                            color: isSelected
+                                                ? FlutterFlowTheme.of(context)
+                                                    .primary
+                                                : FlutterFlowTheme.of(context)
+                                                    .alternate,
+                                            width: isSelected ? 3.0 : 1.0,
+                                          ),
+                                          boxShadow: const [
+                                            BoxShadow(
+                                              blurRadius: 4.0,
+                                              color: Color(0x1A000000),
+                                              offset: Offset(0.0, 2.0),
+                                            ),
+                                          ],
+                                        ),
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.center,
+                                          children: [
+                                            // Outfit placeholder
+                                            Expanded(
+                                              flex: 4,
+                                              child: Container(
+                                                width: double.infinity,
+                                                decoration: BoxDecoration(
+                                                  borderRadius:
+                                                      const BorderRadius
+                                                          .vertical(
+                                                    top: Radius.circular(12.0),
+                                                  ),
+                                                  color: FlutterFlowTheme.of(
+                                                          context)
+                                                      .alternate,
+                                                ),
+                                                child: ClipRRect(
+                                                  borderRadius:
+                                                      const BorderRadius
+                                                          .vertical(
+                                                    top: Radius.circular(12.0),
+                                                  ),
+                                                  child: Icon(
+                                                    Icons.checkroom,
+                                                    size: 50.0,
+                                                    color: FlutterFlowTheme.of(
+                                                            context)
+                                                        .secondaryText,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+
+                                            // Outfit Details
+                                            Container(
+                                              width: double.infinity,
+                                              padding:
+                                                  const EdgeInsets.all(8.0),
+                                              child: Column(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                children: [
+                                                  Text(
+                                                    outfit.name,
+                                                    style: FlutterFlowTheme.of(
+                                                            context)
+                                                        .titleSmall
+                                                        .override(
+                                                          fontFamily:
+                                                              'Inter Tight',
+                                                          color: FlutterFlowTheme
+                                                                  .of(context)
+                                                              .primaryText,
+                                                          fontSize: 14.0,
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                        ),
+                                                    maxLines: 2,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                    textAlign: TextAlign.center,
+                                                  ),
+                                                  const SizedBox(height: 4.0),
+                                                  if (outfit.isSuggested)
+                                                    Container(
+                                                      padding: const EdgeInsets
+                                                          .symmetric(
+                                                          horizontal: 6.0,
+                                                          vertical: 2.0),
+                                                      decoration: BoxDecoration(
+                                                        color:
+                                                            FlutterFlowTheme.of(
+                                                                    context)
+                                                                .accent3,
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(8.0),
+                                                      ),
+                                                      child: Text(
+                                                        'AI Suggested',
+                                                        style:
+                                                            FlutterFlowTheme.of(
+                                                                    context)
+                                                                .bodySmall
+                                                                .override(
+                                                                  fontFamily:
+                                                                      'Inter',
+                                                                  color: FlutterFlowTheme.of(
+                                                                          context)
+                                                                      .tertiary,
+                                                                  fontSize: 9.0,
+                                                                ),
+                                                      ),
+                                                    ),
+                                                  if (isSelected)
+                                                    Padding(
+                                                      padding:
+                                                          const EdgeInsets.only(
+                                                              top: 4.0),
+                                                      child: Icon(
+                                                        Icons.check_circle,
+                                                        color:
+                                                            FlutterFlowTheme.of(
+                                                                    context)
+                                                                .primary,
+                                                        size: 16.0,
+                                                      ),
+                                                    ),
+                                                ],
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                );
+                              },
+                            ),
                 ),
               ],
             ),
@@ -232,12 +446,12 @@ class _OutfitPlanner2WidgetState extends State<OutfitPlanner2Widget> {
   // Build planned outfit list item
   Widget _buildPlannedOutfitItem(PlannedOutfit plannedOutfit) {
     return Padding(
-      padding: EdgeInsetsDirectional.fromSTEB(16.0, 0.0, 16.0, 12.0),
+      padding: const EdgeInsetsDirectional.fromSTEB(16.0, 0.0, 16.0, 12.0),
       child: Container(
         width: double.infinity,
         decoration: BoxDecoration(
           color: FlutterFlowTheme.of(context).secondaryBackground,
-          boxShadow: [
+          boxShadow: const [
             BoxShadow(
               blurRadius: 3.0,
               color: Color(0x33000000),
@@ -247,94 +461,94 @@ class _OutfitPlanner2WidgetState extends State<OutfitPlanner2Widget> {
           borderRadius: BorderRadius.circular(16.0),
         ),
         child: Padding(
-          padding: EdgeInsets.all(8.0),
+          padding: const EdgeInsets.all(12.0),
           child: Row(
             mainAxisSize: MainAxisSize.max,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                mainAxisSize: MainAxisSize.max,
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: EdgeInsetsDirectional.fromSTEB(4.0, 0.0, 0.0, 0.0),
-                    child: Text(
+              // Outfit icon on the left
+              GestureDetector(
+                onTap: () => _showOutfitSelectionDialog(plannedOutfit.date),
+                child: Container(
+                  width: 50.0,
+                  height: 50.0,
+                  margin: const EdgeInsets.only(right: 12.0),
+                  decoration: BoxDecoration(
+                    color: FlutterFlowTheme.of(context).primaryBackground,
+                    borderRadius: BorderRadius.circular(8.0),
+                    border: Border.all(
+                      color: FlutterFlowTheme.of(context).alternate,
+                      width: 1.0,
+                    ),
+                  ),
+                  child: Icon(
+                    Icons.checkroom,
+                    color: FlutterFlowTheme.of(context).secondaryText,
+                    size: 24.0,
+                  ),
+                ),
+              ),
+              // Outfit details
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.max,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
                       plannedOutfit.outfit.name,
                       style:
                           FlutterFlowTheme.of(context).headlineSmall.override(
-                                font: GoogleFonts.interTight(),
-                                color: FlutterFlowTheme.of(context).underground,
-                                fontSize: 22.0,
+                                fontFamily: 'Inter Tight',
+                                color: FlutterFlowTheme.of(context).primaryText,
+                                fontSize: 18.0,
                               ),
                     ),
-                  ),
-                  Padding(
-                    padding: EdgeInsetsDirectional.fromSTEB(0.0, 4.0, 0.0, 0.0),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.max,
+                    const SizedBox(height: 4.0),
+                    Row(
                       children: [
+                        Icon(
+                          Icons.calendar_today,
+                          size: 14.0,
+                          color: FlutterFlowTheme.of(context).secondaryText,
+                        ),
+                        const SizedBox(width: 4.0),
                         Text(
                           DateFormat('dd/MM/yyyy').format(plannedOutfit.date),
                           style: FlutterFlowTheme.of(context)
                               .bodySmall
                               .override(
-                                font: GoogleFonts.inter(),
-                                color: FlutterFlowTheme.of(context).underground,
+                                fontFamily: 'Inter',
+                                color:
+                                    FlutterFlowTheme.of(context).secondaryText,
                               ),
                         ),
-                        SizedBox(width: 8.0),
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                              horizontal: 8.0, vertical: 2.0),
-                          decoration: BoxDecoration(
-                            color: FlutterFlowTheme.of(context).accent3,
-                            borderRadius: BorderRadius.circular(12.0),
+                        if (plannedOutfit.planRecord?.event?.isNotEmpty ==
+                            true) ...[
+                          const SizedBox(width: 12.0),
+                          Icon(
+                            Icons.event,
+                            size: 14.0,
+                            color: FlutterFlowTheme.of(context).tertiary,
                           ),
-                          child: Text(
-                            plannedOutfit.outfit.category,
-                            style: FlutterFlowTheme.of(context)
-                                .bodySmall
-                                .override(
-                                  font: GoogleFonts.inter(),
-                                  color: FlutterFlowTheme.of(context).tertiary,
-                                  fontSize: 10.0,
-                                ),
+                          const SizedBox(width: 4.0),
+                          Expanded(
+                            child: Text(
+                              plannedOutfit.planRecord!.event,
+                              style: FlutterFlowTheme.of(context)
+                                  .bodySmall
+                                  .override(
+                                    fontFamily: 'Inter',
+                                    color:
+                                        FlutterFlowTheme.of(context).tertiary,
+                                  ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
-                        ),
+                        ],
                       ],
                     ),
-                  ),
-                ],
-              ),
-              Container(
-                width: 50.0,
-                height: 50.0,
-                decoration: BoxDecoration(
-                  color: FlutterFlowTheme.of(context).primaryBackground,
-                  borderRadius: BorderRadius.circular(8.0),
-                  shape: BoxShape.rectangle,
-                  border: Border.all(
-                    color: FlutterFlowTheme.of(context).alternate,
-                    width: 1.0,
-                  ),
-                ),
-                alignment: AlignmentDirectional(0.0, 0.0),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8.0),
-                  child: Image.asset(
-                    plannedOutfit.outfit.imagePath,
-                    width: 200.0,
-                    height: 200.0,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Icon(
-                        Icons.image_not_supported,
-                        color: FlutterFlowTheme.of(context).secondaryText,
-                        size: 24.0,
-                      );
-                    },
-                  ),
+                  ],
                 ),
               ),
             ],
@@ -344,7 +558,7 @@ class _OutfitPlanner2WidgetState extends State<OutfitPlanner2Widget> {
     );
   }
 
-  // Modern Navigation Item Builder (copied from home page)
+  // Navigation Item Builder - UPDATED TO MATCH HOME PAGE
   Widget _buildNavItem({
     required BuildContext context,
     required IconData icon,
@@ -355,7 +569,7 @@ class _OutfitPlanner2WidgetState extends State<OutfitPlanner2Widget> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: EdgeInsetsDirectional.fromSTEB(12.0, 8.0, 12.0, 8.0),
+        padding: const EdgeInsetsDirectional.fromSTEB(12.0, 8.0, 12.0, 8.0),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12.0),
           color: isActive
@@ -372,13 +586,12 @@ class _OutfitPlanner2WidgetState extends State<OutfitPlanner2Widget> {
                   ? FlutterFlowTheme.of(context).waxFlower
                   : FlutterFlowTheme.of(context).info,
             ),
-            SizedBox(height: 4.0),
+            const SizedBox(height: 4.0),
             Text(
               label,
               style: FlutterFlowTheme.of(context).bodySmall.override(
-                    font: GoogleFonts.inter(
-                      fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
-                    ),
+                    fontFamily: 'Inter',
+                    fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
                     color: isActive
                         ? FlutterFlowTheme.of(context).waxFlower
                         : FlutterFlowTheme.of(context).info,
@@ -409,12 +622,32 @@ class _OutfitPlanner2WidgetState extends State<OutfitPlanner2Widget> {
             FFLocalizations.of(context)
                 .getText('nb7yeaja' /* Outfit Planner */),
             style: FlutterFlowTheme.of(context).headlineMedium.override(
-                  font: GoogleFonts.interTight(),
-                  color: FlutterFlowTheme.of(context).underground,
+                  fontFamily: 'Inter Tight',
+                  color: FlutterFlowTheme.of(context).primaryText,
                   letterSpacing: 0.0,
                 ),
           ),
-          actions: [],
+          actions: [
+            IconButton(
+              onPressed: () async {
+                await _model.refreshData();
+                if (mounted) {
+                  setState(() {});
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: const Text('Data refreshed!'),
+                      backgroundColor: FlutterFlowTheme.of(context).primary,
+                      duration: const Duration(seconds: 1),
+                    ),
+                  );
+                }
+              },
+              icon: Icon(
+                Icons.refresh,
+                color: FlutterFlowTheme.of(context).primaryText,
+              ),
+            ),
+          ],
           centerTitle: false,
           elevation: 0.0,
         ),
@@ -424,7 +657,8 @@ class _OutfitPlanner2WidgetState extends State<OutfitPlanner2Widget> {
           children: [
             Expanded(
               child: Padding(
-                padding: EdgeInsetsDirectional.fromSTEB(15.0, 0.0, 15.0, 0.0),
+                padding:
+                    const EdgeInsetsDirectional.fromSTEB(15.0, 0.0, 15.0, 0.0),
                 child: Container(
                   width: double.infinity,
                   height: double.infinity,
@@ -436,112 +670,241 @@ class _OutfitPlanner2WidgetState extends State<OutfitPlanner2Widget> {
                       mainAxisSize: MainAxisSize.max,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            color: FlutterFlowTheme.of(context)
-                                .secondaryBackground,
-                            boxShadow: [
-                              BoxShadow(
-                                blurRadius: 3.0,
-                                color: Color(0x33000000),
-                                offset: Offset(0.0, 1.0),
-                              )
-                            ],
+                        // Calendar Widget with highlighting
+                        StreamBuilder<List<OutfitPlansRecord>>(
+                          stream: queryOutfitPlansRecord(
+                            queryBuilder: (outfitPlansRecord) =>
+                                outfitPlansRecord.where('user_id',
+                                    isEqualTo: currentUserUid),
                           ),
-                          child: FlutterFlowCalendar(
-                            color: FlutterFlowTheme.of(context).waxFlower,
-                            iconColor:
-                                FlutterFlowTheme.of(context).secondaryText,
-                            weekFormat: false,
-                            weekStartsMonday: true,
-                            onChange: (DateTimeRange? newSelectedDate) {
-                              safeSetState(() =>
-                                  _model.calendarSelectedDay = newSelectedDate);
-                              // Only show dialog when date is selected by user (not initial auto-selection)
-                              if (newSelectedDate != null && !_isInitialLoad) {
-                                _showOutfitSelectionDialog(
-                                    newSelectedDate.start);
-                              }
-                            },
-                            titleStyle: FlutterFlowTheme.of(context)
-                                .titleLarge
-                                .override(
-                                  font: GoogleFonts.interTight(),
-                                  letterSpacing: 0.0,
-                                ),
-                            dayOfWeekStyle: FlutterFlowTheme.of(context)
-                                .labelMedium
-                                .override(
-                                  font: GoogleFonts.inter(),
-                                  letterSpacing: 0.0,
-                                ),
-                            dateStyle: FlutterFlowTheme.of(context)
-                                .bodyMedium
-                                .override(
-                                  font: GoogleFonts.inter(),
-                                  letterSpacing: 0.0,
-                                ),
-                            selectedDateStyle: FlutterFlowTheme.of(context)
-                                .titleSmall
-                                .override(
-                              font: GoogleFonts.interTight(),
-                              letterSpacing: 0.0,
-                              shadows: [
-                                Shadow(
-                                  color: FlutterFlowTheme.of(context)
-                                      .secondaryText,
-                                  offset: Offset(2.0, 2.0),
-                                  blurRadius: 2.0,
-                                )
-                              ],
-                            ),
-                            inactiveDateStyle: FlutterFlowTheme.of(context)
-                                .labelMedium
-                                .override(
-                                  font: GoogleFonts.inter(),
-                                  letterSpacing: 0.0,
-                                ),
-                            locale: FFLocalizations.of(context).languageCode,
-                          ),
+                          builder: (context, planSnapshot) {
+                            // Update local data when stream updates
+                            if (planSnapshot.hasData &&
+                                planSnapshot.data != null) {
+                              // Sort the data locally
+                              final sortedData = List<OutfitPlansRecord>.from(
+                                  planSnapshot.data!);
+                              sortedData.sort((a, b) {
+                                if (a.date == null && b.date == null) return 0;
+                                if (a.date == null) return 1;
+                                if (b.date == null) return -1;
+                                return a.date!.compareTo(b.date!);
+                              });
+
+                              _model.updatePlannedOutfitRecords(sortedData);
+                            }
+
+                            final plannedDates = _model.getPlannedOutfitDates();
+
+                            return Container(
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                color: FlutterFlowTheme.of(context)
+                                    .secondaryBackground,
+                                boxShadow: const [
+                                  BoxShadow(
+                                    blurRadius: 3.0,
+                                    color: Color(0x33000000),
+                                    offset: Offset(0.0, 1.0),
+                                  )
+                                ],
+                              ),
+                              child: Stack(
+                                children: [
+                                  FlutterFlowCalendar(
+                                    color: FlutterFlowTheme.of(context)
+                                        .underground,
+                                    iconColor: FlutterFlowTheme.of(context)
+                                        .secondaryText,
+                                    weekFormat: false,
+                                    weekStartsMonday: true,
+                                    onChange: (DateTimeRange? newSelectedDate) {
+                                      setState(() =>
+                                          _model.calendarSelectedDay =
+                                              newSelectedDate);
+
+                                      // Only show dialog when calendar is initialized and date is selected
+                                      if (_calendarInitialized &&
+                                          newSelectedDate != null) {
+                                        _showOutfitSelectionDialog(
+                                            newSelectedDate.start);
+                                      }
+                                    },
+                                    titleStyle: FlutterFlowTheme.of(context)
+                                        .titleLarge
+                                        .override(
+                                          fontFamily: 'Inter Tight',
+                                          letterSpacing: 0.0,
+                                        ),
+                                    dayOfWeekStyle: FlutterFlowTheme.of(context)
+                                        .labelMedium
+                                        .override(
+                                          fontFamily: 'Inter',
+                                          letterSpacing: 0.0,
+                                        ),
+                                    dateStyle: FlutterFlowTheme.of(context)
+                                        .bodyMedium
+                                        .override(
+                                          fontFamily: 'Inter',
+                                          letterSpacing: 0.0,
+                                        ),
+                                    selectedDateStyle:
+                                        FlutterFlowTheme.of(context)
+                                            .titleSmall
+                                            .override(
+                                              fontFamily: 'Inter Tight',
+                                              letterSpacing: 0.0,
+                                            ),
+                                    inactiveDateStyle:
+                                        FlutterFlowTheme.of(context)
+                                            .labelMedium
+                                            .override(
+                                              fontFamily: 'Inter',
+                                              letterSpacing: 0.0,
+                                            ),
+                                    locale: FFLocalizations.of(context)
+                                        .languageCode,
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
                         ),
+
+                        // Upcoming Outfits Section
                         Column(
                           mainAxisSize: MainAxisSize.max,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Padding(
-                              padding: EdgeInsetsDirectional.fromSTEB(
-                                  20.0, 12.0, 0.0, 0.0),
-                              child: Text(
-                                FFLocalizations.of(context)
-                                    .getText('yvs9q8r4' /* Coming Outfit */),
-                                style: FlutterFlowTheme.of(context)
-                                    .labelMedium
-                                    .override(
-                                      font: GoogleFonts.inter(
-                                          fontWeight: FontWeight.bold),
-                                      color: FlutterFlowTheme.of(context)
-                                          .underground,
-                                      fontSize: 20.0,
-                                      letterSpacing: 0.0,
+                              padding: const EdgeInsetsDirectional.fromSTEB(
+                                  20.0, 16.0, 20.0, 0.0),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    FFLocalizations.of(context).getText(
+                                        'yvs9q8r4' /* Coming Outfit */),
+                                    style: FlutterFlowTheme.of(context)
+                                        .labelMedium
+                                        .override(
+                                          fontFamily: 'Inter',
+                                          fontWeight: FontWeight.bold,
+                                          color: FlutterFlowTheme.of(context)
+                                              .primaryText,
+                                          fontSize: 20.0,
+                                          letterSpacing: 0.0,
+                                        ),
+                                  ),
+                                  if (_model.isLoadingPlans)
+                                    SizedBox(
+                                      width: 20.0,
+                                      height: 20.0,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2.0,
+                                        color: FlutterFlowTheme.of(context)
+                                            .primary,
+                                      ),
                                     ),
+                                ],
                               ),
                             ),
+
+                            // Upcoming outfits list - Fast synchronous version
                             Padding(
-                              padding: EdgeInsetsDirectional.fromSTEB(
+                              padding: const EdgeInsetsDirectional.fromSTEB(
                                   0.0, 12.0, 0.0, 0.0),
-                              child: Column(
-                                children: _model
-                                    .getUpcomingOutfits()
-                                    .map((plannedOutfit) =>
-                                        _buildPlannedOutfitItem(plannedOutfit))
-                                    .toList(),
+                              child: StreamBuilder<List<OutfitPlansRecord>>(
+                                stream: queryOutfitPlansRecord(
+                                  queryBuilder: (outfitPlansRecord) =>
+                                      outfitPlansRecord.where('user_id',
+                                          isEqualTo: currentUserUid),
+                                ),
+                                builder: (context, planSnapshot) {
+                                  // Update local data when stream updates
+                                  if (planSnapshot.hasData &&
+                                      planSnapshot.data != null) {
+                                    // Sort the data locally
+                                    final sortedData =
+                                        List<OutfitPlansRecord>.from(
+                                            planSnapshot.data!);
+                                    sortedData.sort((a, b) {
+                                      if (a.date == null && b.date == null)
+                                        return 0;
+                                      if (a.date == null) return 1;
+                                      if (b.date == null) return -1;
+                                      return a.date!.compareTo(b.date!);
+                                    });
+
+                                    _model
+                                        .updatePlannedOutfitRecords(sortedData);
+                                  }
+
+                                  // Get upcoming outfits synchronously (fast)
+                                  final upcomingOutfits =
+                                      _model.getUpcomingOutfitsSync();
+
+                                  if (upcomingOutfits.isEmpty) {
+                                    return Center(
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(20.0),
+                                        child: Column(
+                                          children: [
+                                            Icon(
+                                              Icons.calendar_today_outlined,
+                                              size: 48.0,
+                                              color:
+                                                  FlutterFlowTheme.of(context)
+                                                      .secondaryText,
+                                            ),
+                                            const SizedBox(height: 12.0),
+                                            Text(
+                                              'No upcoming outfit plans',
+                                              style: FlutterFlowTheme.of(
+                                                      context)
+                                                  .titleMedium
+                                                  .override(
+                                                    fontFamily: 'Inter Tight',
+                                                    color: FlutterFlowTheme.of(
+                                                            context)
+                                                        .secondaryText,
+                                                  ),
+                                            ),
+                                            const SizedBox(height: 8.0),
+                                            Text(
+                                              'Tap on calendar dates to plan your outfits!',
+                                              style:
+                                                  FlutterFlowTheme.of(context)
+                                                      .bodyMedium
+                                                      .override(
+                                                        fontFamily: 'Inter',
+                                                        color:
+                                                            FlutterFlowTheme.of(
+                                                                    context)
+                                                                .secondaryText,
+                                                      ),
+                                              textAlign: TextAlign.center,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  }
+
+                                  // Build the list directly with immediate data
+                                  return Column(
+                                    children: upcomingOutfits
+                                        .map((plannedOutfit) =>
+                                            _buildPlannedOutfitItem(
+                                                plannedOutfit))
+                                        .toList(),
+                                  );
+                                },
                               ),
                             ),
                           ],
                         ),
-                        SizedBox(
-                            height: 100.0), // Add bottom spacing for nav bar
                       ],
                     ),
                   ),
@@ -550,7 +913,7 @@ class _OutfitPlanner2WidgetState extends State<OutfitPlanner2Widget> {
             ),
           ],
         ),
-        // Modern Bottom Navigation Bar (copied from home page)
+        // Modern Bottom Navigation Bar - UPDATED TO MATCH HOME PAGE
         bottomNavigationBar: Container(
           decoration: BoxDecoration(
             color: FlutterFlowTheme.of(context).underground,
@@ -558,13 +921,14 @@ class _OutfitPlanner2WidgetState extends State<OutfitPlanner2Widget> {
               BoxShadow(
                 color: Colors.black.withOpacity(0.1),
                 blurRadius: 10.0,
-                offset: Offset(0, -2),
+                offset: const Offset(0, -2),
               ),
             ],
           ),
           child: SafeArea(
             child: Padding(
-              padding: EdgeInsetsDirectional.fromSTEB(16.0, 8.0, 16.0, 8.0),
+              padding:
+                  const EdgeInsetsDirectional.fromSTEB(16.0, 8.0, 16.0, 8.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
@@ -574,7 +938,7 @@ class _OutfitPlanner2WidgetState extends State<OutfitPlanner2Widget> {
                     label: FFLocalizations.of(context)
                         .getText('juu7t29n' /* Home */),
                     isActive: false,
-                    onTap: () => context.pushNamed(HomePageWidget.routeName),
+                    onTap: () => context.pushNamed('HomePage'),
                   ),
                   _buildNavItem(
                     context: context,
@@ -582,7 +946,7 @@ class _OutfitPlanner2WidgetState extends State<OutfitPlanner2Widget> {
                     label: FFLocalizations.of(context)
                         .getText('j10f5yzy' /* Wardrobe */),
                     isActive: false,
-                    onTap: () => context.pushNamed(MyWardrodeWidget.routeName),
+                    onTap: () => context.pushNamed('MyWardrobe'),
                   ),
                   _buildNavItem(
                     context: context,
@@ -590,7 +954,7 @@ class _OutfitPlanner2WidgetState extends State<OutfitPlanner2Widget> {
                     label: FFLocalizations.of(context)
                         .getText('rud9dgwq' /* Match */),
                     isActive: false,
-                    onTap: () => context.pushNamed(OutfitMatchWidget.routeName),
+                    onTap: () => context.pushNamed('OutfitMatch'),
                   ),
                   _buildNavItem(
                     context: context,
@@ -598,7 +962,7 @@ class _OutfitPlanner2WidgetState extends State<OutfitPlanner2Widget> {
                     label: FFLocalizations.of(context)
                         .getText('addqz4ow' /* Shop */),
                     isActive: false,
-                    onTap: () => context.pushNamed(BuyClothesWidget.routeName),
+                    onTap: () => context.pushNamed('BuyClothes'),
                   ),
                   _buildNavItem(
                     context: context,
@@ -616,7 +980,7 @@ class _OutfitPlanner2WidgetState extends State<OutfitPlanner2Widget> {
                     label: FFLocalizations.of(context)
                         .getText('lswy1ody' /* Profile */),
                     isActive: false,
-                    onTap: () => context.pushNamed(UserProfileWidget.routeName),
+                    onTap: () => context.pushNamed('UserProfile'),
                   ),
                 ],
               ),
