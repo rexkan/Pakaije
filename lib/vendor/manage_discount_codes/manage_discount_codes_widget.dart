@@ -49,6 +49,9 @@ class _ManageDiscountCodesWidgetState extends State<ManageDiscountCodesWidget>
     _model.textController4 ??= TextEditingController();
     _model.textFieldFocusNode4 ??= FocusNode();
 
+    _model.textController5 ??= TextEditingController();
+    _model.textFieldFocusNode5 ??= FocusNode();
+
     animationsMap.addAll({
       'containerOnActionTriggerAnimation': AnimationInfo(
         trigger: AnimationTrigger.onActionTrigger,
@@ -619,6 +622,17 @@ class _ManageDiscountCodesWidgetState extends State<ManageDiscountCodesWidget>
                         ),
                   ),
                   SizedBox(height: 4.0),
+                  if (discountCode.itemId.isNotEmpty)
+                    Text(
+                      'Item ID: ${discountCode.itemId}',
+                      style: FlutterFlowTheme.of(context).bodyMedium.override(
+                            fontFamily: GoogleFonts.inter().fontFamily,
+                            color: FlutterFlowTheme.of(context).secondaryText,
+                            letterSpacing: 0.0,
+                            fontStyle: FontStyle.italic,
+                          ),
+                    ),
+                  SizedBox(height: 4.0),
                   Text(
                     validityText,
                     style: FlutterFlowTheme.of(context).bodyMedium.override(
@@ -884,13 +898,23 @@ class _ManageDiscountCodesWidgetState extends State<ManageDiscountCodesWidget>
 
         SizedBox(height: 16.0),
 
+        // Item ID Field
+        _buildTextField(
+          controller: _model.textController3!,
+          focusNode: _model.textFieldFocusNode3!,
+          hintText: 'Item ID (Optional - links to branded item)',
+          icon: Icons.inventory_2,
+        ),
+
+        SizedBox(height: 16.0),
+
         // Date Range Fields
         Row(
           children: [
             Expanded(
               child: _buildTextField(
-                controller: _model.textController3!,
-                focusNode: _model.textFieldFocusNode3!,
+                controller: _model.textController4!,
+                focusNode: _model.textFieldFocusNode4!,
                 hintText: 'Start Date (Optional)',
                 icon: Icons.calendar_today,
               ),
@@ -898,8 +922,8 @@ class _ManageDiscountCodesWidgetState extends State<ManageDiscountCodesWidget>
             SizedBox(width: 16.0),
             Expanded(
               child: _buildTextField(
-                controller: _model.textController4!,
-                focusNode: _model.textFieldFocusNode4!,
+                controller: _model.textController5!,
+                focusNode: _model.textFieldFocusNode5!,
                 hintText: 'End Date (Optional)',
                 icon: Icons.calendar_today,
               ),
@@ -934,6 +958,9 @@ class _ManageDiscountCodesWidgetState extends State<ManageDiscountCodesWidget>
                 'discount_type': 'percentage',
                 'discount_value':
                     double.tryParse(_model.textController2!.text) ?? 0.0,
+                'item_id': _model.textController3!.text.trim().isEmpty
+                    ? ''
+                    : _model.textController3!.text.trim(),
                 'start_date': DateTime.now(),
                 'end_date': null,
                 'is_active': true,
@@ -964,6 +991,7 @@ class _ManageDiscountCodesWidgetState extends State<ManageDiscountCodesWidget>
               _model.textController2?.clear();
               _model.textController3?.clear();
               _model.textController4?.clear();
+              _model.textController5?.clear();
             } catch (e) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
@@ -1063,6 +1091,8 @@ class _ManageDiscountCodesWidgetState extends State<ManageDiscountCodesWidget>
         TextEditingController(text: discountCode.discountValue.toString());
     final TextEditingController maxUsageController =
         TextEditingController(text: discountCode.maxUsage.toString());
+    final TextEditingController itemIdController =
+        TextEditingController(text: discountCode.itemId);
 
     showDialog(
       context: context,
@@ -1114,6 +1144,17 @@ class _ManageDiscountCodesWidgetState extends State<ManageDiscountCodesWidget>
               ),
               SizedBox(height: 16.0),
               TextFormField(
+                controller: itemIdController,
+                decoration: InputDecoration(
+                  labelText: 'Item ID (Optional)',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
+                  prefixIcon: Icon(Icons.inventory_2),
+                ),
+              ),
+              SizedBox(height: 16.0),
+              TextFormField(
                 controller: maxUsageController,
                 decoration: InputDecoration(
                   labelText: 'Max Usage (0 = unlimited)',
@@ -1152,6 +1193,7 @@ class _ManageDiscountCodesWidgetState extends State<ManageDiscountCodesWidget>
                     'discount_value':
                         double.tryParse(discountController.text) ??
                             discountCode.discountValue,
+                    'item_id': itemIdController.text.trim(),
                     'max_usage': int.tryParse(maxUsageController.text) ??
                         discountCode.maxUsage,
                   });

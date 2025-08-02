@@ -10,6 +10,7 @@ import 'vendor_dashboard_model.dart';
 export 'vendor_dashboard_model.dart';
 import '/backend/backend.dart';
 import '/auth/firebase_auth/auth_util.dart';
+import '/backend/schema/vendors_record.dart';
 
 class VendorDashboardWidget extends StatefulWidget {
   const VendorDashboardWidget({super.key});
@@ -25,6 +26,189 @@ class _VendorDashboardWidgetState extends State<VendorDashboardWidget> {
   late VendorDashboardModel _model;
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
+
+  Widget _buildWelcomeSection() {
+    return StreamBuilder<VendorsRecord?>(
+      stream: _getCurrentVendor(),
+      builder: (context, snapshot) {
+        // Loading state
+        if (!snapshot.hasData) {
+          return Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: FlutterFlowTheme.of(context).secondaryBackground,
+              boxShadow: [
+                BoxShadow(
+                  blurRadius: 4.0,
+                  color: Color(0x33000000),
+                  offset: Offset(0.0, 2.0),
+                )
+              ],
+              borderRadius: BorderRadius.circular(12.0),
+            ),
+            child: Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Row(
+                children: [
+                  Container(
+                    width: 60.0,
+                    height: 60.0,
+                    decoration: BoxDecoration(
+                      color: FlutterFlowTheme.of(context).accent1,
+                      borderRadius: BorderRadius.circular(12.0),
+                    ),
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.0,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          FlutterFlowTheme.of(context).primary,
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 16.0),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: 120.0,
+                          height: 20.0,
+                          decoration: BoxDecoration(
+                            color: FlutterFlowTheme.of(context).alternate,
+                            borderRadius: BorderRadius.circular(4.0),
+                          ),
+                        ),
+                        SizedBox(height: 8.0),
+                        Container(
+                          width: 180.0,
+                          height: 16.0,
+                          decoration: BoxDecoration(
+                            color: FlutterFlowTheme.of(context).alternate,
+                            borderRadius: BorderRadius.circular(4.0),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        final vendor = snapshot.data;
+        final brandName = vendor?.brandName ?? 'Your Brand';
+        final email = vendor?.email ?? currentUserEmail ?? '';
+
+        return Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: FlutterFlowTheme.of(context).secondaryBackground,
+            boxShadow: [
+              BoxShadow(
+                blurRadius: 4.0,
+                color: Color(0x33000000),
+                offset: Offset(0.0, 2.0),
+              )
+            ],
+            borderRadius: BorderRadius.circular(12.0),
+          ),
+          child: Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Row(
+              children: [
+                Container(
+                  width: 60.0,
+                  height: 60.0,
+                  decoration: BoxDecoration(
+                    color: FlutterFlowTheme.of(context).accent1,
+                    borderRadius: BorderRadius.circular(12.0),
+                    border: Border.all(
+                      color: FlutterFlowTheme.of(context).primary,
+                      width: 2.0,
+                    ),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8.0),
+                    child: Image.asset(
+                      'assets/images/user_848006.png',
+                      width: 50.0,
+                      height: 50.0,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+                SizedBox(width: 16.0),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        brandName,
+                        style:
+                            FlutterFlowTheme.of(context).headlineSmall.override(
+                                  fontFamily: 'Inter',
+                                  letterSpacing: 0.0,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                      ),
+                      SizedBox(height: 4.0),
+                      Text(
+                        'Welcome to your dashboard',
+                        style: FlutterFlowTheme.of(context).bodyMedium.override(
+                              fontFamily: 'Inter',
+                              color: FlutterFlowTheme.of(context).secondaryText,
+                              fontSize: 16.0,
+                              letterSpacing: 0.0,
+                            ),
+                      ),
+                      if (email.isNotEmpty) ...[
+                        SizedBox(height: 2.0),
+                        Text(
+                          email,
+                          style: FlutterFlowTheme.of(context)
+                              .bodySmall
+                              .override(
+                                fontFamily: 'Inter',
+                                color:
+                                    FlutterFlowTheme.of(context).secondaryText,
+                                fontSize: 12.0,
+                                letterSpacing: 0.0,
+                              ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                // Status indicator
+                if (vendor?.isActive == true)
+                  Container(
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12.0),
+                      border: Border.all(color: Colors.green, width: 1.0),
+                    ),
+                    child: Text(
+                      'Active',
+                      style: FlutterFlowTheme.of(context).bodySmall.override(
+                            fontFamily: 'Inter',
+                            color: Colors.green,
+                            fontSize: 10.0,
+                            letterSpacing: 0.0,
+                            fontWeight: FontWeight.w500,
+                          ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
 
   @override
   void initState() {
@@ -98,6 +282,38 @@ class _VendorDashboardWidgetState extends State<VendorDashboardWidget> {
         }
       }
     }
+  }
+
+  Stream<VendorsRecord?> _getCurrentVendor() {
+    if (currentUserUid.isEmpty) return Stream.value(null);
+
+    return VendorsRecord.collection
+        .doc(currentUserUid)
+        .snapshots()
+        .map((snapshot) {
+      if (snapshot.exists) {
+        return VendorsRecord.fromSnapshot(snapshot);
+      }
+      return null;
+    });
+  }
+
+  /// Alternative method if vendor document ID is different from auth UID
+  Stream<VendorsRecord?> _getCurrentVendorByEmail() {
+    if (currentUserEmail == null || currentUserEmail!.isEmpty) {
+      return Stream.value(null);
+    }
+
+    return VendorsRecord.collection
+        .where('email', isEqualTo: currentUserEmail)
+        .limit(1)
+        .snapshots()
+        .map((snapshot) {
+      if (snapshot.docs.isNotEmpty) {
+        return VendorsRecord.fromSnapshot(snapshot.docs.first);
+      }
+      return null;
+    });
   }
 
   @override
@@ -180,77 +396,6 @@ class _VendorDashboardWidgetState extends State<VendorDashboardWidget> {
               _buildBottomNavigation(),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildWelcomeSection() {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: FlutterFlowTheme.of(context).secondaryBackground,
-        boxShadow: [
-          BoxShadow(
-            blurRadius: 4.0,
-            color: Color(0x33000000),
-            offset: Offset(0.0, 2.0),
-          )
-        ],
-        borderRadius: BorderRadius.circular(12.0),
-      ),
-      child: Padding(
-        padding: EdgeInsets.all(16.0),
-        child: Row(
-          children: [
-            Container(
-              width: 60.0,
-              height: 60.0,
-              decoration: BoxDecoration(
-                color: FlutterFlowTheme.of(context).accent1,
-                borderRadius: BorderRadius.circular(12.0),
-                border: Border.all(
-                  color: FlutterFlowTheme.of(context).primary,
-                  width: 2.0,
-                ),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(8.0),
-                child: Image.asset(
-                  'assets/images/user_848006.png',
-                  width: 50.0,
-                  height: 50.0,
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
-            SizedBox(width: 16.0),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Fashion Brand Name',
-                    style: FlutterFlowTheme.of(context).headlineSmall.override(
-                          fontFamily: 'Inter',
-                          letterSpacing: 0.0,
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
-                  SizedBox(height: 4.0),
-                  Text(
-                    'Welcome to your dashboard',
-                    style: FlutterFlowTheme.of(context).bodyMedium.override(
-                          fontFamily: 'Inter',
-                          color: FlutterFlowTheme.of(context).secondaryText,
-                          fontSize: 16.0,
-                          letterSpacing: 0.0,
-                        ),
-                  ),
-                ],
-              ),
-            ),
-          ],
         ),
       ),
     );
