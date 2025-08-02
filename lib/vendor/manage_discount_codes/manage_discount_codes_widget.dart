@@ -9,6 +9,9 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'manage_discount_codes_model.dart';
 export 'manage_discount_codes_model.dart';
+import '/backend/backend.dart';
+import '/auth/firebase_auth/auth_util.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ManageDiscountCodesWidget extends StatefulWidget {
   const ManageDiscountCodesWidget({super.key});
@@ -34,8 +37,6 @@ class _ManageDiscountCodesWidgetState extends State<ManageDiscountCodesWidget>
     super.initState();
     _model = createModel(context, () => ManageDiscountCodesModel());
 
-    _model.switchValue1 = true;
-    _model.switchValue2 = true;
     _model.textController1 ??= TextEditingController();
     _model.textFieldFocusNode1 ??= FocusNode();
 
@@ -75,6 +76,206 @@ class _ManageDiscountCodesWidgetState extends State<ManageDiscountCodesWidget>
   void dispose() {
     _model.dispose();
     super.dispose();
+  }
+
+  // Show delete confirmation dialog
+  void _showDeleteConfirmation(DiscountCodesRecord discountCode) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Row(
+            children: [
+              Icon(
+                Icons.warning_amber_rounded,
+                color: FlutterFlowTheme.of(context).error,
+                size: 28.0,
+              ),
+              SizedBox(width: 12.0),
+              Expanded(
+                child: Text(
+                  'Delete Discount Code',
+                  style: FlutterFlowTheme.of(context).headlineSmall.override(
+                        fontFamily: 'Inter Tight',
+                        color: FlutterFlowTheme.of(context).error,
+                        letterSpacing: 0.0,
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Are you sure you want to delete discount code "${discountCode.code}"?',
+                style: FlutterFlowTheme.of(context).bodyLarge.override(
+                      fontFamily: 'Inter',
+                      letterSpacing: 0.0,
+                      fontWeight: FontWeight.w500,
+                    ),
+              ),
+              SizedBox(height: 12.0),
+              Text(
+                'This action cannot be undone. The discount code will be permanently removed.',
+                style: FlutterFlowTheme.of(context).bodyMedium.override(
+                      fontFamily: 'Inter',
+                      color: FlutterFlowTheme.of(context).secondaryText,
+                      letterSpacing: 0.0,
+                    ),
+              ),
+            ],
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.0),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              style: TextButton.styleFrom(
+                padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
+              ),
+              child: Text(
+                'Cancel',
+                style: FlutterFlowTheme.of(context).bodyLarge.override(
+                      fontFamily: 'Inter',
+                      color: FlutterFlowTheme.of(context).secondaryText,
+                      letterSpacing: 0.0,
+                      fontWeight: FontWeight.w500,
+                    ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.of(context).pop();
+                await _deleteDiscountCode(discountCode);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: FlutterFlowTheme.of(context).error,
+                padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.delete_forever,
+                    color: Colors.white,
+                    size: 18.0,
+                  ),
+                  SizedBox(width: 6.0),
+                  Text(
+                    'Delete',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16.0,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Delete discount code from Firebase
+  Future<void> _deleteDiscountCode(DiscountCodesRecord discountCode) async {
+    try {
+      await discountCode.reference.delete();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(
+                Icons.check_circle,
+                color: Colors.white,
+                size: 20.0,
+              ),
+              SizedBox(width: 8.0),
+              Expanded(
+                child: Text(
+                  '${discountCode.code} deleted successfully',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 3),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8.0),
+          ),
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(
+                Icons.error,
+                color: Colors.white,
+                size: 20.0,
+              ),
+              SizedBox(width: 8.0),
+              Expanded(
+                child: Text(
+                  'Error deleting discount code: ${e.toString()}',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: FlutterFlowTheme.of(context).error,
+          duration: Duration(seconds: 4),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8.0),
+          ),
+        ),
+      );
+    }
+  }
+
+  // Toggle discount code active status
+  Future<void> _toggleDiscountCodeStatus(
+      DiscountCodesRecord discountCode, bool newStatus) async {
+    try {
+      await discountCode.reference.update({
+        'is_active': newStatus,
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '${discountCode.code} ${newStatus ? 'activated' : 'deactivated'}',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: FlutterFlowTheme.of(context).primary,
+          duration: Duration(seconds: 2),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8.0),
+          ),
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error updating status: ${e.toString()}'),
+          backgroundColor: FlutterFlowTheme.of(context).error,
+        ),
+      );
+    }
   }
 
   @override
@@ -130,7 +331,7 @@ class _ManageDiscountCodesWidgetState extends State<ManageDiscountCodesWidget>
 
                       SizedBox(height: 32.0),
 
-                      // Performance Stats
+                      // Performance Stats (using real data)
                       _buildPerformanceStats(),
 
                       SizedBox(height: 32.0),
@@ -157,14 +358,54 @@ class _ManageDiscountCodesWidgetState extends State<ManageDiscountCodesWidget>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Active Promo Codes',
-          style: FlutterFlowTheme.of(context).headlineMedium.override(
-                fontFamily: GoogleFonts.interTight().fontFamily,
-                fontSize: 24.0,
-                letterSpacing: 0.0,
-                fontWeight: FontWeight.w600,
-              ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Active Promo Codes',
+              style: FlutterFlowTheme.of(context).headlineMedium.override(
+                    fontFamily: GoogleFonts.interTight().fontFamily,
+                    fontSize: 24.0,
+                    letterSpacing: 0.0,
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+            // Discount code count
+            StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('discount_codes')
+                  .where('vendor_id', isEqualTo: currentUserUid)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  final discountCodes = snapshot.data!.docs
+                      .map((doc) => DiscountCodesRecord.fromSnapshot(doc))
+                      .toList();
+                  final activeCount =
+                      discountCodes.where((code) => code.isActive).length;
+                  return Container(
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+                    decoration: BoxDecoration(
+                      color: FlutterFlowTheme.of(context).primary,
+                      borderRadius: BorderRadius.circular(20.0),
+                    ),
+                    child: Text(
+                      '$activeCount active',
+                      style: FlutterFlowTheme.of(context).bodySmall.override(
+                            fontFamily: 'Inter',
+                            color: Colors.white,
+                            fontSize: 12.0,
+                            letterSpacing: 0.0,
+                            fontWeight: FontWeight.w500,
+                          ),
+                    ),
+                  );
+                }
+                return SizedBox.shrink();
+              },
+            ),
+          ],
         ),
         SizedBox(height: 8.0),
         Text(
@@ -178,37 +419,125 @@ class _ManageDiscountCodesWidgetState extends State<ManageDiscountCodesWidget>
 
         SizedBox(height: 20.0),
 
-        // Promo Code Cards
-        _buildPromoCodeCard(
-          'PAKAIJE50',
-          '50% Discount',
-          'Valid until Dec 31, 2024',
-          _model.switchValue1!,
-          (value) => setState(() => _model.switchValue1 = value),
-        ),
+        // Promo Codes from Firebase
+        StreamBuilder<QuerySnapshot>(
+          stream: FirebaseFirestore.instance
+              .collection('discount_codes')
+              .where('vendor_id', isEqualTo: currentUserUid)
+              .orderBy('created_at', descending: true)
+              .snapshots(),
+          builder: (context, snapshot) {
+            // Loading state
+            if (!snapshot.hasData) {
+              return Center(
+                child: Column(
+                  children: [
+                    SizedBox(
+                      width: 50.0,
+                      height: 50.0,
+                      child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          FlutterFlowTheme.of(context).primary,
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 16.0),
+                    Text(
+                      'Loading discount codes...',
+                      style: FlutterFlowTheme.of(context).bodyMedium.override(
+                            fontFamily: 'Inter',
+                            color: FlutterFlowTheme.of(context).secondaryText,
+                            letterSpacing: 0.0,
+                          ),
+                    ),
+                  ],
+                ),
+              );
+            }
 
-        SizedBox(height: 16.0),
+            List<DiscountCodesRecord> discountCodes = snapshot.data!.docs
+                .map((doc) => DiscountCodesRecord.fromSnapshot(doc))
+                .toList();
 
-        _buildPromoCodeCard(
-          'PAKAIJE20',
-          '20% Discount',
-          'Valid until Jan 15, 2025',
-          _model.switchValue2!,
-          (value) => setState(() => _model.switchValue2 = value),
+            // Empty state
+            if (discountCodes.isEmpty) {
+              return Container(
+                width: double.infinity,
+                padding: EdgeInsets.symmetric(vertical: 40.0),
+                decoration: BoxDecoration(
+                  color: FlutterFlowTheme.of(context).secondaryBackground,
+                  borderRadius: BorderRadius.circular(12.0),
+                  border: Border.all(
+                    color: FlutterFlowTheme.of(context).alternate,
+                    width: 1.0,
+                  ),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.discount_outlined,
+                      size: 64.0,
+                      color: FlutterFlowTheme.of(context).secondaryText,
+                    ),
+                    SizedBox(height: 16.0),
+                    Text(
+                      'No discount codes yet',
+                      style: FlutterFlowTheme.of(context)
+                          .headlineSmall
+                          .override(
+                            fontFamily: 'Inter Tight',
+                            color: FlutterFlowTheme.of(context).secondaryText,
+                            letterSpacing: 0.0,
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                    SizedBox(height: 8.0),
+                    Text(
+                      'Create your first discount code to boost sales',
+                      style: FlutterFlowTheme.of(context).bodyMedium.override(
+                            fontFamily: 'Inter',
+                            color: FlutterFlowTheme.of(context).secondaryText,
+                            letterSpacing: 0.0,
+                          ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            // Display discount codes
+            return Column(
+              children: discountCodes.map((discountCode) {
+                return Padding(
+                  padding: EdgeInsets.only(bottom: 16.0),
+                  child: _buildPromoCodeCard(discountCode),
+                );
+              }).toList(),
+            );
+          },
         ),
       ],
     );
   }
 
-  Widget _buildPromoCodeCard(String code, String discount, String validity,
-      bool isActive, Function(bool) onChanged) {
+  Widget _buildPromoCodeCard(DiscountCodesRecord discountCode) {
+    String discountText = discountCode.discountType == 'percentage'
+        ? '${discountCode.discountValue.toStringAsFixed(0)}% Discount'
+        : '\$${discountCode.discountValue.toStringAsFixed(2)} Off';
+
+    String validityText = discountCode.endDate != null
+        ? 'Valid until ${DateFormat('MMM dd, yyyy').format(discountCode.endDate!)}'
+        : 'No expiry date';
+
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
         color: FlutterFlowTheme.of(context).secondaryBackground,
         borderRadius: BorderRadius.circular(12.0),
         border: Border.all(
-          color: isActive
+          color: discountCode.isActive
               ? FlutterFlowTheme.of(context).primary.withOpacity(0.3)
               : FlutterFlowTheme.of(context).alternate,
           width: 2.0,
@@ -245,7 +574,7 @@ class _ManageDiscountCodesWidgetState extends State<ManageDiscountCodesWidget>
                           ),
                         ),
                         child: Text(
-                          code,
+                          discountCode.code,
                           style:
                               FlutterFlowTheme.of(context).bodyMedium.override(
                                     fontFamily: GoogleFonts.inter().fontFamily,
@@ -256,7 +585,7 @@ class _ManageDiscountCodesWidgetState extends State<ManageDiscountCodesWidget>
                         ),
                       ),
                       SizedBox(width: 8.0),
-                      if (isActive)
+                      if (discountCode.isActive)
                         Container(
                           padding: EdgeInsets.symmetric(
                               horizontal: 8.0, vertical: 4.0),
@@ -281,7 +610,7 @@ class _ManageDiscountCodesWidgetState extends State<ManageDiscountCodesWidget>
                   ),
                   SizedBox(height: 8.0),
                   Text(
-                    discount,
+                    discountText,
                     style: FlutterFlowTheme.of(context).headlineSmall.override(
                           fontFamily: GoogleFonts.interTight().fontFamily,
                           fontSize: 18.0,
@@ -291,8 +620,17 @@ class _ManageDiscountCodesWidgetState extends State<ManageDiscountCodesWidget>
                   ),
                   SizedBox(height: 4.0),
                   Text(
-                    validity,
+                    validityText,
                     style: FlutterFlowTheme.of(context).bodyMedium.override(
+                          fontFamily: GoogleFonts.inter().fontFamily,
+                          color: FlutterFlowTheme.of(context).secondaryText,
+                          letterSpacing: 0.0,
+                        ),
+                  ),
+                  SizedBox(height: 4.0),
+                  Text(
+                    'Used: ${discountCode.usageCount}${discountCode.maxUsage > 0 ? ' / ${discountCode.maxUsage}' : ''}',
+                    style: FlutterFlowTheme.of(context).bodySmall.override(
                           fontFamily: GoogleFonts.inter().fontFamily,
                           color: FlutterFlowTheme.of(context).secondaryText,
                           letterSpacing: 0.0,
@@ -304,34 +642,64 @@ class _ManageDiscountCodesWidgetState extends State<ManageDiscountCodesWidget>
             Column(
               children: [
                 Switch.adaptive(
-                  value: isActive,
-                  onChanged: onChanged,
+                  value: discountCode.isActive,
+                  onChanged: (value) =>
+                      _toggleDiscountCodeStatus(discountCode, value),
                   activeColor: FlutterFlowTheme.of(context).primary,
                   inactiveTrackColor: FlutterFlowTheme.of(context).alternate,
                   inactiveThumbColor:
                       FlutterFlowTheme.of(context).secondaryText,
                 ),
                 SizedBox(height: 8.0),
-                FFButtonWidget(
-                  onPressed: () =>
-                      _showEditPromoDialog(code, discount, validity),
-                  text: 'Edit',
-                  options: FFButtonOptions(
-                    width: 60.0,
-                    height: 32.0,
-                    padding: EdgeInsets.zero,
-                    iconPadding: EdgeInsets.zero,
-                    color: FlutterFlowTheme.of(context).underground,
-                    textStyle: FlutterFlowTheme.of(context).bodySmall.override(
-                          fontFamily: GoogleFonts.inter().fontFamily,
-                          color: Colors.white,
-                          fontSize: 12.0,
-                          letterSpacing: 0.0,
-                          fontWeight: FontWeight.w500,
+                Row(
+                  children: [
+                    FFButtonWidget(
+                      onPressed: () => _showEditPromoDialog(discountCode),
+                      text: 'Edit',
+                      options: FFButtonOptions(
+                        width: 50.0,
+                        height: 32.0,
+                        padding: EdgeInsets.zero,
+                        iconPadding: EdgeInsets.zero,
+                        color: FlutterFlowTheme.of(context).underground,
+                        textStyle:
+                            FlutterFlowTheme.of(context).bodySmall.override(
+                                  fontFamily: GoogleFonts.inter().fontFamily,
+                                  color: Colors.white,
+                                  fontSize: 12.0,
+                                  letterSpacing: 0.0,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                        elevation: 0.0,
+                        borderRadius: BorderRadius.circular(8.0),
+                      ),
+                    ),
+                    SizedBox(width: 8.0),
+                    GestureDetector(
+                      onTap: () => _showDeleteConfirmation(discountCode),
+                      child: Container(
+                        width: 32.0,
+                        height: 32.0,
+                        decoration: BoxDecoration(
+                          color: FlutterFlowTheme.of(context)
+                              .error
+                              .withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8.0),
+                          border: Border.all(
+                            color: FlutterFlowTheme.of(context)
+                                .error
+                                .withOpacity(0.3),
+                            width: 1.0,
+                          ),
                         ),
-                    elevation: 0.0,
-                    borderRadius: BorderRadius.circular(8.0),
-                  ),
+                        child: Icon(
+                          Icons.delete_outline,
+                          color: FlutterFlowTheme.of(context).error,
+                          size: 16.0,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -342,33 +710,53 @@ class _ManageDiscountCodesWidgetState extends State<ManageDiscountCodesWidget>
   }
 
   Widget _buildPerformanceStats() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Promo Code Performance',
-          style: FlutterFlowTheme.of(context).headlineMedium.override(
-                fontFamily: GoogleFonts.interTight().fontFamily,
-                fontSize: 20.0,
-                letterSpacing: 0.0,
-                fontWeight: FontWeight.w600,
-              ),
-        ),
-        SizedBox(height: 16.0),
-        Row(
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('discount_codes')
+          .where('vendor_id', isEqualTo: currentUserUid)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return SizedBox.shrink();
+        }
+
+        List<DiscountCodesRecord> discountCodes = snapshot.data!.docs
+            .map((doc) => DiscountCodesRecord.fromSnapshot(doc))
+            .toList();
+        int totalRedemptions =
+            discountCodes.fold(0, (sum, code) => sum + code.usageCount);
+        int activeCodesCount =
+            discountCodes.where((code) => code.isActive).length;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              child:
-                  _buildStatCard('Redemptions', '255', '32.2%', Icons.redeem),
+            Text(
+              'Promo Code Performance',
+              style: FlutterFlowTheme.of(context).headlineMedium.override(
+                    fontFamily: GoogleFonts.interTight().fontFamily,
+                    fontSize: 20.0,
+                    letterSpacing: 0.0,
+                    fontWeight: FontWeight.w600,
+                  ),
             ),
-            SizedBox(width: 16.0),
-            Expanded(
-              child:
-                  _buildStatCard('Click-throughs', '67', '45.5%', Icons.mouse),
+            SizedBox(height: 16.0),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildStatCard('Total Redemptions',
+                      totalRedemptions.toString(), '+12.3%', Icons.redeem),
+                ),
+                SizedBox(width: 16.0),
+                Expanded(
+                  child: _buildStatCard('Active Codes',
+                      activeCodesCount.toString(), '+5.2%', Icons.local_offer),
+                ),
+              ],
             ),
           ],
-        ),
-      ],
+        );
+      },
     );
   }
 
@@ -490,7 +878,7 @@ class _ManageDiscountCodesWidgetState extends State<ManageDiscountCodesWidget>
         _buildTextField(
           controller: _model.textController2!,
           focusNode: _model.textFieldFocusNode2!,
-          hintText: 'Discount Amount (e.g., 25%)',
+          hintText: 'Discount Amount (e.g., 25)',
           icon: Icons.percent,
         ),
 
@@ -503,7 +891,7 @@ class _ManageDiscountCodesWidgetState extends State<ManageDiscountCodesWidget>
               child: _buildTextField(
                 controller: _model.textController3!,
                 focusNode: _model.textFieldFocusNode3!,
-                hintText: 'Start Date',
+                hintText: 'Start Date (Optional)',
                 icon: Icons.calendar_today,
               ),
             ),
@@ -512,7 +900,7 @@ class _ManageDiscountCodesWidgetState extends State<ManageDiscountCodesWidget>
               child: _buildTextField(
                 controller: _model.textController4!,
                 focusNode: _model.textFieldFocusNode4!,
-                hintText: 'End Date',
+                hintText: 'End Date (Optional)',
                 icon: Icons.calendar_today,
               ),
             ),
@@ -523,31 +911,67 @@ class _ManageDiscountCodesWidgetState extends State<ManageDiscountCodesWidget>
 
         // Create Button
         FFButtonWidget(
-          onPressed: () {
+          onPressed: () async {
             if ((_model.textController1?.text.isEmpty ?? true) ||
                 (_model.textController2?.text.isEmpty ?? true)) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Please fill in all required fields'),
+                  content:
+                      Text('Please fill in the code name and discount amount'),
                   backgroundColor: FlutterFlowTheme.of(context).error,
                 ),
               );
               return;
             }
 
-            // Handle create logic here
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Promo code created successfully!'),
-                backgroundColor: FlutterFlowTheme.of(context).primary,
-              ),
-            );
+            // Create new discount code
+            try {
+              await FirebaseFirestore.instance
+                  .collection('discount_codes')
+                  .add({
+                'vendor_id': currentUserUid,
+                'code': _model.textController1!.text.toUpperCase(),
+                'discount_type': 'percentage',
+                'discount_value':
+                    double.tryParse(_model.textController2!.text) ?? 0.0,
+                'start_date': DateTime.now(),
+                'end_date': null,
+                'is_active': true,
+                'usage_count': 0,
+                'max_usage': 0,
+                'created_at': DateTime.now(),
+              });
 
-            // Clear fields
-            _model.textController1?.clear();
-            _model.textController2?.clear();
-            _model.textController3?.clear();
-            _model.textController4?.clear();
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Row(
+                    children: [
+                      Icon(Icons.check_circle, color: Colors.white, size: 20.0),
+                      SizedBox(width: 8.0),
+                      Text('Promo code created successfully!'),
+                    ],
+                  ),
+                  backgroundColor: FlutterFlowTheme.of(context).primary,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
+                ),
+              );
+
+              // Clear fields
+              _model.textController1?.clear();
+              _model.textController2?.clear();
+              _model.textController3?.clear();
+              _model.textController4?.clear();
+            } catch (e) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Error creating promo code: ${e.toString()}'),
+                  backgroundColor: FlutterFlowTheme.of(context).error,
+                ),
+              );
+            }
           },
           text: 'Create Promo Code',
           options: FFButtonOptions(
@@ -634,58 +1058,155 @@ class _ManageDiscountCodesWidgetState extends State<ManageDiscountCodesWidget>
     );
   }
 
-  void _showEditPromoDialog(String code, String discount, String validity) {
+  void _showEditPromoDialog(DiscountCodesRecord discountCode) {
+    final TextEditingController discountController =
+        TextEditingController(text: discountCode.discountValue.toString());
+    final TextEditingController maxUsageController =
+        TextEditingController(text: discountCode.maxUsage.toString());
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Edit Promo Code'),
+          title: Row(
+            children: [
+              Icon(
+                Icons.edit,
+                color: FlutterFlowTheme.of(context).primary,
+                size: 24.0,
+              ),
+              SizedBox(width: 12.0),
+              Expanded(
+                child: Text(
+                  'Edit Promo Code',
+                  style: FlutterFlowTheme.of(context).headlineSmall.override(
+                        fontFamily: 'Inter Tight',
+                        letterSpacing: 0.0,
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+              ),
+            ],
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Editing promo code: $code'),
+              Text(
+                'Code: ${discountCode.code}',
+                style: FlutterFlowTheme.of(context).bodyLarge.override(
+                      fontFamily: 'Inter',
+                      letterSpacing: 0.0,
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
               SizedBox(height: 16.0),
               TextFormField(
-                initialValue: discount,
+                controller: discountController,
                 decoration: InputDecoration(
                   labelText: 'Discount Amount',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8.0),
                   ),
+                  prefixIcon: Icon(Icons.percent),
                 ),
+                keyboardType: TextInputType.number,
               ),
               SizedBox(height: 16.0),
               TextFormField(
-                initialValue: validity,
+                controller: maxUsageController,
                 decoration: InputDecoration(
-                  labelText: 'Validity',
+                  labelText: 'Max Usage (0 = unlimited)',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8.0),
                   ),
+                  prefixIcon: Icon(Icons.repeat),
                 ),
+                keyboardType: TextInputType.number,
               ),
             ],
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.0),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: Text('Cancel'),
+              style: TextButton.styleFrom(
+                padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
+              ),
+              child: Text(
+                'Cancel',
+                style: FlutterFlowTheme.of(context).bodyLarge.override(
+                      fontFamily: 'Inter',
+                      color: FlutterFlowTheme.of(context).secondaryText,
+                      letterSpacing: 0.0,
+                      fontWeight: FontWeight.w500,
+                    ),
+              ),
             ),
             ElevatedButton(
-              onPressed: () {
-                // Handle save logic
-                Navigator.of(context).pop();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Promo code updated successfully!'),
-                    backgroundColor: FlutterFlowTheme.of(context).primary,
-                  ),
-                );
+              onPressed: () async {
+                try {
+                  await discountCode.reference.update({
+                    'discount_value':
+                        double.tryParse(discountController.text) ??
+                            discountCode.discountValue,
+                    'max_usage': int.tryParse(maxUsageController.text) ??
+                        discountCode.maxUsage,
+                  });
+
+                  Navigator.of(context).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Row(
+                        children: [
+                          Icon(Icons.check_circle,
+                              color: Colors.white, size: 20.0),
+                          SizedBox(width: 8.0),
+                          Text('Promo code updated successfully!'),
+                        ],
+                      ),
+                      backgroundColor: FlutterFlowTheme.of(context).primary,
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8.0),
+                      ),
+                    ),
+                  );
+                } catch (e) {
+                  Navigator.of(context).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content:
+                          Text('Error updating promo code: ${e.toString()}'),
+                      backgroundColor: FlutterFlowTheme.of(context).error,
+                    ),
+                  );
+                }
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: FlutterFlowTheme.of(context).primary,
+                padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
               ),
-              child: Text('Save', style: TextStyle(color: Colors.white)),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.save, color: Colors.white, size: 18.0),
+                  SizedBox(width: 6.0),
+                  Text(
+                    'Save',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16.0,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         );

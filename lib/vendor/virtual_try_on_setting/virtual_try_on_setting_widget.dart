@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'virtual_try_on_setting_model.dart';
 export 'virtual_try_on_setting_model.dart';
+import '/backend/backend.dart';
+import '/auth/firebase_auth/auth_util.dart';
 
 class VirtualTryOnSettingWidget extends StatefulWidget {
   const VirtualTryOnSettingWidget({super.key});
@@ -18,8 +20,15 @@ class VirtualTryOnSettingWidget extends StatefulWidget {
       _VirtualTryOnSettingWidgetState();
 }
 
-class _VirtualTryOnSettingWidgetState extends State<VirtualTryOnSettingWidget> {
+class _VirtualTryOnSettingWidgetState extends State<VirtualTryOnSettingWidget>
+    with TickerProviderStateMixin {
   late VirtualTryOnSettingModel _model;
+
+  // Map to track virtual try-on state for each product
+  Map<String, bool> _productVirtualTryOnState = {};
+
+  // Map to track animation controllers for each product
+  Map<String, AnimationController> _animationControllers = {};
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
@@ -37,7 +46,259 @@ class _VirtualTryOnSettingWidgetState extends State<VirtualTryOnSettingWidget> {
   @override
   void dispose() {
     _model.dispose();
+    // Dispose all animation controllers
+    for (var controller in _animationControllers.values) {
+      controller.dispose();
+    }
     super.dispose();
+  }
+
+  // Initialize animation controller for a product
+  AnimationController _getAnimationController(String productId) {
+    if (!_animationControllers.containsKey(productId)) {
+      _animationControllers[productId] = AnimationController(
+        duration: const Duration(milliseconds: 300),
+        vsync: this,
+      );
+    }
+    return _animationControllers[productId]!;
+  }
+
+  // Get virtual try-on state for a product
+  bool _getVirtualTryOnState(String productId) {
+    return _productVirtualTryOnState[productId] ?? true; // Default to true
+  }
+
+  // Update virtual try-on state for a product
+  void _updateVirtualTryOnState(String productId, bool value) {
+    setState(() {
+      _productVirtualTryOnState[productId] = value;
+    });
+
+    // Animate the controller
+    final controller = _getAnimationController(productId);
+    if (value) {
+      controller.forward();
+    } else {
+      controller.reverse();
+    }
+  }
+
+  // Show delete confirmation dialog
+  void _showDeleteConfirmation(BrandedItemsRecord product) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Row(
+            children: [
+              Icon(
+                Icons.warning_amber_rounded,
+                color: FlutterFlowTheme.of(context).error,
+                size: 28.0,
+              ),
+              SizedBox(width: 12.0),
+              Expanded(
+                child: Text(
+                  'Delete Product',
+                  style: FlutterFlowTheme.of(context).headlineSmall.override(
+                        fontFamily: 'Inter Tight',
+                        color: FlutterFlowTheme.of(context).error,
+                        letterSpacing: 0.0,
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Are you sure you want to delete "${product.name}"?',
+                style: FlutterFlowTheme.of(context).bodyLarge.override(
+                      fontFamily: 'Inter',
+                      letterSpacing: 0.0,
+                      fontWeight: FontWeight.w500,
+                    ),
+              ),
+              SizedBox(height: 12.0),
+              Text(
+                'This action cannot be undone. The product will be permanently removed from your inventory.',
+                style: FlutterFlowTheme.of(context).bodyMedium.override(
+                      fontFamily: 'Inter',
+                      color: FlutterFlowTheme.of(context).secondaryText,
+                      letterSpacing: 0.0,
+                    ),
+              ),
+            ],
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.0),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              style: TextButton.styleFrom(
+                padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
+              ),
+              child: Text(
+                'Cancel',
+                style: FlutterFlowTheme.of(context).bodyLarge.override(
+                      fontFamily: 'Inter',
+                      color: FlutterFlowTheme.of(context).secondaryText,
+                      letterSpacing: 0.0,
+                      fontWeight: FontWeight.w500,
+                    ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.of(context).pop();
+                await _deleteProduct(product);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: FlutterFlowTheme.of(context).error,
+                padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.delete_forever,
+                    color: Colors.white,
+                    size: 18.0,
+                  ),
+                  SizedBox(width: 6.0),
+                  Text(
+                    'Delete',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16.0,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Delete product from Firebase
+  Future<void> _deleteProduct(BrandedItemsRecord product) async {
+    try {
+      // Show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return Center(
+            child: Container(
+              padding: EdgeInsets.all(20.0),
+              decoration: BoxDecoration(
+                color: FlutterFlowTheme.of(context).secondaryBackground,
+                borderRadius: BorderRadius.circular(12.0),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      FlutterFlowTheme.of(context).primary,
+                    ),
+                  ),
+                  SizedBox(height: 16.0),
+                  Text(
+                    'Deleting product...',
+                    style: FlutterFlowTheme.of(context).bodyMedium.override(
+                          fontFamily: 'Inter',
+                          letterSpacing: 0.0,
+                        ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      );
+
+      // Delete the product from Firebase
+      await product.reference.delete();
+
+      // Remove from local state
+      _productVirtualTryOnState.remove(product.reference.id);
+      _animationControllers[product.reference.id]?.dispose();
+      _animationControllers.remove(product.reference.id);
+
+      // Close loading dialog
+      Navigator.of(context).pop();
+
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(
+                Icons.check_circle,
+                color: Colors.white,
+                size: 20.0,
+              ),
+              SizedBox(width: 8.0),
+              Expanded(
+                child: Text(
+                  '${product.name} has been deleted successfully',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 3),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8.0),
+          ),
+        ),
+      );
+    } catch (e) {
+      // Close loading dialog if it's open
+      Navigator.of(context).pop();
+
+      // Show error message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(
+                Icons.error,
+                color: Colors.white,
+                size: 20.0,
+              ),
+              SizedBox(width: 8.0),
+              Expanded(
+                child: Text(
+                  'Error deleting product: ${e.toString()}',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: FlutterFlowTheme.of(context).error,
+          duration: Duration(seconds: 4),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8.0),
+          ),
+        ),
+      );
+    }
   }
 
   @override
@@ -112,48 +373,110 @@ class _VirtualTryOnSettingWidgetState extends State<VirtualTryOnSettingWidget> {
                       SizedBox(height: 24.0),
 
                       // Products Grid
-                      LayoutBuilder(
-                        builder: (context, constraints) {
-                          int crossAxisCount =
-                              constraints.maxWidth > 600 ? 2 : 1;
+                      StreamBuilder<List<BrandedItemsRecord>>(
+                        stream: queryBrandedItemsRecord(
+                          queryBuilder: (brandedItemsRecord) =>
+                              brandedItemsRecord
+                                  .where('vendor_id', isEqualTo: currentUserUid)
+                                  .orderBy('date_added', descending: true),
+                        ),
+                        builder: (context, snapshot) {
+                          // Loading state
+                          if (!snapshot.hasData) {
+                            return Center(
+                              child: SizedBox(
+                                width: 50.0,
+                                height: 50.0,
+                                child: CircularProgressIndicator(
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    FlutterFlowTheme.of(context).primary,
+                                  ),
+                                ),
+                              ),
+                            );
+                          }
 
-                          return GridView.count(
-                            shrinkWrap: true,
-                            physics: NeverScrollableScrollPhysics(),
-                            crossAxisCount: crossAxisCount,
-                            crossAxisSpacing: 16.0,
-                            mainAxisSpacing: 16.0,
-                            childAspectRatio: crossAxisCount == 2 ? 1.0 : 0.8,
-                            children: [
-                              _buildProductCard(
-                                'Basic Black Tee',
-                                'Casual',
-                                _model.switchValue1!,
-                                (value) =>
-                                    setState(() => _model.switchValue1 = value),
+                          List<BrandedItemsRecord> products = snapshot.data!;
+
+                          // Empty state
+                          if (products.isEmpty) {
+                            return Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.inventory_2_outlined,
+                                    size: 64.0,
+                                    color: FlutterFlowTheme.of(context)
+                                        .secondaryText,
+                                  ),
+                                  SizedBox(height: 16.0),
+                                  Text(
+                                    'No products found',
+                                    style: FlutterFlowTheme.of(context)
+                                        .headlineSmall
+                                        .override(
+                                          fontFamily: 'Inter Tight',
+                                          color: FlutterFlowTheme.of(context)
+                                              .secondaryText,
+                                          letterSpacing: 0.0,
+                                        ),
+                                  ),
+                                  SizedBox(height: 8.0),
+                                  Text(
+                                    'Add some products to manage virtual try-on settings',
+                                    style: FlutterFlowTheme.of(context)
+                                        .bodyMedium
+                                        .override(
+                                          fontFamily: 'Inter',
+                                          color: FlutterFlowTheme.of(context)
+                                              .secondaryText,
+                                          letterSpacing: 0.0,
+                                        ),
+                                  ),
+                                ],
                               ),
-                              _buildProductCard(
-                                'White Sneakers',
-                                'Casual, Sports',
-                                _model.switchValue2!,
-                                (value) =>
-                                    setState(() => _model.switchValue2 = value),
-                              ),
-                              _buildProductCard(
-                                'Formal Blazer',
-                                'Formal',
-                                _model.switchValue3!,
-                                (value) =>
-                                    setState(() => _model.switchValue3 = value),
-                              ),
-                              _buildProductCard(
-                                'Summer Dress',
-                                'Casual, Party',
-                                _model.switchValue4!,
-                                (value) =>
-                                    setState(() => _model.switchValue4 = value),
-                              ),
-                            ],
+                            );
+                          }
+
+                          return LayoutBuilder(
+                            builder: (context, constraints) {
+                              int crossAxisCount =
+                                  constraints.maxWidth > 600 ? 2 : 1;
+
+                              return GridView.builder(
+                                shrinkWrap: true,
+                                physics: NeverScrollableScrollPhysics(),
+                                gridDelegate:
+                                    SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: crossAxisCount,
+                                  crossAxisSpacing: 16.0,
+                                  mainAxisSpacing: 16.0,
+                                  childAspectRatio:
+                                      crossAxisCount == 2 ? 1.0 : 0.8,
+                                ),
+                                itemCount: products.length,
+                                itemBuilder: (context, index) {
+                                  final product = products[index];
+
+                                  // Get the style tags as a string
+                                  String tags = product.styleTags.isNotEmpty
+                                      ? product.styleTags.join(', ')
+                                      : product.category;
+
+                                  return _buildProductCard(
+                                    product.name,
+                                    tags,
+                                    _getVirtualTryOnState(product.reference.id),
+                                    (value) {
+                                      _updateVirtualTryOnState(
+                                          product.reference.id, value);
+                                    },
+                                    product: product,
+                                  );
+                                },
+                              );
+                            },
                           );
                         },
                       ),
@@ -173,116 +496,296 @@ class _VirtualTryOnSettingWidgetState extends State<VirtualTryOnSettingWidget> {
     );
   }
 
-  Widget _buildProductCard(String productName, String tags, bool isEnabled,
-      Function(bool) onChanged) {
-    return Container(
-      decoration: BoxDecoration(
-        color: FlutterFlowTheme.of(context).secondaryBackground,
-        boxShadow: [
-          BoxShadow(
-            blurRadius: 4.0,
-            color: Color(0x33000000),
-            offset: Offset(0.0, 2.0),
-          )
-        ],
-        borderRadius: BorderRadius.circular(12.0),
-        border: Border.all(
-          color: isEnabled
-              ? FlutterFlowTheme.of(context).primary.withOpacity(0.3)
-              : FlutterFlowTheme.of(context).alternate,
-          width: 2.0,
-        ),
-      ),
-      child: Padding(
-        padding: EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Product Image
-            Expanded(
-              flex: 3,
-              child: Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8.0),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8.0),
-                  child: Image.asset(
-                    'assets/images/basic_black_tee.jpg',
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
+  Widget _buildProductCard(
+    String productName,
+    String tags,
+    bool isEnabled,
+    Function(bool) onChanged, {
+    BrandedItemsRecord? product,
+  }) {
+    final productId = product?.reference.id ?? '';
+    final animationController = _getAnimationController(productId);
+
+    return AnimatedBuilder(
+      animation: animationController,
+      builder: (context, child) {
+        return Container(
+          decoration: BoxDecoration(
+            color: FlutterFlowTheme.of(context).secondaryBackground,
+            boxShadow: [
+              BoxShadow(
+                blurRadius: 4.0,
+                color: Color(0x33000000),
+                offset: Offset(0.0, 2.0),
+              )
+            ],
+            borderRadius: BorderRadius.circular(12.0),
+            border: Border.all(
+              color: isEnabled
+                  ? FlutterFlowTheme.of(context).primary.withOpacity(0.3)
+                  : FlutterFlowTheme.of(context).alternate,
+              width: 2.0,
             ),
-
-            SizedBox(height: 16.0),
-
-            // Product Info
-            Expanded(
-              flex: 2,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    productName,
-                    style: FlutterFlowTheme.of(context).headlineSmall.override(
-                          fontFamily: 'Inter Tight',
-                          fontSize: 18.0,
-                          letterSpacing: 0.0,
-                          fontWeight: FontWeight.w600,
+          ),
+          child: Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header with Delete Button
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        productName,
+                        style:
+                            FlutterFlowTheme.of(context).headlineSmall.override(
+                                  fontFamily: 'Inter Tight',
+                                  fontSize: 18.0,
+                                  letterSpacing: 0.0,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    // Delete Button
+                    GestureDetector(
+                      onTap: () {
+                        if (product != null) {
+                          _showDeleteConfirmation(product);
+                        }
+                      },
+                      child: Container(
+                        padding: EdgeInsets.all(6.0),
+                        decoration: BoxDecoration(
+                          color: FlutterFlowTheme.of(context)
+                              .error
+                              .withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8.0),
+                          border: Border.all(
+                            color: FlutterFlowTheme.of(context)
+                                .error
+                                .withOpacity(0.3),
+                            width: 1.0,
+                          ),
                         ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-
-                  SizedBox(height: 8.0),
-
-                  Text(
-                    'Tags: $tags',
-                    style: FlutterFlowTheme.of(context).bodyMedium.override(
-                          fontFamily: 'Inter',
-                          color: FlutterFlowTheme.of(context).secondaryText,
-                          fontSize: 14.0,
-                          letterSpacing: 0.0,
+                        child: Icon(
+                          Icons.delete_outline,
+                          color: FlutterFlowTheme.of(context).error,
+                          size: 20.0,
                         ),
+                      ),
+                    ),
+                  ],
+                ),
+
+                SizedBox(height: 16.0),
+
+                // Product Image
+                Expanded(
+                  flex: 3,
+                  child: Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8.0),
+                      child: product?.imageUrl.isNotEmpty == true
+                          ? Image.network(
+                              product!.imageUrl,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  color: FlutterFlowTheme.of(context).alternate,
+                                  child: Icon(
+                                    Icons.image_not_supported,
+                                    color: FlutterFlowTheme.of(context)
+                                        .secondaryText,
+                                    size: 48.0,
+                                  ),
+                                );
+                              },
+                            )
+                          : Container(
+                              color: FlutterFlowTheme.of(context).alternate,
+                              child: Icon(
+                                Icons.image,
+                                color:
+                                    FlutterFlowTheme.of(context).secondaryText,
+                                size: 48.0,
+                              ),
+                            ),
+                    ),
                   ),
+                ),
 
-                  Spacer(),
+                SizedBox(height: 16.0),
 
-                  // Virtual Try-On Toggle
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                // Product Info
+                Expanded(
+                  flex: 2,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: Text(
-                          'Virtual Try-On',
+                      // Show price if available
+                      if (product != null)
+                        Text(
+                          '\$${product.price.toStringAsFixed(2)}',
                           style:
                               FlutterFlowTheme.of(context).bodyMedium.override(
+                                    fontFamily: 'Inter',
+                                    color: FlutterFlowTheme.of(context).primary,
+                                    fontSize: 16.0,
+                                    letterSpacing: 0.0,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                        ),
+
+                      SizedBox(height: 8.0),
+
+                      Text(
+                        'Tags: $tags',
+                        style: FlutterFlowTheme.of(context).bodyMedium.override(
+                              fontFamily: 'Inter',
+                              color: FlutterFlowTheme.of(context).secondaryText,
+                              fontSize: 14.0,
+                              letterSpacing: 0.0,
+                            ),
+                      ),
+
+                      Spacer(),
+
+                      // Virtual Try-On Toggle with Animation
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: AnimatedDefaultTextStyle(
+                              duration: Duration(milliseconds: 200),
+                              style: FlutterFlowTheme.of(context)
+                                  .bodyMedium
+                                  .override(
                                     fontFamily: 'Inter',
                                     fontSize: 16.0,
                                     letterSpacing: 0.0,
                                     fontWeight: FontWeight.w500,
+                                    color: isEnabled
+                                        ? FlutterFlowTheme.of(context)
+                                            .primaryText
+                                        : FlutterFlowTheme.of(context)
+                                            .secondaryText,
                                   ),
-                        ),
-                      ),
-                      Switch.adaptive(
-                        value: isEnabled,
-                        onChanged: onChanged,
-                        activeColor: FlutterFlowTheme.of(context).primary,
-                        inactiveTrackColor:
-                            FlutterFlowTheme.of(context).alternate,
-                        inactiveThumbColor:
-                            FlutterFlowTheme.of(context).secondaryText,
+                              child: Text('Virtual Try-On'),
+                            ),
+                          ),
+
+                          // Custom Animated Switch
+                          GestureDetector(
+                            onTap: () {
+                              onChanged(!isEnabled);
+
+                              // Show animated feedback
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Row(
+                                    children: [
+                                      AnimatedSwitcher(
+                                        duration: Duration(milliseconds: 300),
+                                        child: Icon(
+                                          !isEnabled
+                                              ? Icons.visibility
+                                              : Icons.visibility_off,
+                                          key: ValueKey(!isEnabled),
+                                          color: Colors.white,
+                                          size: 20.0,
+                                        ),
+                                      ),
+                                      SizedBox(width: 8.0),
+                                      Expanded(
+                                        child: Text(!isEnabled
+                                            ? 'Virtual try-on enabled for $productName'
+                                            : 'Virtual try-on disabled for $productName'),
+                                      ),
+                                    ],
+                                  ),
+                                  backgroundColor:
+                                      FlutterFlowTheme.of(context).primary,
+                                  duration: Duration(seconds: 2),
+                                  behavior: SnackBarBehavior.floating,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8.0),
+                                  ),
+                                ),
+                              );
+                            },
+                            child: AnimatedContainer(
+                              duration: Duration(milliseconds: 300),
+                              curve: Curves.easeInOut,
+                              width: 50.0,
+                              height: 30.0,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(15.0),
+                                color: isEnabled
+                                    ? FlutterFlowTheme.of(context).primary
+                                    : FlutterFlowTheme.of(context).alternate,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.1),
+                                    blurRadius: 4.0,
+                                    offset: Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: AnimatedAlign(
+                                duration: Duration(milliseconds: 300),
+                                curve: Curves.easeInOut,
+                                alignment: isEnabled
+                                    ? Alignment.centerRight
+                                    : Alignment.centerLeft,
+                                child: Container(
+                                  width: 26.0,
+                                  height: 26.0,
+                                  margin: EdgeInsets.all(2.0),
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: Colors.white,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.1),
+                                        blurRadius: 2.0,
+                                        offset: Offset(0, 1),
+                                      ),
+                                    ],
+                                  ),
+                                  child: AnimatedSwitcher(
+                                    duration: Duration(milliseconds: 200),
+                                    child: Icon(
+                                      isEnabled ? Icons.check : Icons.close,
+                                      key: ValueKey(isEnabled),
+                                      size: 16.0,
+                                      color: isEnabled
+                                          ? FlutterFlowTheme.of(context).primary
+                                          : FlutterFlowTheme.of(context)
+                                              .secondaryText,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 

@@ -242,7 +242,6 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
                                   'All Clothes',
                                   'Tops',
                                   'Bottoms',
-                                  'Skirts',
                                   'Shoes'
                                 ],
                                 onChanged: (val) => setState(() {
