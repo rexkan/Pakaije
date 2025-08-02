@@ -20,6 +20,11 @@ class DiscountCodesRecord extends FirestoreRecord {
   String get vendorId => _vendorId ?? '';
   bool hasVendorId() => _vendorId != null;
 
+  // "item_id" field.
+  String? _itemId;
+  String get itemId => _itemId ?? '';
+  bool hasItemId() => _itemId != null;
+
   // "code" field.
   String? _code;
   String get code => _code ?? '';
@@ -67,6 +72,7 @@ class DiscountCodesRecord extends FirestoreRecord {
 
   void _initializeFields() {
     _vendorId = snapshotData['vendor_id'] as String?;
+    _itemId = snapshotData['item_id'] as String?;
     _code = snapshotData['code'] as String?;
     _discountType = snapshotData['discount_type'] as String?;
     _discountValue = castToType<double>(snapshotData['discount_value']);
@@ -114,6 +120,7 @@ class DiscountCodesRecord extends FirestoreRecord {
 
 Map<String, dynamic> createDiscountCodesRecordData({
   String? vendorId,
+  String? itemId,
   String? code,
   String? discountType,
   double? discountValue,
@@ -127,6 +134,7 @@ Map<String, dynamic> createDiscountCodesRecordData({
   final firestoreData = mapToFirestore(
     <String, dynamic>{
       'vendor_id': vendorId,
+      'item_id': itemId,
       'code': code,
       'discount_type': discountType,
       'discount_value': discountValue,
@@ -149,6 +157,7 @@ class DiscountCodesRecordDocumentEquality
   @override
   bool equals(DiscountCodesRecord? e1, DiscountCodesRecord? e2) {
     return e1?.vendorId == e2?.vendorId &&
+        e1?.itemId == e2?.itemId &&
         e1?.code == e2?.code &&
         e1?.discountType == e2?.discountType &&
         e1?.discountValue == e2?.discountValue &&
@@ -163,6 +172,7 @@ class DiscountCodesRecordDocumentEquality
   @override
   int hash(DiscountCodesRecord? e) => const ListEquality().hash([
         e?.vendorId,
+        e?.itemId,
         e?.code,
         e?.discountType,
         e?.discountValue,
