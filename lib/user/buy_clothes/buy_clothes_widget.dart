@@ -36,10 +36,6 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
     'Tops',
     'Bottoms',
     'Shoes',
-    'Dresses',
-    'Outerwear',
-    'Activewear',
-    'Accessories',
   ];
 
   @override
