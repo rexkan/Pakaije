@@ -139,9 +139,40 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
           builder: (context, params) => ReportsInsightsWidget(),
         ),
         FFRoute(
-          name: OutfitMatchWidget.routeName,
-          path: OutfitMatchWidget.routePath,
-          builder: (context, params) => OutfitMatchWidget(),
+          name: OutfitMatchWidget.routeName, // 'OutfitMatch'
+          path: OutfitMatchWidget.routePath, // '/outfitMatch'
+          builder: (context, params) {
+            // Extract query parameters if they exist, otherwise use null (for new outfits)
+            final loadOutfit = params.getParam('loadOutfit', ParamType.String);
+            final outfitName = params.getParam('outfitName', ParamType.String);
+            final topItemId = params.getParam('topItemId', ParamType.String);
+            final bottomItemId =
+                params.getParam('bottomItemId', ParamType.String);
+            final shoesItemId =
+                params.getParam('shoesItemId', ParamType.String);
+            final outfitId = params.getParam('outfitId', ParamType.String);
+            final sizeScales = params.getParam('sizeScales', ParamType.String);
+
+            // Debug print to see what parameters are received
+            print('=== OutfitMatch Route Debug ===');
+            print('loadOutfit: $loadOutfit');
+            print('outfitName: $outfitName');
+            print('topItemId: $topItemId');
+            print('bottomItemId: $bottomItemId');
+            print('shoesItemId: $shoesItemId');
+            print('outfitId: $outfitId');
+            print('sizeScales: $sizeScales');
+
+            return OutfitMatchWidget(
+              loadOutfit: loadOutfit,
+              outfitName: outfitName,
+              topItemId: topItemId,
+              bottomItemId: bottomItemId,
+              shoesItemId: shoesItemId,
+              outfitId: outfitId,
+              sizeScales: sizeScales,
+            );
+          },
         ),
         FFRoute(
           name: LoginPageWidget.routeName,
@@ -202,7 +233,7 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
           name: ProductDetailsPageWidget.routeName,
           path: ProductDetailsPageWidget.routePath,
           builder: (context, params) => ProductDetailsPageWidget(),
-        )
+        ),
       ].map((r) => r.toRoute(appStateNotifier)).toList(),
     );
 

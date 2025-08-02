@@ -13,9 +13,28 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:pakaije/services/background_removal_service.dart'; // Package import
 import 'outfit_match_model.dart';
 export 'outfit_match_model.dart';
+import 'dart:convert';
 
 class OutfitMatchWidget extends StatefulWidget {
-  const OutfitMatchWidget({super.key});
+  // Add parameters to accept outfit data
+  final String? loadOutfit;
+  final String? outfitName;
+  final String? topItemId;
+  final String? bottomItemId;
+  final String? shoesItemId;
+  final String? outfitId;
+  final String? sizeScales;
+
+  const OutfitMatchWidget({
+    super.key,
+    this.loadOutfit,
+    this.outfitName,
+    this.topItemId,
+    this.bottomItemId,
+    this.shoesItemId,
+    this.outfitId,
+    this.sizeScales,
+  });
 
   static String routeName = 'OutfitMatch';
   static String routePath = '/outfitMatch';
@@ -61,7 +80,167 @@ class _OutfitMatchWidgetState extends State<OutfitMatchWidget> {
     _model = createModel(context, () => OutfitMatchModel());
     _model.textController ??= TextEditingController();
     _model.textFieldFocusNode ??= FocusNode();
-    _loadUserData();
+
+    // DEBUG: Print all widget parameters
+    print('=== OutfitMatchWidget initState Debug ===');
+    print('loadOutfit: ${widget.loadOutfit}');
+    print('outfitName: ${widget.outfitName}');
+    print('topItemId: ${widget.topItemId}');
+    print('bottomItemId: ${widget.bottomItemId}');
+    print('shoesItemId: ${widget.shoesItemId}');
+    print('outfitId: ${widget.outfitId}');
+    print('sizeScales: ${widget.sizeScales}');
+    print('============================================');
+
+    // Load outfit data if provided, otherwise just load user data
+    if (widget.loadOutfit == 'true') {
+      print('🔄 Loading outfit data...');
+      _loadOutfitData();
+    } else {
+      print('🔄 Loading user data only...');
+      _loadUserData();
+    }
+  }
+
+  Future<void> _loadOutfitData() async {
+    print('=== _loadOutfitData START ===');
+    print('loadOutfit: ${widget.loadOutfit}');
+
+    if (widget.loadOutfit == 'true') {
+      try {
+        setState(() {
+          isLoading = true;
+          errorMessage = null;
+        });
+
+        // Set the outfit name in the text controller
+        if (widget.outfitName != null && widget.outfitName!.isNotEmpty) {
+          _model.textController?.text = widget.outfitName!;
+          print('✅ Set outfit name: ${widget.outfitName}');
+        }
+
+        // Load size scales if provided
+        if (widget.sizeScales != null && widget.sizeScales!.isNotEmpty) {
+          try {
+            final scales =
+                jsonDecode(widget.sizeScales!) as Map<String, dynamic>;
+            setState(() {
+              itemSizeScales = {
+                'Tops': (scales['Tops'] ?? 1.0).toDouble(),
+                'Bottoms': (scales['Bottoms'] ?? 1.0).toDouble(),
+                'Shoes': (scales['Shoes'] ?? 1.0).toDouble(),
+              };
+            });
+            print('✅ Size scales loaded: $itemSizeScales');
+          } catch (e) {
+            print('❌ Error parsing size scales: $e');
+          }
+        }
+
+        // Load the wardrobe items first
+        print('🔄 Loading user wardrobe data...');
+        await _loadUserData();
+        print(
+            '✅ User data loaded. Wardrobe items count: ${wardrobeItems.length}');
+
+        // Then load the specific outfit items
+        Map<String, String?> itemIds = {
+          'Tops': widget.topItemId,
+          'Bottoms': widget.bottomItemId,
+          'Shoes': widget.shoesItemId,
+        };
+
+        print('🔍 Looking for items with IDs: $itemIds');
+
+        int loadedCount = 0;
+        for (String slot in itemIds.keys) {
+          String? itemId = itemIds[slot];
+          if (itemId != null && itemId.isNotEmpty) {
+            print('🔍 Searching for $slot with ID: $itemId');
+
+            // Find the item in the loaded wardrobe
+            WardrobeItemsRecord? foundItem;
+            try {
+              foundItem = wardrobeItems.firstWhere(
+                (item) => item.reference.id == itemId,
+              );
+            } catch (e) {
+              print('❌ Item not found in wardrobe for ID: $itemId');
+              // Let's also print all available item IDs for debugging
+              print('Available item IDs in wardrobe:');
+              for (var item in wardrobeItems) {
+                print(
+                    '  - ${item.reference.id} (${item.name} - ${item.category})');
+              }
+              foundItem = null;
+            }
+
+            if (foundItem != null) {
+              setState(() {
+                selectedItems[slot] = foundItem;
+              });
+              loadedCount++;
+              print('✅ Loaded $slot: ${foundItem.name} (ID: $itemId)');
+            } else {
+              print('❌ Could not find item with ID: $itemId for slot: $slot');
+            }
+          } else {
+            print('⚠️ No item ID provided for slot: $slot');
+          }
+        }
+
+        print(
+            '📊 Summary: Loaded $loadedCount out of ${itemIds.length} possible items');
+
+        // Show success message
+        if (mounted) {
+          if (loadedCount > 0) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                    'Outfit "${widget.outfitName}" loaded! ($loadedCount items)'),
+                backgroundColor: Colors.green,
+                duration: Duration(seconds: 2),
+              ),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content:
+                    Text('Outfit loaded but no items found. Check item IDs.'),
+                backgroundColor: Colors.orange,
+                duration: Duration(seconds: 3),
+              ),
+            );
+          }
+        }
+      } catch (e) {
+        print('❌ Error loading outfit: $e');
+        if (mounted) {
+          setState(() {
+            errorMessage = 'Error loading outfit: $e';
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error loading outfit: $e'),
+              backgroundColor: FlutterFlowTheme.of(context).error,
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() {
+            isLoading = false;
+          });
+        }
+      }
+    } else {
+      print('⚠️ loadOutfit is not "true", just loading user data');
+      await _loadUserData();
+    }
+
+    print('=== _loadOutfitData END ===');
   }
 
   @override
@@ -1235,25 +1414,44 @@ class _OutfitMatchWidgetState extends State<OutfitMatchWidget> {
         height: containerHeight * 0.38,
         child: DragTarget<Map<String, dynamic>>(
           onAccept: (data) {
-            if (data['item'] is WardrobeItemsRecord &&
-                data['item'].category.toLowerCase() == 'tops') {
-              _handleItemDrop('Tops', data['item'], Offset(0.5, 0.25));
+            if (data['item'] is WardrobeItemsRecord) {
+              final item = data['item'] as WardrobeItemsRecord;
+              // Fixed: Handle case-insensitive category comparison
+              if (item.category.toLowerCase() == 'tops') {
+                _handleItemDrop('Tops', item, Offset(0.5, 0.25));
+              } else {
+                print('❌ Wrong category for Tops slot: ${item.category}');
+              }
             }
           },
           builder: (context, candidateData, rejectedData) {
             final bool isDragging = candidateData.isNotEmpty;
             final bool isEmpty = selectedItems['Tops'] == null;
 
+            // Validate that dragged item is correct category
+            bool isValidDrop = false;
+            if (candidateData.isNotEmpty) {
+              final data = candidateData.first as Map<String, dynamic>;
+              if (data['item'] is WardrobeItemsRecord) {
+                final item = data['item'] as WardrobeItemsRecord;
+                isValidDrop = item.category.toLowerCase() == 'tops';
+              }
+            }
+
             return AnimatedContainer(
               duration: Duration(milliseconds: 200),
               decoration: BoxDecoration(
                 color: isDragging
-                    ? FlutterFlowTheme.of(context).primary.withOpacity(0.1)
+                    ? (isValidDrop
+                        ? FlutterFlowTheme.of(context).primary.withOpacity(0.1)
+                        : Colors.red.withOpacity(0.1))
                     : Colors.transparent,
                 borderRadius: BorderRadius.circular(16),
                 border: isDragging
                     ? Border.all(
-                        color: FlutterFlowTheme.of(context).primary,
+                        color: isValidDrop
+                            ? FlutterFlowTheme.of(context).primary
+                            : Colors.red,
                         width: 2,
                       )
                     : isEmpty
@@ -1272,22 +1470,29 @@ class _OutfitMatchWidgetState extends State<OutfitMatchWidget> {
                           Container(
                             padding: EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: FlutterFlowTheme.of(context)
-                                  .primary
+                              color: (isValidDrop
+                                      ? FlutterFlowTheme.of(context).primary
+                                      : Colors.red)
                                   .withOpacity(0.1),
                               shape: BoxShape.circle,
                             ),
                             child: Icon(
-                              Icons.add_rounded,
-                              color: FlutterFlowTheme.of(context).primary,
+                              isValidDrop
+                                  ? Icons.add_rounded
+                                  : Icons.close_rounded,
+                              color: isValidDrop
+                                  ? FlutterFlowTheme.of(context).primary
+                                  : Colors.red,
                               size: 32,
                             ),
                           ),
                           SizedBox(height: 8),
                           Text(
-                            'Drop Top Here',
+                            isValidDrop ? 'Drop Top Here' : 'Wrong Item Type',
                             style: TextStyle(
-                              color: FlutterFlowTheme.of(context).primary,
+                              color: isValidDrop
+                                  ? FlutterFlowTheme.of(context).primary
+                                  : Colors.red,
                               fontWeight: FontWeight.w600,
                               fontSize: 14,
                             ),
