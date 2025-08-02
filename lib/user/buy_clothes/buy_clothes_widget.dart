@@ -14,7 +14,6 @@ class ClothingItem {
   final String name;
   final String description;
   final String price;
-  final String originalPrice;
   final String imagePath;
   final List<String> colors;
   final List<String> sizes;
@@ -31,7 +30,6 @@ class ClothingItem {
     required this.name,
     required this.description,
     required this.price,
-    this.originalPrice = '',
     required this.imagePath,
     this.colors = const [],
     this.sizes = const [],
@@ -66,14 +64,13 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
   String _selectedCategory = 'All';
   bool _isGridView = true;
 
-  // Sample enhanced data
+  // Sample enhanced data - removed originalPrice from the constructor calls
   final List<ClothingItem> _clothingItems = [
     ClothingItem(
       id: '1',
       name: 'Premium Basic Tee',
       description: 'Soft cotton blend, perfect fit',
       price: '\$24.99',
-      originalPrice: '\$34.99',
       imagePath: 'assets/images/basic_black_tee.jpg',
       colors: ['Black', 'White', 'Gray', 'Navy'],
       sizes: ['XS', 'S', 'M', 'L', 'XL'],
@@ -103,7 +100,6 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
       name: 'Floral Summer Dress',
       description: 'Lightweight, breathable fabric',
       price: '\$45.00',
-      originalPrice: '\$65.00',
       imagePath: 'assets/images/summer_dress.jpg',
       colors: ['Floral Print', 'Solid White', 'Coral'],
       sizes: ['XS', 'S', 'M', 'L'],
@@ -146,7 +142,6 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
       name: 'Athletic Performance Shorts',
       description: 'Moisture-wicking, quick-dry technology',
       price: '\$19.99',
-      originalPrice: '\$29.99',
       imagePath: 'assets/images/athletic_shorts.jpg',
       colors: ['Black', 'Gray', 'Navy', 'Red'],
       sizes: ['S', 'M', 'L', 'XL'],
@@ -399,10 +394,7 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
                 'All',
                 'Tops',
                 'Bottoms',
-                'Outerwear',
-                'Dresses',
-                'Sweaters',
-                'Activewear'
+                'Shoes',
               ].map((category) => _buildCategoryChip(category)).toList(),
             ),
           ),
@@ -678,7 +670,6 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
           'name': item.name,
           'description': item.description,
           'price': item.price,
-          'originalPrice': item.originalPrice,
           'imagePath': item.imagePath,
           'colors': item.colors,
           'sizes': item.sizes,
@@ -751,29 +742,13 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
                         ),
                       ),
                     ),
-                    // Badges
-                    Positioned(
-                      top: 12.0,
-                      left: 12.0,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (item.isNew) _buildBadge('NEW', Colors.green),
-                          if (item.isOnSale)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 4.0),
-                              child: _buildBadge(
-                                  '-${item.discountPercent}%', Colors.red),
-                            ),
-                        ],
-                      ),
-                    ),
+                    // Badges removed
                   ],
                 ),
               ),
             ),
 
-            // Content Section - Removed description, improved price layout
+            // Content Section - Simplified to show only name and single price
             Container(
               padding: const EdgeInsets.all(16.0),
               child: Column(
@@ -794,37 +769,16 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
                   ),
                   const SizedBox(height: 12.0),
 
-                  // Inline Price Section with original price between offer price
-                  Row(
-                    children: [
-                      Text(
-                        item.price,
-                        style: FlutterFlowTheme.of(context)
-                            .headlineSmall
-                            .override(
-                              fontFamily: GoogleFonts.interTight().fontFamily,
-                              color: FlutterFlowTheme.of(context).underground,
-                              fontSize: 18.0,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 0.0,
-                            ),
-                      ),
-                      if (item.originalPrice.isNotEmpty && item.isOnSale) ...[
-                        const SizedBox(width: 8.0),
-                        Text(
-                          item.originalPrice,
-                          style: FlutterFlowTheme.of(context)
-                              .bodySmall
-                              .override(
-                                fontFamily: GoogleFonts.inter().fontFamily,
-                                color:
-                                    FlutterFlowTheme.of(context).secondaryText,
-                                fontSize: 14.0,
-                                decoration: TextDecoration.lineThrough,
-                              ),
+                  // Single Price - No original price comparison
+                  Text(
+                    item.price,
+                    style: FlutterFlowTheme.of(context).headlineSmall.override(
+                          fontFamily: GoogleFonts.interTight().fontFamily,
+                          color: FlutterFlowTheme.of(context).underground,
+                          fontSize: 18.0,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.0,
                         ),
-                      ],
-                    ],
                   ),
                 ],
               ),
@@ -844,7 +798,6 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
           'name': item.name,
           'description': item.description,
           'price': item.price,
-          'originalPrice': item.originalPrice,
           'imagePath': item.imagePath,
           'colors': item.colors,
           'sizes': item.sizes,
@@ -911,31 +864,14 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
                         ),
                       ),
                     ),
-                    // Badges
-                    if (item.isNew || item.isOnSale)
-                      Positioned(
-                        top: 8.0,
-                        left: 8.0,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            if (item.isNew) _buildBadge('NEW', Colors.green),
-                            if (item.isOnSale)
-                              Padding(
-                                padding: const EdgeInsets.only(top: 2.0),
-                                child: _buildBadge(
-                                    '-${item.discountPercent}%', Colors.red),
-                              ),
-                          ],
-                        ),
-                      ),
+                    // Badges removed
                   ],
                 ),
               ),
 
               const SizedBox(width: 16.0),
 
-              // Content - Removed description
+              // Content - Name only
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -954,42 +890,20 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
                 ),
               ),
 
-              // Inline Price Section with original price between offer price
+              // Single Price - No original price comparison
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        item.price,
-                        style: FlutterFlowTheme.of(context)
-                            .headlineSmall
-                            .override(
-                              fontFamily: GoogleFonts.interTight().fontFamily,
-                              color: FlutterFlowTheme.of(context).underground,
-                              fontSize: 18.0,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 0.0,
-                            ),
-                      ),
-                      if (item.originalPrice.isNotEmpty && item.isOnSale) ...[
-                        const SizedBox(width: 8.0),
-                        Text(
-                          item.originalPrice,
-                          style: FlutterFlowTheme.of(context)
-                              .bodySmall
-                              .override(
-                                fontFamily: GoogleFonts.inter().fontFamily,
-                                color:
-                                    FlutterFlowTheme.of(context).secondaryText,
-                                fontSize: 14.0,
-                                decoration: TextDecoration.lineThrough,
-                              ),
+                  Text(
+                    item.price,
+                    style: FlutterFlowTheme.of(context).headlineSmall.override(
+                          fontFamily: GoogleFonts.interTight().fontFamily,
+                          color: FlutterFlowTheme.of(context).underground,
+                          fontSize: 18.0,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.0,
                         ),
-                      ],
-                    ],
                   ),
                 ],
               ),
@@ -1000,29 +914,5 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
     );
   }
 
-  Widget _buildBadge(String text, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(12.0),
-        boxShadow: [
-          BoxShadow(
-            blurRadius: 2.0,
-            color: color.withOpacity(0.3),
-            offset: const Offset(0, 1),
-          ),
-        ],
-      ),
-      child: Text(
-        text,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 10.0,
-          fontWeight: FontWeight.bold,
-          letterSpacing: 0.5,
-        ),
-      ),
-    );
-  }
+  // _buildBadge method removed as badges are no longer used
 }
