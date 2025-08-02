@@ -75,6 +75,16 @@ class BrandedItemsRecord extends FirestoreRecord {
   List<String> get promoCodeIds => _promoCodeIds ?? const [];
   bool hasPromoCodeIds() => _promoCodeIds != null;
 
+  // "status" field - NEW FIELD
+  String? _status;
+  String get status => _status ?? '';
+  bool hasStatus() => _status != null;
+
+  // "removed_at" field - NEW FIELD
+  DateTime? _removedAt;
+  DateTime? get removedAt => _removedAt;
+  bool hasRemovedAt() => _removedAt != null;
+
   void _initializeFields() {
     _vendorId = snapshotData['vendor_id'] as String?;
     _imageUrl = snapshotData['image_url'] as String?;
@@ -88,6 +98,8 @@ class BrandedItemsRecord extends FirestoreRecord {
     _dateAdded = snapshotData['date_added'] as DateTime?;
     _productUrl = snapshotData['product_url'] as String?;
     _promoCodeIds = getDataList(snapshotData['promo_code_ids']);
+    _status = snapshotData['status'] as String?; // NEW LINE
+    _removedAt = snapshotData['removed_at'] as DateTime?; // NEW LINE
   }
 
   static CollectionReference get collection =>
@@ -134,6 +146,8 @@ Map<String, dynamic> createBrandedItemsRecordData({
   String? category,
   DateTime? dateAdded,
   String? productUrl,
+  String? status, // NEW PARAMETER
+  DateTime? removedAt, // NEW PARAMETER
 }) {
   final firestoreData = mapToFirestore(
     <String, dynamic>{
@@ -146,6 +160,8 @@ Map<String, dynamic> createBrandedItemsRecordData({
       'category': category,
       'date_added': dateAdded,
       'product_url': productUrl,
+      'status': status, // NEW LINE
+      'removed_at': removedAt, // NEW LINE
     }.withoutNulls,
   );
 
@@ -169,7 +185,9 @@ class BrandedItemsRecordDocumentEquality
         listEquality.equals(e1?.weatherSuitability, e2?.weatherSuitability) &&
         e1?.dateAdded == e2?.dateAdded &&
         e1?.productUrl == e2?.productUrl &&
-        listEquality.equals(e1?.promoCodeIds, e2?.promoCodeIds);
+        listEquality.equals(e1?.promoCodeIds, e2?.promoCodeIds) &&
+        e1?.status == e2?.status && // NEW LINE
+        e1?.removedAt == e2?.removedAt; // NEW LINE
   }
 
   @override
@@ -184,7 +202,9 @@ class BrandedItemsRecordDocumentEquality
         e?.weatherSuitability,
         e?.dateAdded,
         e?.productUrl,
-        e?.promoCodeIds
+        e?.promoCodeIds,
+        e?.status, // NEW LINE
+        e?.removedAt, // NEW LINE
       ]);
 
   @override

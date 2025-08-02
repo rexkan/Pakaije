@@ -6,6 +6,7 @@ import '/index.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:cloud_firestore/cloud_firestore.dart'; // Added missing import
 import 'buy_clothes_model.dart';
 export 'buy_clothes_model.dart';
 
@@ -162,16 +163,19 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
     );
   }
 
+  // CORRECTED: Single _buildFirebaseContent method with async filtering
   Widget _buildFirebaseContent() {
     return StreamBuilder<List<BrandedItemsRecord>>(
       stream: queryBrandedItemsRecord(
         queryBuilder: (brandedItemsRecord) {
+          var query = brandedItemsRecord;
+
           // Apply category filter if not 'All'
           if (_selectedCategory != 'All') {
-            return brandedItemsRecord.where('category',
-                isEqualTo: _selectedCategory);
+            query = query.where('category', isEqualTo: _selectedCategory);
           }
-          return brandedItemsRecord.orderBy('date_added', descending: true);
+
+          return query.orderBy('date_added', descending: true);
         },
       ),
       builder: (context, snapshot) {
@@ -199,19 +203,80 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
           );
         }
 
-        final brandedItems = snapshot.data!;
+        List<BrandedItemsRecord> allItems = snapshot.data!;
 
-        // Handle empty state
-        if (brandedItems.isEmpty) {
-          return _buildEmptyState();
-        }
+        // Use FutureBuilder to filter out removed items asynchronously
+        return FutureBuilder<List<BrandedItemsRecord>>(
+          future: _filterRemovedItems(allItems),
+          builder: (context, filteredSnapshot) {
+            if (!filteredSnapshot.hasData) {
+              return Center(
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    FlutterFlowTheme.of(context).underground,
+                  ),
+                ),
+              );
+            }
 
-        // Build content based on view type
-        return _isGridView
-            ? _buildFirebaseGrid(brandedItems)
-            : _buildFirebaseList(brandedItems);
+            List<BrandedItemsRecord> brandedItems = filteredSnapshot.data!;
+
+            // Handle empty state
+            if (brandedItems.isEmpty) {
+              return _buildEmptyState();
+            }
+
+            // Build content based on view type
+            return _isGridView
+                ? _buildFirebaseGrid(brandedItems)
+                : _buildFirebaseList(brandedItems);
+          },
+        );
       },
     );
+  }
+
+  // Helper method to async filter removed items
+  Future<List<BrandedItemsRecord>> _filterRemovedItems(
+      List<BrandedItemsRecord> items) async {
+    List<BrandedItemsRecord> filteredItems = [];
+
+    for (BrandedItemsRecord item in items) {
+      try {
+        // Check the current status of each item
+        DocumentSnapshot doc = await FirebaseFirestore.instance
+            .collection('branded_items')
+            .doc(item.reference.id)
+            .get();
+
+        if (doc.exists) {
+          Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+          String status = data['status'] ?? '';
+
+          // Only include items that haven't been removed
+          if (status != 'removed_for_violation' &&
+              status != 'deleted' &&
+              status != 'hidden' &&
+              status != 'inactive') {
+            filteredItems.add(item);
+          } else {
+            print('🚫 Filtered out item: ${item.name} (status: $status)');
+          }
+        } else {
+          // If document doesn't exist, don't include it
+          print('🚫 Document not found for item: ${item.name}');
+          continue;
+        }
+      } catch (e) {
+        print('Error checking item status: $e');
+        // If there's an error, include the item to be safe
+        filteredItems.add(item);
+      }
+    }
+
+    print(
+        '📦 Filtered ${items.length} items down to ${filteredItems.length} available items');
+    return filteredItems;
   }
 
   Widget _buildFirebaseGrid(List<BrandedItemsRecord> items) {
@@ -267,24 +332,6 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
   Widget _buildFirebaseClothingCard(BrandedItemsRecord item) {
     return GestureDetector(
       onTap: () {
-        // Convert BrandedItemsRecord to Map for navigation - FIXED DATA MAPPING
-        final itemMap = {
-          'documentId': item.reference.id, // Firebase document ID
-          'itemId': item.itemId, // The actual item_id field from Firebase
-          'name': item.name,
-          'description': item.description,
-          'price': '\$${item.price.toStringAsFixed(2)}',
-          'imagePath': item.imageUrl, // This maps to imageUrl from Firebase
-          'category': item.category,
-          'productUrl': item.productUrl,
-          'vendorId': item.vendorId,
-          'styleTags': item.styleTags,
-          'weatherSuitability': item.weatherSuitability,
-        };
-
-        // Debug print to see what we're passing
-        print('Navigating with data: $itemMap');
-
         context.pushNamed(
           'ProductDetailsPage',
           queryParameters: {
@@ -420,27 +467,10 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
     );
   }
 
+  // ADDED: Missing _buildFirebaseListCard method
   Widget _buildFirebaseListCard(BrandedItemsRecord item) {
     return GestureDetector(
       onTap: () {
-        // Convert BrandedItemsRecord to Map for navigation - FIXED DATA MAPPING
-        final itemMap = {
-          'documentId': item.reference.id, // Firebase document ID
-          'itemId': item.itemId, // The actual item_id field from Firebase
-          'name': item.name,
-          'description': item.description,
-          'price': '\$${item.price.toStringAsFixed(2)}',
-          'imagePath': item.imageUrl, // This maps to imageUrl from Firebase
-          'category': item.category,
-          'productUrl': item.productUrl,
-          'vendorId': item.vendorId,
-          'styleTags': item.styleTags,
-          'weatherSuitability': item.weatherSuitability,
-        };
-
-        // Debug print to see what we're passing
-        print('Navigating with data: $itemMap');
-
         context.pushNamed(
           'ProductDetailsPage',
           queryParameters: {
@@ -530,7 +560,7 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
 
               const SizedBox(width: 16.0),
 
-              // Content - Name only
+              // Content
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -544,6 +574,14 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
                           ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 8.0),
+                    Text(
+                      item.category,
+                      style: FlutterFlowTheme.of(context).bodySmall.override(
+                            fontFamily: GoogleFonts.inter().fontFamily,
+                            color: FlutterFlowTheme.of(context).secondaryText,
+                          ),
                     ),
                   ],
                 ),
@@ -880,6 +918,4 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
       ),
     );
   }
-
-  // _buildBadge method removed as badges are no longer used
 }

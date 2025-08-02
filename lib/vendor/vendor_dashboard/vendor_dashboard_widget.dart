@@ -10,7 +10,8 @@ import 'vendor_dashboard_model.dart';
 export 'vendor_dashboard_model.dart';
 import '/backend/backend.dart';
 import '/auth/firebase_auth/auth_util.dart';
-import '/backend/schema/vendors_record.dart';
+import '/backend/schema/users_record.dart'; // CHANGED: Use users_record instead of vendors_record
+import 'package:intl/intl.dart';
 
 class VendorDashboardWidget extends StatefulWidget {
   const VendorDashboardWidget({super.key});
@@ -28,9 +29,15 @@ class _VendorDashboardWidgetState extends State<VendorDashboardWidget> {
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
   Widget _buildWelcomeSection() {
-    return StreamBuilder<VendorsRecord?>(
-      stream: _getCurrentVendor(),
+    print('Current User UID: $currentUserUid');
+    return StreamBuilder<UsersRecord?>(
+      // CHANGED: Use UsersRecord instead of VendorsRecord
+      stream:
+          _getCurrentUser(), // CHANGED: Use _getCurrentUser instead of _getCurrentVendor
       builder: (context, snapshot) {
+        print('Snapshot hasData: ${snapshot.hasData}');
+        print('Snapshot data: ${snapshot.data}');
+
         // Loading state
         if (!snapshot.hasData) {
           return Container(
@@ -97,9 +104,13 @@ class _VendorDashboardWidgetState extends State<VendorDashboardWidget> {
           );
         }
 
-        final vendor = snapshot.data;
-        final brandName = vendor?.brandName ?? 'Your Brand';
-        final email = vendor?.email ?? currentUserEmail ?? '';
+        final user = snapshot.data; // CHANGED: Use user instead of vendor
+        final brandName = user?.displayName ??
+            'Your Brand'; // CHANGED: Use displayName instead of brandName
+        final email = user?.email ?? currentUserEmail ?? '';
+        final isActiveVendor = user?.role == 'Vendor' &&
+            user?.accountStatus ==
+                'active'; // CHANGED: Check user role and status
 
         return Container(
           width: double.infinity,
@@ -131,12 +142,28 @@ class _VendorDashboardWidgetState extends State<VendorDashboardWidget> {
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(8.0),
-                    child: Image.asset(
-                      'assets/images/user_848006.png',
-                      width: 50.0,
-                      height: 50.0,
-                      fit: BoxFit.cover,
-                    ),
+                    child: user?.photoUrl?.isNotEmpty ==
+                            true // CHANGED: Use user's photoUrl
+                        ? Image.network(
+                            user!.photoUrl,
+                            width: 50.0,
+                            height: 50.0,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Image.asset(
+                                'assets/images/user_848006.png',
+                                width: 50.0,
+                                height: 50.0,
+                                fit: BoxFit.cover,
+                              );
+                            },
+                          )
+                        : Image.asset(
+                            'assets/images/user_848006.png',
+                            width: 50.0,
+                            height: 50.0,
+                            fit: BoxFit.cover,
+                          ),
                   ),
                 ),
                 SizedBox(width: 16.0),
@@ -181,8 +208,8 @@ class _VendorDashboardWidgetState extends State<VendorDashboardWidget> {
                     ],
                   ),
                 ),
-                // Status indicator
-                if (vendor?.isActive == true)
+                // Status indicator - CHANGED: Use accountStatus from users collection
+                if (isActiveVendor)
                   Container(
                     padding:
                         EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
@@ -284,37 +311,22 @@ class _VendorDashboardWidgetState extends State<VendorDashboardWidget> {
     }
   }
 
-  Stream<VendorsRecord?> _getCurrentVendor() {
+  // CHANGED: New method to get current user from users collection
+  Stream<UsersRecord?> _getCurrentUser() {
     if (currentUserUid.isEmpty) return Stream.value(null);
 
-    return VendorsRecord.collection
+    return UsersRecord.collection
         .doc(currentUserUid)
         .snapshots()
         .map((snapshot) {
       if (snapshot.exists) {
-        return VendorsRecord.fromSnapshot(snapshot);
+        return UsersRecord.fromSnapshot(snapshot);
       }
       return null;
     });
   }
 
-  /// Alternative method if vendor document ID is different from auth UID
-  Stream<VendorsRecord?> _getCurrentVendorByEmail() {
-    if (currentUserEmail == null || currentUserEmail!.isEmpty) {
-      return Stream.value(null);
-    }
-
-    return VendorsRecord.collection
-        .where('email', isEqualTo: currentUserEmail)
-        .limit(1)
-        .snapshots()
-        .map((snapshot) {
-      if (snapshot.docs.isNotEmpty) {
-        return VendorsRecord.fromSnapshot(snapshot.docs.first);
-      }
-      return null;
-    });
-  }
+  // REMOVED: Delete these old vendor-related methods since we're using users collection now
 
   @override
   Widget build(BuildContext context) {
@@ -502,14 +514,23 @@ class _VendorDashboardWidgetState extends State<VendorDashboardWidget> {
                     fontWeight: FontWeight.w600,
                   ),
             ),
-            // Product count indicator
+            // Product count indicator - now shows only active products
             StreamBuilder<List<BrandedItemsRecord>>(
               stream: queryBrandedItemsRecord(
                 queryBuilder: (brandedItemsRecord) => brandedItemsRecord
-                    .where('vendor_id', isEqualTo: currentUserUid),
+                    .where('vendor_id', isEqualTo: currentUserUid)
+                    // Filter out deleted products
+                    .where('status', isNotEqualTo: 'removed_for_violation'),
               ),
               builder: (context, snapshot) {
                 if (snapshot.hasData) {
+                  // Additional filtering in case some deleted items slip through
+                  final activeProducts = snapshot.data!
+                      .where((product) =>
+                          product.status != 'removed_for_violation' &&
+                          product.removedAt == null)
+                      .toList();
+
                   return Container(
                     padding:
                         EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
@@ -518,7 +539,7 @@ class _VendorDashboardWidgetState extends State<VendorDashboardWidget> {
                       borderRadius: BorderRadius.circular(20.0),
                     ),
                     child: Text(
-                      '${snapshot.data!.length} items',
+                      '${activeProducts.length} items',
                       style: FlutterFlowTheme.of(context).bodySmall.override(
                             fontFamily: 'Inter',
                             color: Colors.white,
@@ -536,11 +557,13 @@ class _VendorDashboardWidgetState extends State<VendorDashboardWidget> {
         ),
         SizedBox(height: 16.0),
 
-        // Products StreamBuilder
+        // Products StreamBuilder - Updated to filter deleted products
         StreamBuilder<List<BrandedItemsRecord>>(
           stream: queryBrandedItemsRecord(
             queryBuilder: (brandedItemsRecord) => brandedItemsRecord
                 .where('vendor_id', isEqualTo: currentUserUid)
+                // Primary filter: exclude products with removed status
+                .where('status', isNotEqualTo: 'removed_for_violation')
                 .orderBy('date_added', descending: true),
           ),
           builder: (context, snapshot) {
@@ -573,7 +596,12 @@ class _VendorDashboardWidgetState extends State<VendorDashboardWidget> {
               );
             }
 
-            List<BrandedItemsRecord> products = snapshot.data!;
+            // Additional client-side filtering as a safety net
+            List<BrandedItemsRecord> products = snapshot.data!.where((product) {
+              // Filter out products that are deleted or have removal timestamp
+              return product.status != 'removed_for_violation' &&
+                  product.removedAt == null;
+            }).toList();
 
             // Empty state
             if (products.isEmpty) {
@@ -598,7 +626,7 @@ class _VendorDashboardWidgetState extends State<VendorDashboardWidget> {
                     ),
                     SizedBox(height: 16.0),
                     Text(
-                      'No products yet',
+                      'No active products',
                       style: FlutterFlowTheme.of(context)
                           .headlineSmall
                           .override(
@@ -650,7 +678,7 @@ class _VendorDashboardWidgetState extends State<VendorDashboardWidget> {
               );
             }
 
-            // Products grid with data
+            // Products grid with active products only
             return Column(
               children: [
                 LayoutBuilder(
@@ -694,7 +722,7 @@ class _VendorDashboardWidgetState extends State<VendorDashboardWidget> {
                     child: Column(
                       children: [
                         Text(
-                          'Showing 6 of ${products.length} products',
+                          'Showing 6 of ${products.length} active products',
                           style: FlutterFlowTheme.of(context)
                               .bodyMedium
                               .override(
@@ -775,6 +803,163 @@ class _VendorDashboardWidgetState extends State<VendorDashboardWidget> {
           },
         ),
       ],
+    );
+  }
+
+  // Optional: Add method to show deleted products in a separate section
+  Widget _buildDeletedProductsSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ExpansionTile(
+          title: Text(
+            'Removed Products',
+            style: FlutterFlowTheme.of(context).headlineMedium.override(
+                  fontFamily: 'Inter Tight',
+                  fontSize: 18.0,
+                  letterSpacing: 0.0,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.red,
+                ),
+          ),
+          subtitle: Text(
+            'Products removed by admin due to policy violations',
+            style: FlutterFlowTheme.of(context).bodySmall.override(
+                  fontFamily: 'Inter',
+                  color: FlutterFlowTheme.of(context).secondaryText,
+                  letterSpacing: 0.0,
+                ),
+          ),
+          children: [
+            StreamBuilder<List<BrandedItemsRecord>>(
+              stream: queryBrandedItemsRecord(
+                queryBuilder: (brandedItemsRecord) => brandedItemsRecord
+                    .where('vendor_id', isEqualTo: currentUserUid)
+                    .where('status', isEqualTo: 'removed_for_violation')
+                    .orderBy('removed_at', descending: true),
+              ),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return Center(child: CircularProgressIndicator());
+                }
+
+                List<BrandedItemsRecord> deletedProducts = snapshot.data!;
+
+                if (deletedProducts.isEmpty) {
+                  return Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: Text(
+                      'No removed products',
+                      style: FlutterFlowTheme.of(context).bodyMedium.override(
+                            fontFamily: 'Inter',
+                            color: FlutterFlowTheme.of(context).secondaryText,
+                            letterSpacing: 0.0,
+                          ),
+                    ),
+                  );
+                }
+
+                return ListView.builder(
+                  shrinkWrap: true,
+                  physics: NeverScrollableScrollPhysics(),
+                  itemCount: deletedProducts.length,
+                  itemBuilder: (context, index) {
+                    final product = deletedProducts[index];
+                    return _buildDeletedProductCard(product);
+                  },
+                );
+              },
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  // Helper method to build deleted product cards
+  Widget _buildDeletedProductCard(BrandedItemsRecord product) {
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      decoration: BoxDecoration(
+        color: FlutterFlowTheme.of(context).secondaryBackground,
+        borderRadius: BorderRadius.circular(12.0),
+        border: Border.all(color: Colors.red.withOpacity(0.3), width: 1.0),
+      ),
+      child: ListTile(
+        leading: ClipRRect(
+          borderRadius: BorderRadius.circular(8.0),
+          child: product.imageUrl.isNotEmpty
+              ? Image.network(
+                  product.imageUrl,
+                  width: 50.0,
+                  height: 50.0,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      width: 50.0,
+                      height: 50.0,
+                      color: FlutterFlowTheme.of(context).alternate,
+                      child: Icon(Icons.image_not_supported),
+                    );
+                  },
+                )
+              : Container(
+                  width: 50.0,
+                  height: 50.0,
+                  color: FlutterFlowTheme.of(context).alternate,
+                  child: Icon(Icons.image),
+                ),
+        ),
+        title: Text(
+          product.name,
+          style: FlutterFlowTheme.of(context).bodyLarge.override(
+                fontFamily: 'Inter',
+                letterSpacing: 0.0,
+                fontWeight: FontWeight.w600,
+              ),
+        ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              product.category,
+              style: FlutterFlowTheme.of(context).bodySmall.override(
+                    fontFamily: 'Inter',
+                    color: FlutterFlowTheme.of(context).secondaryText,
+                    letterSpacing: 0.0,
+                  ),
+            ),
+            if (product.removedAt != null)
+              Text(
+                'Removed: ${DateFormat('MMM dd, yyyy').format(product.removedAt!)}',
+                style: FlutterFlowTheme.of(context).bodySmall.override(
+                      fontFamily: 'Inter',
+                      color: Colors.red,
+                      fontSize: 12.0,
+                      letterSpacing: 0.0,
+                    ),
+              ),
+          ],
+        ),
+        trailing: Container(
+          padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+          decoration: BoxDecoration(
+            color: Colors.red.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12.0),
+            border: Border.all(color: Colors.red, width: 1.0),
+          ),
+          child: Text(
+            'Removed',
+            style: FlutterFlowTheme.of(context).bodySmall.override(
+                  fontFamily: 'Inter',
+                  color: Colors.red,
+                  fontSize: 10.0,
+                  letterSpacing: 0.0,
+                  fontWeight: FontWeight.w500,
+                ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -860,36 +1045,55 @@ class _VendorDashboardWidgetState extends State<VendorDashboardWidget> {
 
                   Spacer(),
 
-                  // Price and Status
+                  // Price and Status - FIXED: Added Flexible widgets to prevent overflow
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        '\$${product.price.toStringAsFixed(2)}',
-                        style: FlutterFlowTheme.of(context).bodyMedium.override(
-                              fontFamily: 'Inter',
-                              color: FlutterFlowTheme.of(context).primaryText,
-                              letterSpacing: 0.0,
-                              fontWeight: FontWeight.w600,
-                            ),
-                      ),
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                            horizontal: 8.0, vertical: 4.0),
-                        decoration: BoxDecoration(
-                          color: FlutterFlowTheme.of(context).accent1,
-                          borderRadius: BorderRadius.circular(12.0),
-                        ),
+                      // Price with Flexible to prevent overflow
+                      Flexible(
+                        flex: 2,
                         child: Text(
-                          'Active',
-                          style:
-                              FlutterFlowTheme.of(context).bodySmall.override(
-                                    fontFamily: 'Inter',
-                                    color: FlutterFlowTheme.of(context).primary,
-                                    fontSize: 10.0,
-                                    letterSpacing: 0.0,
-                                    fontWeight: FontWeight.w500,
-                                  ),
+                          '\$${product.price.toStringAsFixed(2)}',
+                          style: FlutterFlowTheme.of(context)
+                              .bodyMedium
+                              .override(
+                                fontFamily: 'Inter',
+                                color: FlutterFlowTheme.of(context).primaryText,
+                                letterSpacing: 0.0,
+                                fontWeight: FontWeight.w600,
+                              ),
+                          overflow: TextOverflow
+                              .ellipsis, // Add this to handle long prices
+                        ),
+                      ),
+
+                      SizedBox(width: 8.0), // Add some spacing
+
+                      // Status badge with Flexible
+                      Flexible(
+                        flex: 1,
+                        child: Container(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 6.0,
+                              vertical: 3.0), // Reduced padding
+                          decoration: BoxDecoration(
+                            color: FlutterFlowTheme.of(context).accent1,
+                            borderRadius: BorderRadius.circular(12.0),
+                          ),
+                          child: Text(
+                            'Active',
+                            style: FlutterFlowTheme.of(context)
+                                .bodySmall
+                                .override(
+                                  fontFamily: 'Inter',
+                                  color: FlutterFlowTheme.of(context).primary,
+                                  fontSize: 9.0, // Reduced font size
+                                  letterSpacing: 0.0,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                            textAlign: TextAlign.center,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
                       ),
                     ],
