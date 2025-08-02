@@ -376,12 +376,8 @@ class _VirtualTryOnSettingWidgetState extends State<VirtualTryOnSettingWidget>
                       StreamBuilder<List<BrandedItemsRecord>>(
                         stream: queryBrandedItemsRecord(
                           queryBuilder: (brandedItemsRecord) =>
-                              brandedItemsRecord
-                                  .where('vendor_id', isEqualTo: currentUserUid)
-                                  // ADDED: Filter out deleted products
-                                  .where('status',
-                                      isNotEqualTo: 'removed_for_violation')
-                                  .orderBy('date_added', descending: true),
+                              brandedItemsRecord.where('vendor_id',
+                                  isEqualTo: currentUserUid),
                         ),
                         builder: (context, snapshot) {
                           // Loading state

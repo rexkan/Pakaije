@@ -498,6 +498,8 @@ class _VendorDashboardWidgetState extends State<VendorDashboardWidget> {
     );
   }
 
+// Fixed _buildProductsSection method for vendor_dashboard_widget.dart
+
   Widget _buildProductsSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -519,17 +521,27 @@ class _VendorDashboardWidgetState extends State<VendorDashboardWidget> {
               stream: queryBrandedItemsRecord(
                 queryBuilder: (brandedItemsRecord) => brandedItemsRecord
                     .where('vendor_id', isEqualTo: currentUserUid)
-                    // Filter out deleted products
-                    .where('status', isNotEqualTo: 'removed_for_violation'),
+                    .orderBy('date_added',
+                        descending: true), // REMOVED status filter from query
               ),
               builder: (context, snapshot) {
                 if (snapshot.hasData) {
-                  // Additional filtering in case some deleted items slip through
-                  final activeProducts = snapshot.data!
-                      .where((product) =>
-                          product.status != 'removed_for_violation' &&
-                          product.removedAt == null)
-                      .toList();
+                  // Debug: Print all products to see what's being returned
+                  print('Total products found: ${snapshot.data!.length}');
+                  for (var product in snapshot.data!) {
+                    print(
+                        'Product: ${product.name}, Status: ${product.status}, RemovedAt: ${product.removedAt}');
+                  }
+
+                  // Filter active products
+                  final activeProducts = snapshot.data!.where((product) {
+                    bool isActive = product.status != 'removed_for_violation' &&
+                        product.removedAt == null;
+                    print('Product ${product.name} is active: $isActive');
+                    return isActive;
+                  }).toList();
+
+                  print('Active products count: ${activeProducts.length}');
 
                   return Container(
                     padding:
@@ -557,14 +569,13 @@ class _VendorDashboardWidgetState extends State<VendorDashboardWidget> {
         ),
         SizedBox(height: 16.0),
 
-        // Products StreamBuilder - Updated to filter deleted products
+        // Products StreamBuilder - Updated to be more flexible
         StreamBuilder<List<BrandedItemsRecord>>(
           stream: queryBrandedItemsRecord(
             queryBuilder: (brandedItemsRecord) => brandedItemsRecord
                 .where('vendor_id', isEqualTo: currentUserUid)
-                // Primary filter: exclude products with removed status
-                .where('status', isNotEqualTo: 'removed_for_violation')
-                .orderBy('date_added', descending: true),
+                .orderBy('date_added',
+                    descending: true), // REMOVED status filter from query
           ),
           builder: (context, snapshot) {
             // Loading state
@@ -596,12 +607,19 @@ class _VendorDashboardWidgetState extends State<VendorDashboardWidget> {
               );
             }
 
-            // Additional client-side filtering as a safety net
+            // Debug: Print raw data
+            print('Raw products from Firebase: ${snapshot.data!.length}');
+
+            // More lenient filtering - only filter out truly deleted products
             List<BrandedItemsRecord> products = snapshot.data!.where((product) {
-              // Filter out products that are deleted or have removal timestamp
-              return product.status != 'removed_for_violation' &&
-                  product.removedAt == null;
+              // Only filter out products that are explicitly marked as removed
+              bool shouldInclude = product.status != 'removed_for_violation';
+              print(
+                  'Product ${product.name}: status=${product.status}, including=$shouldInclude');
+              return shouldInclude;
             }).toList();
+
+            print('Filtered products count: ${products.length}');
 
             // Empty state
             if (products.isEmpty) {
@@ -626,7 +644,7 @@ class _VendorDashboardWidgetState extends State<VendorDashboardWidget> {
                     ),
                     SizedBox(height: 16.0),
                     Text(
-                      'No active products',
+                      'No products found',
                       style: FlutterFlowTheme.of(context)
                           .headlineSmall
                           .override(
@@ -634,6 +652,15 @@ class _VendorDashboardWidgetState extends State<VendorDashboardWidget> {
                             color: FlutterFlowTheme.of(context).secondaryText,
                             letterSpacing: 0.0,
                             fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                    SizedBox(height: 8.0),
+                    Text(
+                      'Debug: Total from DB: ${snapshot.data!.length}',
+                      style: FlutterFlowTheme.of(context).bodySmall.override(
+                            fontFamily: 'Inter',
+                            color: Colors.red,
+                            letterSpacing: 0.0,
                           ),
                     ),
                     SizedBox(height: 8.0),
@@ -678,97 +705,63 @@ class _VendorDashboardWidgetState extends State<VendorDashboardWidget> {
               );
             }
 
-            // Products grid with active products only
+            // FIXED: Products grid with proper scrollable layout
             return Column(
               children: [
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    int crossAxisCount = constraints.maxWidth > 600 ? 3 : 2;
+                // Container with fixed height for scrollable grid
+                Container(
+                  height: 400.0, // Fixed height for scrollable area
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      int crossAxisCount = constraints.maxWidth > 600 ? 3 : 2;
 
-                    return GridView.builder(
-                      shrinkWrap: true,
-                      physics: NeverScrollableScrollPhysics(),
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: crossAxisCount,
-                        crossAxisSpacing: 12.0,
-                        mainAxisSpacing: 12.0,
-                        childAspectRatio: 0.75,
-                      ),
-                      itemCount: products.length > 6
-                          ? 6
-                          : products.length, // Show max 6 products
-                      itemBuilder: (context, index) {
-                        final product = products[index];
-                        return _buildProductCard(product);
-                      },
-                    );
-                  },
+                      return GridView.builder(
+                        // REMOVED: shrinkWrap and NeverScrollableScrollPhysics
+                        // This allows the GridView to handle its own scrolling
+                        physics:
+                            AlwaysScrollableScrollPhysics(), // Enable scrolling
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: crossAxisCount,
+                          crossAxisSpacing: 12.0,
+                          mainAxisSpacing: 12.0,
+                          childAspectRatio: 0.75,
+                        ),
+                        itemCount:
+                            products.length, // Show ALL products, not just 6
+                        itemBuilder: (context, index) {
+                          final product = products[index];
+                          return _buildProductCard(product);
+                        },
+                      );
+                    },
+                  ),
                 ),
 
-                // Show more products button if there are more than 6
-                if (products.length > 6) ...[
-                  SizedBox(height: 16.0),
-                  Container(
-                    width: double.infinity,
-                    padding: EdgeInsets.all(16.0),
-                    decoration: BoxDecoration(
-                      color: FlutterFlowTheme.of(context).secondaryBackground,
-                      borderRadius: BorderRadius.circular(12.0),
-                      border: Border.all(
-                        color: FlutterFlowTheme.of(context).alternate,
-                        width: 1.0,
-                      ),
-                    ),
-                    child: Column(
-                      children: [
-                        Text(
-                          'Showing 6 of ${products.length} active products',
-                          style: FlutterFlowTheme.of(context)
-                              .bodyMedium
-                              .override(
-                                fontFamily: 'Inter',
-                                color:
-                                    FlutterFlowTheme.of(context).secondaryText,
-                                letterSpacing: 0.0,
-                              ),
-                        ),
-                        SizedBox(height: 12.0),
-                        FFButtonWidget(
-                          onPressed: () => context
-                              .pushNamed(VirtualTryOnSettingWidget.routeName),
-                          text: 'View All Products',
-                          icon: Icon(
-                            Icons.arrow_forward,
-                            size: 16.0,
-                          ),
-                          options: FFButtonOptions(
-                            height: 36.0,
-                            padding: EdgeInsetsDirectional.fromSTEB(
-                                16.0, 0.0, 16.0, 0.0),
-                            iconPadding: EdgeInsetsDirectional.fromSTEB(
-                                0.0, 0.0, 4.0, 0.0),
-                            color:
-                                FlutterFlowTheme.of(context).primaryBackground,
-                            textStyle: FlutterFlowTheme.of(context)
-                                .bodyMedium
-                                .override(
-                                  fontFamily: 'Inter',
-                                  color: FlutterFlowTheme.of(context).primary,
-                                  letterSpacing: 0.0,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                            elevation: 0.0,
-                            borderSide: BorderSide(
-                              color: FlutterFlowTheme.of(context).primary,
-                              width: 1.0,
-                            ),
-                            borderRadius: BorderRadius.circular(8.0),
-                          ),
-                        ),
-                      ],
+                SizedBox(height: 16.0),
+
+                // Show total count
+                Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.all(16.0),
+                  decoration: BoxDecoration(
+                    color: FlutterFlowTheme.of(context).secondaryBackground,
+                    borderRadius: BorderRadius.circular(12.0),
+                    border: Border.all(
+                      color: FlutterFlowTheme.of(context).alternate,
+                      width: 1.0,
                     ),
                   ),
-                ],
+                  child: Text(
+                    'Total: ${products.length} products',
+                    style: FlutterFlowTheme.of(context).bodyMedium.override(
+                          fontFamily: 'Inter',
+                          color: FlutterFlowTheme.of(context).primary,
+                          letterSpacing: 0.0,
+                          fontWeight: FontWeight.w600,
+                        ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
 
                 SizedBox(height: 16.0),
 

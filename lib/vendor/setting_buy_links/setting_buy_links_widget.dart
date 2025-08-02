@@ -392,6 +392,10 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
                       SizedBox(height: 24.0),
 
                       // Products List
+// Replace the ENTIRE StreamBuilder section in setting_buy_links_widget.dart
+// Find this section starting around line 320:
+
+// Products List
                       LayoutBuilder(
                         builder: (context, constraints) {
                           int crossAxisCount =
@@ -400,13 +404,8 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
                           return StreamBuilder<List<BrandedItemsRecord>>(
                             stream: queryBrandedItemsRecord(
                               queryBuilder: (brandedItemsRecord) =>
-                                  brandedItemsRecord
-                                      .where('vendor_id',
-                                          isEqualTo: currentUserUid)
-                                      // ADDED: Filter out deleted products
-                                      .where('status',
-                                          isNotEqualTo: 'removed_for_violation')
-                                      .orderBy('date_added', descending: true),
+                                  brandedItemsRecord.where('vendor_id',
+                                      isEqualTo: currentUserUid),
                             ),
                             builder: (context, snapshot) {
                               // Loading state
@@ -424,14 +423,41 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
                                 );
                               }
 
-                              // ADDED: Additional client-side filtering as safety net
+                              // Enhanced client-side filtering with debugging
+                              List<BrandedItemsRecord> allProducts =
+                                  snapshot.data ?? [];
+
+                              // Debug: Print all products to see what's coming from Firebase
+                              print(
+                                  'Total products from Firebase: ${allProducts.length}');
+                              for (var product in allProducts) {
+                                print(
+                                    'Product: ${product.name}, Status: ${product.status}, VendorID: ${product.vendorId}');
+                              }
+
                               List<BrandedItemsRecord> products =
-                                  snapshot.data!.where((product) {
-                                // Filter out products that are deleted or have removal timestamp
-                                return product.status !=
-                                        'removed_for_violation' &&
-                                    product.removedAt == null;
+                                  allProducts.where((product) {
+                                bool hasValidStatus =
+                                    product.status != 'removed_for_violation' &&
+                                        product.status != 'deleted';
+                                bool notRemoved = product.removedAt == null;
+                                bool belongsToUser =
+                                    product.vendorId == currentUserUid;
+
+                                return hasValidStatus &&
+                                    notRemoved &&
+                                    belongsToUser;
                               }).toList();
+
+                              // Sort by date manually with null safety
+                              products.sort((a, b) {
+                                DateTime dateA = a.dateAdded ?? DateTime.now();
+                                DateTime dateB = b.dateAdded ?? DateTime.now();
+                                return dateB.compareTo(dateA);
+                              });
+
+                              print(
+                                  'Filtered products count: ${products.length}');
 
                               // Empty state
                               if (products.isEmpty) {
@@ -459,7 +485,7 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
                                       ),
                                       SizedBox(height: 24.0),
                                       Text(
-                                        'No active products found', // UPDATED: Changed text
+                                        'No active products found',
                                         style: FlutterFlowTheme.of(context)
                                             .headlineSmall
                                             .override(
@@ -485,6 +511,32 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
                                             ),
                                         textAlign: TextAlign.center,
                                       ),
+                                      // Debug info for troubleshooting
+                                      if (allProducts.isNotEmpty) ...[
+                                        SizedBox(height: 16.0),
+                                        Text(
+                                          'Debug: Found ${allProducts.length} total products but ${products.length} match filters',
+                                          style: FlutterFlowTheme.of(context)
+                                              .bodySmall
+                                              .override(
+                                                fontFamily: 'Inter',
+                                                color: Colors.orange,
+                                                letterSpacing: 0.0,
+                                              ),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                        Text(
+                                          'Current User ID: ${currentUserUid ?? "null"}',
+                                          style: FlutterFlowTheme.of(context)
+                                              .bodySmall
+                                              .override(
+                                                fontFamily: 'Inter',
+                                                color: Colors.orange,
+                                                letterSpacing: 0.0,
+                                              ),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ],
                                       SizedBox(height: 32.0),
                                       FFButtonWidget(
                                         onPressed: () => context.pushNamed(
@@ -523,33 +575,27 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
                                 );
                               }
 
-                              return LayoutBuilder(
-                                builder: (context, constraints) {
-                                  int crossAxisCount =
-                                      constraints.maxWidth > 600 ? 2 : 1;
-
-                                  return GridView.builder(
-                                    shrinkWrap: true,
-                                    physics: NeverScrollableScrollPhysics(),
-                                    gridDelegate:
-                                        SliverGridDelegateWithFixedCrossAxisCount(
-                                      crossAxisCount: crossAxisCount,
-                                      crossAxisSpacing: 16.0,
-                                      mainAxisSpacing: 16.0,
-                                      childAspectRatio:
-                                          crossAxisCount == 2 ? 0.9 : 0.8,
-                                    ),
-                                    itemCount: products.length,
-                                    itemBuilder: (context, index) {
-                                      final product = products[index];
-                                      return _buildProductCard(
-                                        product.name,
-                                        product.productUrl,
-                                        animationsMap[
-                                            'containerOnPageLoadAnimation${(index % 3) + 1}']!,
-                                        product: product,
-                                      );
-                                    },
+                              // Products grid - This ensures we always return a Widget
+                              return GridView.builder(
+                                shrinkWrap: true,
+                                physics: NeverScrollableScrollPhysics(),
+                                gridDelegate:
+                                    SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: crossAxisCount,
+                                  crossAxisSpacing: 16.0,
+                                  mainAxisSpacing: 16.0,
+                                  childAspectRatio:
+                                      crossAxisCount == 2 ? 0.9 : 0.8,
+                                ),
+                                itemCount: products.length,
+                                itemBuilder: (context, index) {
+                                  final product = products[index];
+                                  return _buildProductCard(
+                                    product.name,
+                                    product.productUrl,
+                                    animationsMap[
+                                        'containerOnPageLoadAnimation${(index % 3) + 1}']!,
+                                    product: product,
                                   );
                                 },
                               );
