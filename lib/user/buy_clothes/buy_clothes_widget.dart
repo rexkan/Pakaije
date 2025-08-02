@@ -1,47 +1,13 @@
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
+import '/backend/backend.dart';
 import '/index.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'buy_clothes_model.dart';
 export 'buy_clothes_model.dart';
-
-// Enhanced data model for clothing items
-class ClothingItem {
-  final String id;
-  final String name;
-  final String description;
-  final String price;
-  final String imagePath;
-  final List<String> colors;
-  final List<String> sizes;
-  final double rating;
-  final int reviewCount;
-  final String category;
-  final bool isNew;
-  final bool isOnSale;
-  final int discountPercent;
-  final String brand;
-
-  ClothingItem({
-    required this.id,
-    required this.name,
-    required this.description,
-    required this.price,
-    required this.imagePath,
-    this.colors = const [],
-    this.sizes = const [],
-    this.rating = 0.0,
-    this.reviewCount = 0,
-    this.category = 'All',
-    this.isNew = false,
-    this.isOnSale = false,
-    this.discountPercent = 0,
-    this.brand = '',
-  });
-}
 
 class BuyClothesWidget extends StatefulWidget {
   const BuyClothesWidget({super.key});
@@ -64,94 +30,16 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
   String _selectedCategory = 'All';
   bool _isGridView = true;
 
-  // Sample enhanced data - removed originalPrice from the constructor calls
-  final List<ClothingItem> _clothingItems = [
-    ClothingItem(
-      id: '1',
-      name: 'Premium Basic Tee',
-      description: 'Soft cotton blend, perfect fit',
-      price: '\$24.99',
-      imagePath: 'assets/images/basic_black_tee.jpg',
-      colors: ['Black', 'White', 'Gray', 'Navy'],
-      sizes: ['XS', 'S', 'M', 'L', 'XL'],
-      rating: 4.8,
-      reviewCount: 234,
-      category: 'Tops',
-      isOnSale: true,
-      discountPercent: 30,
-      brand: 'StyleCo',
-    ),
-    ClothingItem(
-      id: '2',
-      name: 'Vintage Denim Jacket',
-      description: 'Classic American style, distressed finish',
-      price: '\$89.99',
-      imagePath: 'assets/images/denim_jacket.jpg',
-      colors: ['Blue', 'Black', 'Light Blue'],
-      sizes: ['S', 'M', 'L', 'XL'],
-      rating: 4.9,
-      reviewCount: 156,
-      category: 'Outerwear',
-      isNew: true,
-      brand: 'DenimCraft',
-    ),
-    ClothingItem(
-      id: '3',
-      name: 'Floral Summer Dress',
-      description: 'Lightweight, breathable fabric',
-      price: '\$45.00',
-      imagePath: 'assets/images/summer_dress.jpg',
-      colors: ['Floral Print', 'Solid White', 'Coral'],
-      sizes: ['XS', 'S', 'M', 'L'],
-      rating: 4.6,
-      reviewCount: 89,
-      category: 'Dresses',
-      isOnSale: true,
-      discountPercent: 31,
-      brand: 'FloralFashion',
-    ),
-    ClothingItem(
-      id: '4',
-      name: 'Slim Fit Chinos',
-      description: 'Versatile cotton chinos for any occasion',
-      price: '\$39.99',
-      imagePath: 'assets/images/chinos.jpg',
-      colors: ['Khaki', 'Navy', 'Black', 'Olive'],
-      sizes: ['28', '30', '32', '34', '36'],
-      rating: 4.7,
-      reviewCount: 198,
-      category: 'Bottoms',
-      brand: 'ClassicFit',
-    ),
-    ClothingItem(
-      id: '5',
-      name: 'Luxury Cashmere Sweater',
-      description: 'Ultra-soft premium cashmere',
-      price: '\$199.99',
-      imagePath: 'assets/images/cashmere_sweater.jpg',
-      colors: ['Cream', 'Gray', 'Black'],
-      sizes: ['S', 'M', 'L'],
-      rating: 5.0,
-      reviewCount: 67,
-      category: 'Sweaters',
-      isNew: true,
-      brand: 'LuxeWear',
-    ),
-    ClothingItem(
-      id: '6',
-      name: 'Athletic Performance Shorts',
-      description: 'Moisture-wicking, quick-dry technology',
-      price: '\$19.99',
-      imagePath: 'assets/images/athletic_shorts.jpg',
-      colors: ['Black', 'Gray', 'Navy', 'Red'],
-      sizes: ['S', 'M', 'L', 'XL'],
-      rating: 4.4,
-      reviewCount: 312,
-      category: 'Activewear',
-      isOnSale: true,
-      discountPercent: 33,
-      brand: 'SportFlex',
-    ),
+  // Available categories - you can customize these based on your Firebase data
+  final List<String> _categories = [
+    'All',
+    'Tops',
+    'Bottoms',
+    'Shoes',
+    'Dresses',
+    'Outerwear',
+    'Activewear',
+    'Accessories',
   ];
 
   @override
@@ -173,14 +61,6 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
     _animationController.dispose();
     _model.dispose();
     super.dispose();
-  }
-
-  List<ClothingItem> get _filteredItems {
-    return _clothingItems.where((item) {
-      final matchesCategory =
-          _selectedCategory == 'All' || item.category == _selectedCategory;
-      return matchesCategory;
-    }).toList();
   }
 
   @override
@@ -205,9 +85,7 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
                       _buildSearchAndFilters(),
                       _buildViewToggle(),
                       Expanded(
-                        child: _isGridView
-                            ? _buildClothingGrid()
-                            : _buildClothingList(),
+                        child: _buildFirebaseContent(),
                       ),
                     ],
                   ),
@@ -282,6 +160,417 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
                 ],
               ),
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFirebaseContent() {
+    return StreamBuilder<List<BrandedItemsRecord>>(
+      stream: queryBrandedItemsRecord(
+        queryBuilder: (brandedItemsRecord) {
+          // Apply category filter if not 'All'
+          if (_selectedCategory != 'All') {
+            return brandedItemsRecord.where('category',
+                isEqualTo: _selectedCategory);
+          }
+          return brandedItemsRecord.orderBy('date_added', descending: true);
+        },
+      ),
+      builder: (context, snapshot) {
+        // Handle loading state
+        if (!snapshot.hasData) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    FlutterFlowTheme.of(context).underground,
+                  ),
+                ),
+                const SizedBox(height: 16.0),
+                Text(
+                  'Loading products...',
+                  style: FlutterFlowTheme.of(context).bodyMedium.override(
+                        fontFamily: GoogleFonts.inter().fontFamily,
+                        color: FlutterFlowTheme.of(context).secondaryText,
+                      ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        final brandedItems = snapshot.data!;
+
+        // Handle empty state
+        if (brandedItems.isEmpty) {
+          return _buildEmptyState();
+        }
+
+        // Build content based on view type
+        return _isGridView
+            ? _buildFirebaseGrid(brandedItems)
+            : _buildFirebaseList(brandedItems);
+      },
+    );
+  }
+
+  Widget _buildFirebaseGrid(List<BrandedItemsRecord> items) {
+    return GridView.builder(
+      padding: const EdgeInsets.all(16.0),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 16.0,
+        mainAxisSpacing: 16.0,
+        childAspectRatio: 0.75,
+      ),
+      itemCount: items.length,
+      itemBuilder: (context, index) {
+        return TweenAnimationBuilder<double>(
+          duration: Duration(milliseconds: 400 + (index * 100)),
+          tween: Tween(begin: 0.0, end: 1.0),
+          builder: (context, value, child) {
+            return Transform.translate(
+              offset: Offset(0, 30 * (1 - value)),
+              child: Opacity(
+                opacity: value,
+                child: _buildFirebaseClothingCard(items[index]),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildFirebaseList(List<BrandedItemsRecord> items) {
+    return ListView.builder(
+      padding: const EdgeInsets.all(16.0),
+      itemCount: items.length,
+      itemBuilder: (context, index) {
+        return TweenAnimationBuilder<double>(
+          duration: Duration(milliseconds: 300 + (index * 50)),
+          tween: Tween(begin: 0.0, end: 1.0),
+          builder: (context, value, child) {
+            return Transform.translate(
+              offset: Offset(50 * (1 - value), 0),
+              child: Opacity(
+                opacity: value,
+                child: _buildFirebaseListCard(items[index]),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildFirebaseClothingCard(BrandedItemsRecord item) {
+    return GestureDetector(
+      onTap: () {
+        // Convert BrandedItemsRecord to Map for navigation - FIXED DATA MAPPING
+        final itemMap = {
+          'documentId': item.reference.id, // Firebase document ID
+          'itemId': item.itemId, // The actual item_id field from Firebase
+          'name': item.name,
+          'description': item.description,
+          'price': '\$${item.price.toStringAsFixed(2)}',
+          'imagePath': item.imageUrl, // This maps to imageUrl from Firebase
+          'category': item.category,
+          'productUrl': item.productUrl,
+          'vendorId': item.vendorId,
+          'styleTags': item.styleTags,
+          'weatherSuitability': item.weatherSuitability,
+        };
+
+        // Debug print to see what we're passing
+        print('Navigating with data: $itemMap');
+
+        context.pushNamed(
+          'ProductDetailsPage',
+          queryParameters: {
+            'documentId': item.reference.id,
+            'itemId': item.itemId,
+            'name': item.name,
+            'description': item.description,
+            'price': item.price.toString(),
+            'imageUrl': item.imageUrl,
+            'category': item.category,
+            'productUrl': item.productUrl,
+            'vendorId': item.vendorId,
+          },
+        );
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: FlutterFlowTheme.of(context).secondaryBackground,
+          borderRadius: BorderRadius.circular(20.0),
+          boxShadow: [
+            BoxShadow(
+              blurRadius: 12.0,
+              color: Colors.black.withOpacity(0.08),
+              offset: const Offset(0, 6),
+              spreadRadius: 0,
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Image Container
+            Expanded(
+              flex: 4,
+              child: Container(
+                width: double.infinity,
+                decoration: const BoxDecoration(
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(20.0),
+                    topRight: Radius.circular(20.0),
+                  ),
+                ),
+                child: Hero(
+                  tag:
+                      'item-${item.itemId.isNotEmpty ? item.itemId : item.reference.id}',
+                  child: ClipRRect(
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(20.0),
+                      topRight: Radius.circular(20.0),
+                    ),
+                    child: item.imageUrl.isNotEmpty
+                        ? Image.network(
+                            item.imageUrl,
+                            width: double.infinity,
+                            height: double.infinity,
+                            fit: BoxFit.cover,
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) return child;
+                              return Container(
+                                color: FlutterFlowTheme.of(context).alternate,
+                                child: Center(
+                                  child: CircularProgressIndicator(
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      FlutterFlowTheme.of(context).underground,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                color: FlutterFlowTheme.of(context).alternate,
+                                child: Icon(
+                                  Icons.image_not_supported,
+                                  size: 40.0,
+                                  color: FlutterFlowTheme.of(context)
+                                      .secondaryText,
+                                ),
+                              );
+                            },
+                          )
+                        : Container(
+                            color: FlutterFlowTheme.of(context).alternate,
+                            child: Icon(
+                              Icons.image_not_supported,
+                              size: 40.0,
+                              color: FlutterFlowTheme.of(context).secondaryText,
+                            ),
+                          ),
+                  ),
+                ),
+              ),
+            ),
+
+            // Content Section
+            Container(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Name
+                  Text(
+                    item.name,
+                    style: FlutterFlowTheme.of(context).bodyLarge.override(
+                          fontFamily: GoogleFonts.inter().fontFamily,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.0,
+                          fontSize: 16.0,
+                        ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 12.0),
+
+                  // Price
+                  Text(
+                    '\$${item.price.toStringAsFixed(2)}',
+                    style: FlutterFlowTheme.of(context).headlineSmall.override(
+                          fontFamily: GoogleFonts.interTight().fontFamily,
+                          color: FlutterFlowTheme.of(context).underground,
+                          fontSize: 18.0,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.0,
+                        ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFirebaseListCard(BrandedItemsRecord item) {
+    return GestureDetector(
+      onTap: () {
+        // Convert BrandedItemsRecord to Map for navigation - FIXED DATA MAPPING
+        final itemMap = {
+          'documentId': item.reference.id, // Firebase document ID
+          'itemId': item.itemId, // The actual item_id field from Firebase
+          'name': item.name,
+          'description': item.description,
+          'price': '\$${item.price.toStringAsFixed(2)}',
+          'imagePath': item.imageUrl, // This maps to imageUrl from Firebase
+          'category': item.category,
+          'productUrl': item.productUrl,
+          'vendorId': item.vendorId,
+          'styleTags': item.styleTags,
+          'weatherSuitability': item.weatherSuitability,
+        };
+
+        // Debug print to see what we're passing
+        print('Navigating with data: $itemMap');
+
+        context.pushNamed(
+          'ProductDetailsPage',
+          queryParameters: {
+            'documentId': item.reference.id,
+            'itemId': item.itemId,
+            'name': item.name,
+            'description': item.description,
+            'price': item.price.toString(),
+            'imageUrl': item.imageUrl,
+            'category': item.category,
+            'productUrl': item.productUrl,
+            'vendorId': item.vendorId,
+          },
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16.0),
+        decoration: BoxDecoration(
+          color: FlutterFlowTheme.of(context).secondaryBackground,
+          borderRadius: BorderRadius.circular(16.0),
+          boxShadow: [
+            BoxShadow(
+              blurRadius: 8.0,
+              color: Colors.black.withOpacity(0.06),
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: Row(
+            children: [
+              // Image
+              Container(
+                width: 100.0,
+                height: 100.0,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12.0),
+                ),
+                child: Hero(
+                  tag:
+                      'item-${item.itemId.isNotEmpty ? item.itemId : item.reference.id}',
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12.0),
+                    child: item.imageUrl.isNotEmpty
+                        ? Image.network(
+                            item.imageUrl,
+                            width: 100.0,
+                            height: 100.0,
+                            fit: BoxFit.cover,
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) return child;
+                              return Container(
+                                color: FlutterFlowTheme.of(context).alternate,
+                                child: Center(
+                                  child: CircularProgressIndicator(
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      FlutterFlowTheme.of(context).underground,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                color: FlutterFlowTheme.of(context).alternate,
+                                child: Icon(
+                                  Icons.image_not_supported,
+                                  size: 30.0,
+                                  color: FlutterFlowTheme.of(context)
+                                      .secondaryText,
+                                ),
+                              );
+                            },
+                          )
+                        : Container(
+                            color: FlutterFlowTheme.of(context).alternate,
+                            child: Icon(
+                              Icons.image_not_supported,
+                              size: 30.0,
+                              color: FlutterFlowTheme.of(context).secondaryText,
+                            ),
+                          ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(width: 16.0),
+
+              // Content - Name only
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item.name,
+                      style: FlutterFlowTheme.of(context).bodyLarge.override(
+                            fontFamily: GoogleFonts.inter().fontFamily,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.0,
+                          ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+
+              // Price
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    '\$${item.price.toStringAsFixed(2)}',
+                    style: FlutterFlowTheme.of(context).headlineSmall.override(
+                          fontFamily: GoogleFonts.interTight().fontFamily,
+                          color: FlutterFlowTheme.of(context).underground,
+                          fontSize: 18.0,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.0,
+                        ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
       ),
@@ -386,16 +675,13 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
       ),
       child: Column(
         children: [
-          // Enhanced Category Filter only
+          // Category Filter
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
-              children: [
-                'All',
-                'Tops',
-                'Bottoms',
-                'Shoes',
-              ].map((category) => _buildCategoryChip(category)).toList(),
+              children: _categories
+                  .map((category) => _buildCategoryChip(category))
+                  .toList(),
             ),
           ),
         ],
@@ -540,68 +826,6 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
     );
   }
 
-  Widget _buildClothingGrid() {
-    final filteredItems = _filteredItems;
-
-    if (filteredItems.isEmpty) {
-      return _buildEmptyState();
-    }
-
-    return GridView.builder(
-      padding: const EdgeInsets.all(16.0),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 16.0,
-        mainAxisSpacing: 16.0,
-        childAspectRatio: 0.75,
-      ),
-      itemCount: filteredItems.length,
-      itemBuilder: (context, index) {
-        return TweenAnimationBuilder<double>(
-          duration: Duration(milliseconds: 400 + (index * 100)),
-          tween: Tween(begin: 0.0, end: 1.0),
-          builder: (context, value, child) {
-            return Transform.translate(
-              offset: Offset(0, 30 * (1 - value)),
-              child: Opacity(
-                opacity: value,
-                child: _buildEnhancedClothingCard(filteredItems[index]),
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  Widget _buildClothingList() {
-    final filteredItems = _filteredItems;
-
-    if (filteredItems.isEmpty) {
-      return _buildEmptyState();
-    }
-
-    return ListView.builder(
-      padding: const EdgeInsets.all(16.0),
-      itemCount: filteredItems.length,
-      itemBuilder: (context, index) {
-        return TweenAnimationBuilder<double>(
-          duration: Duration(milliseconds: 300 + (index * 50)),
-          tween: Tween(begin: 0.0, end: 1.0),
-          builder: (context, value, child) {
-            return Transform.translate(
-              offset: Offset(50 * (1 - value), 0),
-              child: Opacity(
-                opacity: value,
-                child: _buildListClothingCard(filteredItems[index]),
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
   Widget _buildEmptyState() {
     return Center(
       child: Column(
@@ -657,259 +881,6 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildEnhancedClothingCard(ClothingItem item) {
-    return GestureDetector(
-      onTap: () {
-        // Convert ClothingItem to Map for FlutterFlow navigation
-        final itemMap = {
-          'id': item.id,
-          'name': item.name,
-          'description': item.description,
-          'price': item.price,
-          'imagePath': item.imagePath,
-          'colors': item.colors,
-          'sizes': item.sizes,
-          'rating': item.rating,
-          'reviewCount': item.reviewCount,
-          'category': item.category,
-          'isNew': item.isNew,
-          'isOnSale': item.isOnSale,
-          'discountPercent': item.discountPercent,
-          'brand': item.brand,
-        };
-
-        context.pushNamed(
-          'ProductDetailsPage',
-          extra: itemMap,
-        );
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          color: FlutterFlowTheme.of(context).secondaryBackground,
-          borderRadius: BorderRadius.circular(20.0),
-          boxShadow: [
-            BoxShadow(
-              blurRadius: 12.0,
-              color: Colors.black.withOpacity(0.08),
-              offset: const Offset(0, 6),
-              spreadRadius: 0,
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Enhanced Image Container
-            Expanded(
-              flex: 4,
-              child: Container(
-                width: double.infinity,
-                decoration: const BoxDecoration(
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(20.0),
-                    topRight: Radius.circular(20.0),
-                  ),
-                ),
-                child: Stack(
-                  children: [
-                    Hero(
-                      tag: 'item-${item.id}',
-                      child: ClipRRect(
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(20.0),
-                          topRight: Radius.circular(20.0),
-                        ),
-                        child: Image.asset(
-                          item.imagePath,
-                          width: double.infinity,
-                          height: double.infinity,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(
-                              color: FlutterFlowTheme.of(context).alternate,
-                              child: Icon(
-                                Icons.image_not_supported,
-                                size: 40.0,
-                                color:
-                                    FlutterFlowTheme.of(context).secondaryText,
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                    // Badges removed
-                  ],
-                ),
-              ),
-            ),
-
-            // Content Section - Simplified to show only name and single price
-            Container(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Name only
-                  Text(
-                    item.name,
-                    style: FlutterFlowTheme.of(context).bodyLarge.override(
-                          fontFamily: GoogleFonts.inter().fontFamily,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 0.0,
-                          fontSize: 16.0,
-                        ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 12.0),
-
-                  // Single Price - No original price comparison
-                  Text(
-                    item.price,
-                    style: FlutterFlowTheme.of(context).headlineSmall.override(
-                          fontFamily: GoogleFonts.interTight().fontFamily,
-                          color: FlutterFlowTheme.of(context).underground,
-                          fontSize: 18.0,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 0.0,
-                        ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildListClothingCard(ClothingItem item) {
-    return GestureDetector(
-      onTap: () {
-        // Convert ClothingItem to Map for FlutterFlow navigation
-        final itemMap = {
-          'id': item.id,
-          'name': item.name,
-          'description': item.description,
-          'price': item.price,
-          'imagePath': item.imagePath,
-          'colors': item.colors,
-          'sizes': item.sizes,
-          'rating': item.rating,
-          'reviewCount': item.reviewCount,
-          'category': item.category,
-          'isNew': item.isNew,
-          'isOnSale': item.isOnSale,
-          'discountPercent': item.discountPercent,
-          'brand': item.brand,
-        };
-
-        context.pushNamed(
-          'ProductDetailsPage',
-          extra: itemMap,
-        );
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 16.0),
-        decoration: BoxDecoration(
-          color: FlutterFlowTheme.of(context).secondaryBackground,
-          borderRadius: BorderRadius.circular(16.0),
-          boxShadow: [
-            BoxShadow(
-              blurRadius: 8.0,
-              color: Colors.black.withOpacity(0.06),
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: Row(
-            children: [
-              // Image
-              Container(
-                width: 100.0,
-                height: 100.0,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12.0),
-                ),
-                child: Stack(
-                  children: [
-                    Hero(
-                      tag: 'item-${item.id}',
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(12.0),
-                        child: Image.asset(
-                          item.imagePath,
-                          width: 100.0,
-                          height: 100.0,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(
-                              color: FlutterFlowTheme.of(context).alternate,
-                              child: Icon(
-                                Icons.image_not_supported,
-                                size: 30.0,
-                                color:
-                                    FlutterFlowTheme.of(context).secondaryText,
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                    // Badges removed
-                  ],
-                ),
-              ),
-
-              const SizedBox(width: 16.0),
-
-              // Content - Name only
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      item.name,
-                      style: FlutterFlowTheme.of(context).bodyLarge.override(
-                            fontFamily: GoogleFonts.inter().fontFamily,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 0.0,
-                          ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-
-              // Single Price - No original price comparison
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    item.price,
-                    style: FlutterFlowTheme.of(context).headlineSmall.override(
-                          fontFamily: GoogleFonts.interTight().fontFamily,
-                          color: FlutterFlowTheme.of(context).underground,
-                          fontSize: 18.0,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 0.0,
-                        ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }

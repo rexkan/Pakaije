@@ -5,49 +5,15 @@ import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/backend/schema/structs/index.dart';
 import '/backend/backend.dart';
+import '/auth/firebase_auth/auth_util.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_router/go_router.dart';
 import 'product_details_page_model.dart';
 export 'product_details_page_model.dart';
-
-// Import the ClothingItem class from buy_clothes_widget
-class ClothingItem {
-  final String id;
-  final String name;
-  final String description;
-  final String price;
-  final String originalPrice;
-  final String imagePath;
-  final List<String> colors;
-  final List<String> sizes;
-  final double rating;
-  final int reviewCount;
-  final String category;
-  final bool isNew;
-  final bool isOnSale;
-  final int discountPercent;
-  final String brand;
-
-  ClothingItem({
-    required this.id,
-    required this.name,
-    required this.description,
-    required this.price,
-    this.originalPrice = '',
-    required this.imagePath,
-    this.colors = const [],
-    this.sizes = const [],
-    this.rating = 0.0,
-    this.reviewCount = 0,
-    this.category = 'All',
-    this.isNew = false,
-    this.isOnSale = false,
-    this.discountPercent = 0,
-    this.brand = '',
-  });
-}
 
 class ProductDetailsPageWidget extends StatefulWidget {
   const ProductDetailsPageWidget({super.key});
@@ -65,8 +31,8 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
   late ProductDetailsPageModel _model;
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
-  // This will hold the passed ClothingItem data
-  ClothingItem? _selectedItem;
+  // This will hold the passed product data
+  Map<String, dynamic>? _productData;
 
   // Report dialog controller
   final TextEditingController _reportReasonController = TextEditingController();
@@ -143,30 +109,45 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
           !anim.applyInitialState),
       this,
     );
-  }
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
+    // Get the passed data - FIXED TO USE QUERY PARAMETERS
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Try to get data from query parameters (FlutterFlow method)
+      final state = GoRouterState.of(context);
+      final queryParams = state.uri.queryParameters;
 
-    // Get the passed data from FlutterFlow navigation
-    final routeSettings = ModalRoute.of(context)?.settings;
+      print('Query parameters: $queryParams'); // Debug print
 
-    // Try to get from FlutterFlow's extra parameter first
-    if (context.mounted) {
-      try {
-        final extra = GoRouterState.of(context).extra;
-        if (extra != null && extra is ClothingItem) {
-          _selectedItem = extra;
-        }
-      } catch (e) {
-        // Fallback to route arguments
-        if (routeSettings?.arguments != null &&
-            routeSettings!.arguments is ClothingItem) {
-          _selectedItem = routeSettings.arguments as ClothingItem;
+      if (queryParams.isNotEmpty) {
+        setState(() {
+          _productData = {
+            'documentId': queryParams['documentId'] ?? '',
+            'itemId': queryParams['itemId'] ?? '',
+            'name': queryParams['name'] ?? '',
+            'description': queryParams['description'] ?? '',
+            'price': queryParams['price'] ?? '0.00',
+            'imagePath': queryParams['imageUrl'] ?? '',
+            'category': queryParams['category'] ?? '',
+            'productUrl': queryParams['productUrl'] ?? '',
+          };
+        });
+        print(
+            'Product data set from query params: $_productData'); // Debug print
+      } else {
+        // Fallback to arguments method
+        final args = ModalRoute.of(context)?.settings.arguments;
+        print('Fallback - Received arguments: $args'); // Debug print
+        if (args != null && args is Map<String, dynamic>) {
+          setState(() {
+            _productData = args;
+          });
+          print(
+              'Product data set from arguments: $_productData'); // Debug print
+        } else {
+          print('No data received via any method'); // Debug print
         }
       }
-    }
+    });
   }
 
   @override
@@ -176,19 +157,39 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
     super.dispose();
   }
 
-  // Get item data (use passed item or fallback to default)
-  ClothingItem get _currentItem {
-    return _selectedItem ??
-        ClothingItem(
-          id: '1',
-          name: 'Basic Tees',
-          description: '100% Suprima Cotton, 260gsm, Enzyme wash',
-          price: '\$50.00',
-          imagePath: 'assets/images/basic_black_tee.jpg',
-          colors: ['Black', 'White', 'Gray'],
-          sizes: ['S', 'M', 'L', 'XL'],
-          category: 'Tops',
-        );
+  // Helper methods to safely get product data with null safety
+  String get documentId => _productData?['documentId']?.toString() ?? '';
+  String get productId =>
+      _productData?['itemId']?.toString() ??
+      _productData?['documentId']?.toString() ??
+      '';
+  String get productName => _productData?['name']?.toString() ?? 'Product Name';
+  String get productDescription =>
+      _productData?['description']?.toString() ?? 'No description available';
+  String get productPrice => _productData?['price']?.toString() ?? '\$0.00';
+  String get productImageUrl => _productData?['imagePath']?.toString() ?? '';
+  String get productCategory => _productData?['category']?.toString() ?? '';
+  String get productUrl => _productData?['productUrl']?.toString() ?? '';
+  String get vendorId => _productData?['vendorId']?.toString() ?? '';
+
+  List<String> get styleTags {
+    if (_productData?['styleTags'] != null) {
+      final tags = _productData!['styleTags'];
+      if (tags is List) {
+        return tags.map((e) => e.toString()).toList();
+      }
+    }
+    return [];
+  }
+
+  List<String> get weatherSuitability {
+    if (_productData?['weatherSuitability'] != null) {
+      final weather = _productData!['weatherSuitability'];
+      if (weather is List) {
+        return weather.map((e) => e.toString()).toList();
+      }
+    }
+    return [];
   }
 
   @override
@@ -209,6 +210,8 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
                   _buildProductImage(),
                   _buildProductInfo(),
                   _buildProductDescription(),
+                  if (styleTags.isNotEmpty) _buildStyleTags(),
+                  if (weatherSuitability.isNotEmpty) _buildWeatherInfo(),
                 ],
               ),
             ),
@@ -240,7 +243,7 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
       title: Text(
         'Product Details',
         style: FlutterFlowTheme.of(context).bodyMedium.override(
-              font: GoogleFonts.inter(fontWeight: FontWeight.bold),
+              fontFamily: GoogleFonts.inter().fontFamily,
               color: FlutterFlowTheme.of(context).white,
               fontSize: 20.0,
               letterSpacing: 0.0,
@@ -250,7 +253,6 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
       centerTitle: true,
       elevation: 2.0,
       actions: [
-        // Report button
         FlutterFlowIconButton(
           borderColor: Colors.transparent,
           borderRadius: 30.0,
@@ -272,58 +274,62 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
   Widget _buildProductImage() {
     return Container(
       width: double.infinity,
-      child: Stack(
-        children: [
-          Align(
-            alignment: AlignmentDirectional(0.0, 0.0),
-            child: Padding(
-              padding: EdgeInsetsDirectional.fromSTEB(0.0, 24.0, 0.0, 24.0),
-              child: Hero(
-                tag: 'item-${_currentItem.id}',
-                transitionOnUserGestures: true,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(16.0),
-                  child: Image.asset(
-                    _currentItem.imagePath,
-                    width: 350.0,
-                    height: 350.0,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        width: 350.0,
-                        height: 350.0,
-                        color: FlutterFlowTheme.of(context).alternate,
-                        child: Icon(
-                          Icons.image_not_supported,
-                          size: 60.0,
-                          color: FlutterFlowTheme.of(context).secondaryText,
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ),
+      child: Align(
+        alignment: AlignmentDirectional(0.0, 0.0),
+        child: Padding(
+          padding: EdgeInsetsDirectional.fromSTEB(0.0, 24.0, 0.0, 24.0),
+          child: Hero(
+            tag: 'item-$productId',
+            transitionOnUserGestures: true,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(16.0),
+              child: productImageUrl.isNotEmpty
+                  ? Image.network(
+                      productImageUrl,
+                      width: 350.0,
+                      height: 350.0,
+                      fit: BoxFit.cover,
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Container(
+                          width: 350.0,
+                          height: 350.0,
+                          color: FlutterFlowTheme.of(context).alternate,
+                          child: Center(
+                            child: CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                FlutterFlowTheme.of(context).underground,
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          width: 350.0,
+                          height: 350.0,
+                          color: FlutterFlowTheme.of(context).alternate,
+                          child: Icon(
+                            Icons.image_not_supported,
+                            size: 60.0,
+                            color: FlutterFlowTheme.of(context).secondaryText,
+                          ),
+                        );
+                      },
+                    )
+                  : Container(
+                      width: 350.0,
+                      height: 350.0,
+                      color: FlutterFlowTheme.of(context).alternate,
+                      child: Icon(
+                        Icons.image_not_supported,
+                        size: 60.0,
+                        color: FlutterFlowTheme.of(context).secondaryText,
+                      ),
+                    ),
             ),
           ),
-          // Badges
-          if (_currentItem.isNew || _currentItem.isOnSale)
-            Positioned(
-              top: 40.0,
-              left: 30.0,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (_currentItem.isNew) _buildBadge('NEW', Colors.green),
-                  if (_currentItem.isOnSale)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8.0),
-                      child: _buildBadge(
-                          '-${_currentItem.discountPercent}%', Colors.red),
-                    ),
-                ],
-              ),
-            ),
-        ],
+        ),
       ),
     ).animateOnPageLoad(animationsMap['imageOnPageLoadAnimation']!);
   }
@@ -334,87 +340,75 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Brand (if available)
-          if (_currentItem.brand.isNotEmpty) ...[
-            Text(
-              _currentItem.brand.toUpperCase(),
-              style: FlutterFlowTheme.of(context).bodySmall.override(
-                    color: FlutterFlowTheme.of(context).underground,
-                    fontSize: 12.0,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 1.5,
+          // Category and Product ID
+          if (productCategory.isNotEmpty || productId.isNotEmpty) ...[
+            Row(
+              children: [
+                if (productCategory.isNotEmpty) ...[
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12.0, vertical: 6.0),
+                    decoration: BoxDecoration(
+                      color: FlutterFlowTheme.of(context)
+                          .underground
+                          .withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20.0),
+                      border: Border.all(
+                        color: FlutterFlowTheme.of(context)
+                            .underground
+                            .withOpacity(0.3),
+                      ),
+                    ),
+                    child: Text(
+                      productCategory.toUpperCase(),
+                      style: FlutterFlowTheme.of(context).bodySmall.override(
+                            fontFamily: GoogleFonts.inter().fontFamily,
+                            color: FlutterFlowTheme.of(context).underground,
+                            fontSize: 11.0,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 1.0,
+                          ),
+                    ),
                   ),
+                  const SizedBox(width: 8.0),
+                ],
+                if (productId.isNotEmpty)
+                  Text(
+                    'ID: $productId',
+                    style: FlutterFlowTheme.of(context).bodySmall.override(
+                          fontFamily: 'monospace',
+                          color: FlutterFlowTheme.of(context).secondaryText,
+                          fontSize: 12.0,
+                        ),
+                  ),
+              ],
             ),
-            const SizedBox(height: 8.0),
+            const SizedBox(height: 16.0),
           ],
 
           // Product Name
           Text(
-            _currentItem.name,
+            productName,
             style: FlutterFlowTheme.of(context).headlineSmall.override(
-                  font: GoogleFonts.interTight(),
+                  fontFamily: GoogleFonts.interTight().fontFamily,
                   fontSize: 28.0,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 0.0,
                 ),
           ).animateOnPageLoad(animationsMap['textOnPageLoadAnimation']!),
 
-          const SizedBox(height: 12.0),
-
-          // Rating (if available)
-          if (_currentItem.rating > 0) ...[
-            Row(
-              children: [
-                ...List.generate(5, (index) {
-                  return Icon(
-                    index < _currentItem.rating.floor()
-                        ? Icons.star
-                        : index < _currentItem.rating
-                            ? Icons.star_half
-                            : Icons.star_border,
-                    size: 20.0,
-                    color: Colors.amber,
-                  );
-                }),
-                const SizedBox(width: 8.0),
-                Text(
-                  '${_currentItem.rating} (${_currentItem.reviewCount} reviews)',
-                  style: FlutterFlowTheme.of(context).bodyMedium.override(
-                        color: FlutterFlowTheme.of(context).secondaryText,
-                        fontSize: 14.0,
-                      ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16.0),
-          ],
+          const SizedBox(height: 16.0),
 
           // Price
-          Row(
-            children: [
-              if (_currentItem.originalPrice.isNotEmpty &&
-                  _currentItem.isOnSale) ...[
-                Text(
-                  _currentItem.originalPrice,
-                  style: FlutterFlowTheme.of(context).headlineSmall.override(
-                        color: FlutterFlowTheme.of(context).secondaryText,
-                        fontSize: 20.0,
-                        decoration: TextDecoration.lineThrough,
-                      ),
+          Text(
+            productPrice,
+            style: FlutterFlowTheme.of(context).headlineSmall.override(
+                  fontFamily: GoogleFonts.interTight().fontFamily,
+                  color: FlutterFlowTheme.of(context).underground,
+                  fontSize: 32.0,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.0,
                 ),
-                const SizedBox(width: 12.0),
-              ],
-              Text(
-                _currentItem.price,
-                style: FlutterFlowTheme.of(context).headlineSmall.override(
-                      font: GoogleFonts.interTight(),
-                      color: FlutterFlowTheme.of(context).underground,
-                      fontSize: 32.0,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 0.0,
-                    ),
-              ),
-            ],
           ),
 
           const SizedBox(height: 24.0),
@@ -425,35 +419,161 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
 
   Widget _buildProductDescription() {
     return Padding(
-      padding: EdgeInsetsDirectional.fromSTEB(24.0, 0.0, 24.0, 40.0),
+      padding: EdgeInsetsDirectional.fromSTEB(24.0, 0.0, 24.0, 24.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'Description',
             style: FlutterFlowTheme.of(context).bodyLarge.override(
+                  fontFamily: GoogleFonts.inter().fontFamily,
                   fontWeight: FontWeight.w600,
                   fontSize: 18.0,
                 ),
           ),
           const SizedBox(height: 12.0),
           Text(
-            _currentItem.description.isNotEmpty
-                ? _currentItem.description
-                : '100% Suprima Cotton, 260gsm, Enzyme wash. This premium basic tee offers exceptional comfort and durability with a perfect fit.',
+            productDescription,
             style: FlutterFlowTheme.of(context).bodyMedium.override(
-                  font: GoogleFonts.inter(),
+                  fontFamily: GoogleFonts.inter().fontFamily,
                   color: FlutterFlowTheme.of(context).secondaryText,
                   fontSize: 16.0,
                   letterSpacing: 0.2,
-                  fontWeight:
-                      FlutterFlowTheme.of(context).bodyMedium.fontWeight,
-                  fontStyle: FlutterFlowTheme.of(context).bodyMedium.fontStyle,
                 ),
           ),
         ],
       ),
     ).animateOnPageLoad(animationsMap['containerOnPageLoadAnimation']!);
+  }
+
+  Widget _buildStyleTags() {
+    return Padding(
+      padding: EdgeInsetsDirectional.fromSTEB(24.0, 0.0, 24.0, 24.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Style Tags',
+            style: FlutterFlowTheme.of(context).bodyLarge.override(
+                  fontFamily: GoogleFonts.inter().fontFamily,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 18.0,
+                ),
+          ),
+          const SizedBox(height: 12.0),
+          Wrap(
+            spacing: 8.0,
+            runSpacing: 8.0,
+            children: styleTags
+                .map((tag) => Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16.0, vertical: 8.0),
+                      decoration: BoxDecoration(
+                        color: FlutterFlowTheme.of(context).primaryBackground,
+                        borderRadius: BorderRadius.circular(20.0),
+                        border: Border.all(
+                          color: FlutterFlowTheme.of(context).alternate,
+                        ),
+                      ),
+                      child: Text(
+                        tag,
+                        style: FlutterFlowTheme.of(context).bodyMedium.override(
+                              fontFamily: GoogleFonts.inter().fontFamily,
+                              color: FlutterFlowTheme.of(context).primaryText,
+                              fontSize: 14.0,
+                              fontWeight: FontWeight.w500,
+                            ),
+                      ),
+                    ))
+                .toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWeatherInfo() {
+    return Padding(
+      padding: EdgeInsetsDirectional.fromSTEB(24.0, 0.0, 24.0, 24.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Weather Suitability',
+            style: FlutterFlowTheme.of(context).bodyLarge.override(
+                  fontFamily: GoogleFonts.inter().fontFamily,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 18.0,
+                ),
+          ),
+          const SizedBox(height: 12.0),
+          Wrap(
+            spacing: 8.0,
+            runSpacing: 8.0,
+            children: weatherSuitability
+                .map((weather) => Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16.0, vertical: 8.0),
+                      decoration: BoxDecoration(
+                        color: FlutterFlowTheme.of(context)
+                            .underground
+                            .withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20.0),
+                        border: Border.all(
+                          color: FlutterFlowTheme.of(context)
+                              .underground
+                              .withOpacity(0.3),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            _getWeatherIcon(weather),
+                            size: 16.0,
+                            color: FlutterFlowTheme.of(context).underground,
+                          ),
+                          const SizedBox(width: 6.0),
+                          Text(
+                            weather,
+                            style: FlutterFlowTheme.of(context)
+                                .bodyMedium
+                                .override(
+                                  fontFamily: GoogleFonts.inter().fontFamily,
+                                  color:
+                                      FlutterFlowTheme.of(context).underground,
+                                  fontSize: 14.0,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                          ),
+                        ],
+                      ),
+                    ))
+                .toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  IconData _getWeatherIcon(String weather) {
+    switch (weather.toLowerCase()) {
+      case 'summer':
+      case 'hot':
+        return Icons.wb_sunny;
+      case 'winter':
+      case 'cold':
+        return Icons.ac_unit;
+      case 'rain':
+      case 'rainy':
+        return Icons.umbrella;
+      case 'spring':
+      case 'fall':
+      case 'autumn':
+        return Icons.park;
+      default:
+        return Icons.wb_cloudy;
+    }
   }
 
   Widget _buildBottomActions() {
@@ -495,7 +615,7 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
                       EdgeInsetsDirectional.fromSTEB(0.0, 0.0, 8.0, 0.0),
                   color: FlutterFlowTheme.of(context).alternate,
                   textStyle: FlutterFlowTheme.of(context).titleMedium.override(
-                        font: GoogleFonts.interTight(),
+                        fontFamily: GoogleFonts.interTight().fontFamily,
                         color: const Color.fromARGB(255, 0, 0, 0),
                         fontSize: 16.0,
                         fontWeight: FontWeight.w600,
@@ -513,16 +633,16 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
 
             const SizedBox(width: 16.0),
 
-            // Copy Product Link Button
+            // Visit Store Button
             Expanded(
               flex: 1,
               child: FFButtonWidget(
                 onPressed: () {
-                  _copyProductLink();
+                  _openProductUrl();
                 },
-                text: 'Product Link',
+                text: 'Visit Store',
                 icon: Icon(
-                  Icons.link,
+                  Icons.open_in_new,
                   size: 25.0,
                   color: Colors.white,
                 ),
@@ -533,7 +653,7 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
                       EdgeInsetsDirectional.fromSTEB(0.0, 0.0, 8.0, 0.0),
                   color: FlutterFlowTheme.of(context).underground,
                   textStyle: FlutterFlowTheme.of(context).titleMedium.override(
-                        font: GoogleFonts.interTight(),
+                        fontFamily: GoogleFonts.interTight().fontFamily,
                         color: Colors.white,
                         fontSize: 16.0,
                         fontWeight: FontWeight.w600,
@@ -549,32 +669,6 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBadge(String text, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(16.0),
-        boxShadow: [
-          BoxShadow(
-            blurRadius: 4.0,
-            color: color.withOpacity(0.3),
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: 12.0,
-          fontWeight: FontWeight.bold,
-          letterSpacing: 0.5,
         ),
       ),
     );
@@ -599,6 +693,7 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
               Text(
                 'Report Content',
                 style: FlutterFlowTheme.of(context).headlineSmall.override(
+                      fontFamily: GoogleFonts.interTight().fontFamily,
                       fontWeight: FontWeight.bold,
                       fontSize: 20.0,
                     ),
@@ -617,14 +712,16 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
                     Text(
                       'Item Name = ',
                       style: FlutterFlowTheme.of(context).bodyMedium.override(
+                            fontFamily: GoogleFonts.inter().fontFamily,
                             fontWeight: FontWeight.w600,
                             fontSize: 16.0,
                           ),
                     ),
                     Expanded(
                       child: Text(
-                        _currentItem.name,
+                        productName,
                         style: FlutterFlowTheme.of(context).bodyMedium.override(
+                              fontFamily: GoogleFonts.inter().fontFamily,
                               fontSize: 16.0,
                             ),
                       ),
@@ -635,33 +732,62 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
                 const SizedBox(height: 16.0),
 
                 // Item ID
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Item ID = ',
-                      style: FlutterFlowTheme.of(context).bodyMedium.override(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 16.0,
-                          ),
-                    ),
-                    Text(
-                      _currentItem.id,
-                      style: FlutterFlowTheme.of(context).bodyMedium.override(
-                            fontSize: 16.0,
-                            fontFamily: 'monospace',
-                            color: FlutterFlowTheme.of(context).underground,
-                          ),
-                    ),
-                  ],
-                ),
+                if (productId.isNotEmpty) ...[
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Item ID = ',
+                        style: FlutterFlowTheme.of(context).bodyMedium.override(
+                              fontFamily: GoogleFonts.inter().fontFamily,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 16.0,
+                            ),
+                      ),
+                      Text(
+                        productId,
+                        style: FlutterFlowTheme.of(context).bodyMedium.override(
+                              fontFamily: 'monospace',
+                              fontSize: 16.0,
+                              color: FlutterFlowTheme.of(context).underground,
+                            ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16.0),
+                ],
 
-                const SizedBox(height: 16.0),
+                // Vendor ID (if available)
+                if (vendorId.isNotEmpty) ...[
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Vendor ID = ',
+                        style: FlutterFlowTheme.of(context).bodyMedium.override(
+                              fontFamily: GoogleFonts.inter().fontFamily,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 16.0,
+                            ),
+                      ),
+                      Text(
+                        vendorId,
+                        style: FlutterFlowTheme.of(context).bodyMedium.override(
+                              fontFamily: 'monospace',
+                              fontSize: 16.0,
+                              color: FlutterFlowTheme.of(context).underground,
+                            ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16.0),
+                ],
 
                 // Reason
                 Text(
                   'Reason',
                   style: FlutterFlowTheme.of(context).bodyMedium.override(
+                        fontFamily: GoogleFonts.inter().fontFamily,
                         fontWeight: FontWeight.w700,
                         fontSize: 16.0,
                       ),
@@ -674,6 +800,7 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
                     hintText:
                         'Please describe why you are reporting this product...',
                     hintStyle: FlutterFlowTheme.of(context).bodyMedium.override(
+                          fontFamily: GoogleFonts.inter().fontFamily,
                           color: FlutterFlowTheme.of(context).secondaryText,
                         ),
                     border: OutlineInputBorder(
@@ -708,6 +835,7 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
               child: Text(
                 'Cancel',
                 style: FlutterFlowTheme.of(context).bodyMedium.override(
+                      fontFamily: GoogleFonts.inter().fontFamily,
                       color: FlutterFlowTheme.of(context).secondaryText,
                       fontWeight: FontWeight.w600,
                     ),
@@ -739,7 +867,7 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
     );
   }
 
-  void _submitReport() {
+  void _submitReport() async {
     if (_reportReasonController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -754,179 +882,579 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
       return;
     }
 
-    // Here you would typically save the report to Firebase
-    // For now, we'll just show a success message
+    try {
+      // Show loading indicator
+      Navigator.of(context).pop(); // Close the dialog first
 
-    // Example of how to create the report data:
-    /*
-    final reportData = createContentReportsRecordData(
-      reportId: 'report_${DateTime.now().millisecondsSinceEpoch}',
-      itemId: _currentItem.id,
-      reporterId: 'current_user_id', // Get from your auth system
-      reason: _reportReasonController.text.trim(),
-      status: 'pending',
-      timestamp: DateTime.now(),
-    );
-    
-    // Save to Firebase
-    ContentReportsRecord.collection.add(reportData);
-    */
-
-    Navigator.of(context).pop();
-    _reportReasonController.clear();
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(
-              Icons.check_circle,
-              color: Colors.white,
-              size: 24.0,
-            ),
-            const SizedBox(width: 12.0),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Report Submitted',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16.0,
-                    ),
-                  ),
-                  Text(
-                    'Thank you for helping keep our community safe.',
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.9),
-                      fontSize: 14.0,
-                    ),
-                  ),
-                ],
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              SizedBox(
+                width: 20.0,
+                height: 20.0,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.0,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
               ),
-            ),
-          ],
+              const SizedBox(width: 12.0),
+              Text(
+                'Submitting report...',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16.0,
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: FlutterFlowTheme.of(context).underground,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.0),
+          ),
+          duration: const Duration(seconds: 2),
         ),
-        backgroundColor: Colors.green,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12.0),
+      );
+
+      // Generate a unique report ID
+      final reportId = DateTime.now().millisecondsSinceEpoch.toString();
+
+      // Get current user ID (assuming you have authentication set up)
+      final currentUserId = currentUserUid ?? 'anonymous';
+
+      // Create the report data
+      final reportData = createContentReportsRecordData(
+        reportId: reportId,
+        itemId: productId,
+        reporterId: currentUserId,
+        reason: _reportReasonController.text.trim(),
+        status: 'pending', // Initial status
+        timestamp: getCurrentTimestamp,
+      );
+
+      // Add to Firestore
+      await ContentReportsRecord.collection.add(reportData);
+
+      // Clear the text field
+      _reportReasonController.clear();
+
+      // Remove loading snackbar and show success message
+      ScaffoldMessenger.of(context).removeCurrentSnackBar();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(
+                Icons.check_circle,
+                color: Colors.white,
+                size: 24.0,
+              ),
+              const SizedBox(width: 12.0),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Report Submitted Successfully',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16.0,
+                      ),
+                    ),
+                    Text(
+                      'Thank you for helping keep our community safe.',
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.9),
+                        fontSize: 14.0,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.0),
+          ),
+          duration: const Duration(seconds: 4),
         ),
-        duration: const Duration(seconds: 4),
-      ),
-    );
+      );
+
+      print('Report submitted successfully:');
+      print('Report ID: $reportId');
+      print('Item ID: $productId');
+      print('Reporter ID: $currentUserId');
+      print('Reason: ${_reportReasonController.text.trim()}');
+    } catch (e) {
+      print('Error submitting report: $e');
+
+      // Clear the text field even on error
+      _reportReasonController.clear();
+
+      // Remove loading snackbar and show error message
+      ScaffoldMessenger.of(context).removeCurrentSnackBar();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(
+                Icons.error,
+                color: Colors.white,
+                size: 24.0,
+              ),
+              const SizedBox(width: 12.0),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Failed to Submit Report',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16.0,
+                      ),
+                    ),
+                    Text(
+                      'Please try again later.',
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.9),
+                        fontSize: 14.0,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.0),
+          ),
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    }
   }
 
-  void _copyPromoCode() {
-    // Generate or use a promo code for this product
-    String promoCode = 'SAVE20${_currentItem.id.toUpperCase()}';
+  void _copyPromoCode() async {
+    if (productId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Product ID not available for promo code lookup.'),
+          backgroundColor: Colors.orange,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.0),
+          ),
+        ),
+      );
+      return;
+    }
 
-    Clipboard.setData(ClipboardData(text: promoCode));
+    try {
+      print('=== DIAGNOSTIC START ===');
+      print('Searching for productId: "$productId"');
+      print('productId length: ${productId.length}');
+      print('productId runtimeType: ${productId.runtimeType}');
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(
-              Icons.local_offer,
-              color: Colors.white,
-              size: 24.0,
+      // Show loading indicator
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              SizedBox(
+                width: 20.0,
+                height: 20.0,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.0,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              ),
+              const SizedBox(width: 12.0),
+              Text(
+                'Diagnosing promo codes...',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16.0,
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: FlutterFlowTheme.of(context).underground,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.0),
+          ),
+          duration: const Duration(seconds: 3),
+        ),
+      );
+
+      // First, let's see ALL documents in the collection
+      print('\n--- Fetching ALL documents from discount_codes collection ---');
+      final allDocsSnapshot =
+          await FirebaseFirestore.instance.collection('discount_codes').get();
+
+      print('Total documents in collection: ${allDocsSnapshot.docs.length}');
+
+      if (allDocsSnapshot.docs.isEmpty) {
+        print('ERROR: The discount_codes collection is completely empty!');
+        ScaffoldMessenger.of(context).removeCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('No documents found in discount_codes collection'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12.0),
             ),
-            const SizedBox(width: 12.0),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
+          ),
+        );
+        return;
+      }
+
+      // Examine each document in detail
+      print('\n--- Examining each document ---');
+      bool foundMatchingDoc = false;
+      DocumentSnapshot? matchingDoc;
+
+      for (int i = 0; i < allDocsSnapshot.docs.length; i++) {
+        final doc = allDocsSnapshot.docs[i];
+        final data = doc.data() as Map<String, dynamic>;
+
+        print('\nDocument ${i + 1} (ID: ${doc.id}):');
+        print('  Raw data: $data');
+
+        // Check item_id field specifically
+        if (data.containsKey('item_id')) {
+          final itemIdValue = data['item_id'];
+          print('  item_id exists:');
+          print('    Value: "$itemIdValue"');
+          print('    Type: ${itemIdValue.runtimeType}');
+          print('    Length: ${itemIdValue.toString().length}');
+          print('    Equals our productId: ${itemIdValue == productId}');
+          print(
+              '    Equals trimmed: ${itemIdValue.toString().trim() == productId.trim()}');
+          print(
+              '    Case-insensitive equals: ${itemIdValue.toString().toLowerCase() == productId.toLowerCase()}');
+
+          // Check for exact match
+          if (itemIdValue == productId) {
+            print('  *** EXACT MATCH FOUND! ***');
+            foundMatchingDoc = true;
+            matchingDoc = doc;
+          }
+
+          // Check for close matches
+          if (itemIdValue.toString().trim() == productId.trim()) {
+            print('  *** TRIMMED MATCH FOUND! ***');
+            if (!foundMatchingDoc) {
+              foundMatchingDoc = true;
+              matchingDoc = doc;
+            }
+          }
+
+          if (itemIdValue.toString().toLowerCase() == productId.toLowerCase()) {
+            print('  *** CASE-INSENSITIVE MATCH FOUND! ***');
+            if (!foundMatchingDoc) {
+              foundMatchingDoc = true;
+              matchingDoc = doc;
+            }
+          }
+        } else {
+          print('  item_id field does NOT exist!');
+          print('  Available fields: ${data.keys.toList()}');
+        }
+
+        // Check is_active field
+        if (data.containsKey('is_active')) {
+          final isActiveValue = data['is_active'];
+          print('  is_active: $isActiveValue (${isActiveValue.runtimeType})');
+        }
+
+        // Check code field
+        if (data.containsKey('code')) {
+          final codeValue = data['code'];
+          print('  code: "$codeValue"');
+        }
+      }
+
+      print('\n--- DIAGNOSTIC SUMMARY ---');
+      print('Found matching document: $foundMatchingDoc');
+
+      // Remove loading snackbar
+      ScaffoldMessenger.of(context).removeCurrentSnackBar();
+
+      if (foundMatchingDoc && matchingDoc != null) {
+        print('Processing the matching document...');
+
+        final data = matchingDoc.data() as Map<String, dynamic>;
+        print('Selected document data: $data');
+
+        // Check if active
+        final isActive = data['is_active'] as bool? ?? false;
+        print('Document is active: $isActive');
+
+        if (!isActive) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Found promo code but it is not active.'),
+              backgroundColor: Colors.orange,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12.0),
+              ),
+            ),
+          );
+          return;
+        }
+
+        // Get the code
+        final code = data['code'] as String? ?? '';
+        final discountType = data['discount_type'] as String? ?? 'percentage';
+        final discountValue =
+            (data['discount_value'] as num?)?.toDouble() ?? 0.0;
+        final startDate = (data['start_date'] as Timestamp?)?.toDate();
+        final endDate = (data['end_date'] as Timestamp?)?.toDate();
+        final usageCount = (data['usage_count'] as num?)?.toInt() ?? 0;
+        final maxUsage = (data['max_usage'] as num?)?.toInt() ?? 0;
+
+        print('Extracted code: "$code"');
+
+        if (code.isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Found promo code but code field is empty.'),
+              backgroundColor: Colors.orange,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12.0),
+              ),
+            ),
+          );
+          return;
+        }
+
+        // Check validity
+        final now = DateTime.now();
+        final isValidDate = (startDate == null || startDate.isBefore(now)) &&
+            (endDate == null || endDate.isAfter(now));
+        final isWithinUsageLimit = maxUsage == 0 || usageCount < maxUsage;
+
+        print('Date valid: $isValidDate');
+        print('Usage valid: $isWithinUsageLimit');
+
+        if (isValidDate && isWithinUsageLimit) {
+          // Copy the promo code to clipboard
+          Clipboard.setData(ClipboardData(text: code));
+
+          // Determine discount text
+          String discountText;
+          if (discountType == 'percentage') {
+            discountText = '${discountValue.toInt()}% OFF';
+          } else if (discountType == 'fixed') {
+            discountText = '\$${discountValue.toStringAsFixed(2)} OFF';
+          } else {
+            discountText = 'DISCOUNT APPLIED';
+          }
+
+          print('SUCCESS: Copied code "$code" with text "$discountText"');
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
                 children: [
-                  Text(
-                    'Promo Code Copied!',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16.0,
-                    ),
+                  Icon(
+                    Icons.local_offer,
+                    color: Colors.white,
+                    size: 24.0,
                   ),
-                  Text(
-                    promoCode,
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.9),
-                      fontSize: 14.0,
-                      fontFamily: 'monospace',
+                  const SizedBox(width: 12.0),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Promo Code Copied! 🎉',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16.0,
+                          ),
+                        ),
+                        Text(
+                          '$code - $discountText',
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.9),
+                            fontSize: 14.0,
+                            fontFamily: 'monospace',
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
+              backgroundColor: Colors.green,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12.0),
+              ),
+              duration: const Duration(seconds: 4),
             ),
-          ],
+          );
+        } else {
+          String reason = !isValidDate ? 'expired' : 'usage limit reached';
+          print('Code invalid - reason: $reason');
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Promo code found but is $reason.'),
+              backgroundColor: Colors.orange,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12.0),
+              ),
+            ),
+          );
+        }
+      } else {
+        print('No matching document found!');
+        print('Possible issues:');
+        print('1. Field name is not "item_id"');
+        print('2. Value format/type mismatch');
+        print('3. Extra whitespace or different casing');
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+                'No matching promo codes found. Check console for details.'),
+            backgroundColor: Colors.blue,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12.0),
+            ),
+          ),
+        );
+      }
+
+      print('=== DIAGNOSTIC END ===');
+    } catch (e) {
+      print('Error in diagnostic: $e');
+      print('Stack trace: ${StackTrace.current}');
+
+      ScaffoldMessenger.of(context).removeCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: ${e.toString()}'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.0),
+          ),
         ),
-        backgroundColor: Colors.orange,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12.0),
-        ),
-        duration: const Duration(seconds: 3),
-      ),
-    );
+      );
+    }
   }
 
-  void _copyProductLink() {
-    // Generate a product link
-    String productLink = 'https://yourstore.com/products/${_currentItem.id}';
+  void _openProductUrl() {
+    if (productUrl.isNotEmpty) {
+      launchURL(productUrl);
 
-    Clipboard.setData(ClipboardData(text: productLink));
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(
-              Icons.link,
-              color: Colors.white,
-              size: 24.0,
-            ),
-            const SizedBox(width: 12.0),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Product Link Copied!',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16.0,
-                    ),
-                  ),
-                  Text(
-                    'Share this ${_currentItem.name} with others',
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.9),
-                      fontSize: 14.0,
-                    ),
-                  ),
-                ],
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(
+                Icons.open_in_new,
+                color: Colors.white,
+                size: 24.0,
               ),
-            ),
-          ],
+              const SizedBox(width: 12.0),
+              Expanded(
+                child: Text(
+                  'Opening product page...',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16.0,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: Colors.blue,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.0),
+          ),
+          duration: const Duration(seconds: 2),
         ),
-        backgroundColor: Colors.blue,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12.0),
+      );
+    } else {
+      // Fallback: copy product info to clipboard
+      String productInfo = 'Product: $productName\nPrice: $productPrice';
+      if (productCategory.isNotEmpty) {
+        productInfo += '\nCategory: $productCategory';
+      }
+
+      Clipboard.setData(ClipboardData(text: productInfo));
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(
+                Icons.content_copy,
+                color: Colors.white,
+                size: 24.0,
+              ),
+              const SizedBox(width: 12.0),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Product Info Copied!',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16.0,
+                      ),
+                    ),
+                    Text(
+                      'Product details copied to clipboard',
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.9),
+                        fontSize: 14.0,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: Colors.blue,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.0),
+          ),
+          duration: const Duration(seconds: 3),
         ),
-        duration: const Duration(seconds: 3),
-        action: SnackBarAction(
-          label: 'SHARE MORE',
-          textColor: Colors.white,
-          onPressed: () {
-            // Open share sheet or additional sharing options
-          },
-        ),
-      ),
-    );
+      );
+    }
   }
 }
