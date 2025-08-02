@@ -1,3 +1,5 @@
+import 'package:firebase_auth/firebase_auth.dart';
+
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
@@ -6,9 +8,10 @@ import '/index.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:cloud_firestore/cloud_firestore.dart'; // Added missing import
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'buy_clothes_model.dart';
 export 'buy_clothes_model.dart';
+import '/auth/firebase_auth/auth_util.dart';
 
 class BuyClothesWidget extends StatefulWidget {
   const BuyClothesWidget({super.key});
@@ -163,7 +166,6 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
     );
   }
 
-  // CORRECTED: Single _buildFirebaseContent method with async filtering
   Widget _buildFirebaseContent() {
     return StreamBuilder<List<BrandedItemsRecord>>(
       stream: queryBrandedItemsRecord(
@@ -298,7 +300,7 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
               offset: Offset(0, 30 * (1 - value)),
               child: Opacity(
                 opacity: value,
-                child: _buildFirebaseClothingCard(items[index]),
+                child: _buildEnhancedProductCard(items[index]),
               ),
             );
           },
@@ -329,7 +331,7 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
     );
   }
 
-  Widget _buildFirebaseClothingCard(BrandedItemsRecord item) {
+  Widget _buildEnhancedProductCard(BrandedItemsRecord item) {
     return GestureDetector(
       onTap: () {
         context.pushNamed(
@@ -445,7 +447,7 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 12.0),
+                  const SizedBox(height: 8.0),
 
                   // Price
                   Text(
@@ -458,6 +460,18 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
                           letterSpacing: 0.0,
                         ),
                   ),
+
+                  const SizedBox(height: 8.0),
+
+                  // Category
+                  Text(
+                    item.category,
+                    style: FlutterFlowTheme.of(context).bodySmall.override(
+                          fontFamily: GoogleFonts.inter().fontFamily,
+                          color: FlutterFlowTheme.of(context).secondaryText,
+                          fontSize: 12.0,
+                        ),
+                  ),
                 ],
               ),
             ),
@@ -467,7 +481,6 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
     );
   }
 
-  // ADDED: Missing _buildFirebaseListCard method
   Widget _buildFirebaseListCard(BrandedItemsRecord item) {
     return GestureDetector(
       onTap: () {

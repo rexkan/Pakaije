@@ -129,6 +129,7 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
             'imagePath': queryParams['imageUrl'] ?? '',
             'category': queryParams['category'] ?? '',
             'productUrl': queryParams['productUrl'] ?? '',
+            'vendorId': queryParams['vendorId'] ?? '',
           };
         });
         print(
@@ -1047,11 +1048,15 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
     }
   }
 
+  // ✅ UPDATED: Enhanced _copyPromoCode method with usage_count increment
   void _copyPromoCode() async {
-    if (productId.isEmpty) {
+    final currentVendorId = vendorId;
+
+    if (currentVendorId.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Product ID not available for promo code lookup.'),
+          content:
+              Text('Vendor information not available for promo code lookup.'),
           backgroundColor: Colors.orange,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
@@ -1062,11 +1067,23 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
       return;
     }
 
+    print('\n🔥 === STARTING _copyPromoCode ===');
+    print('📋 Searching promo codes for vendor: $currentVendorId');
+    print('👤 Current User ID: $currentUserUid');
+
     try {
-      print('=== DIAGNOSTIC START ===');
-      print('Searching for productId: "$productId"');
-      print('productId length: ${productId.length}');
-      print('productId runtimeType: ${productId.runtimeType}');
+      // Check authentication
+      if (currentUserUid == null || currentUserUid.isEmpty) {
+        print('❌ CRITICAL: User not authenticated');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Please log in to use promo codes'),
+            backgroundColor: Colors.orange,
+            duration: Duration(seconds: 2),
+          ),
+        );
+        return;
+      }
 
       // Show loading indicator
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1083,7 +1100,7 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
               ),
               const SizedBox(width: 12.0),
               Text(
-                'Diagnosing promo codes...',
+                'Finding promo codes...',
                 style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.w600,
@@ -1101,20 +1118,26 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
         ),
       );
 
-      // First, let's see ALL documents in the collection
-      print('\n--- Fetching ALL documents from discount_codes collection ---');
-      final allDocsSnapshot =
-          await FirebaseFirestore.instance.collection('discount_codes').get();
+      // Query for active promo codes for this vendor
+      print('\n🔍 Searching for promo codes...');
+      final promoQuery = await FirebaseFirestore.instance
+          .collection('discount_codes')
+          .where('vendor_id', isEqualTo: currentVendorId)
+          .where('is_active', isEqualTo: true)
+          .limit(1)
+          .get();
 
-      print('Total documents in collection: ${allDocsSnapshot.docs.length}');
+      print('Query completed. Found ${promoQuery.docs.length} documents');
 
-      if (allDocsSnapshot.docs.isEmpty) {
-        print('ERROR: The discount_codes collection is completely empty!');
-        ScaffoldMessenger.of(context).removeCurrentSnackBar();
+      // Remove loading snackbar
+      ScaffoldMessenger.of(context).removeCurrentSnackBar();
+
+      if (promoQuery.docs.isEmpty) {
+        print('❌ No active promo codes found for vendor: $currentVendorId');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('No documents found in discount_codes collection'),
-            backgroundColor: Colors.red,
+            content: Text('No promo codes available for this vendor.'),
+            backgroundColor: Colors.blue,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12.0),
@@ -1124,248 +1147,204 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
         return;
       }
 
-      // Examine each document in detail
-      print('\n--- Examining each document ---');
-      bool foundMatchingDoc = false;
-      DocumentSnapshot? matchingDoc;
+      final promoDoc = promoQuery.docs.first;
+      final promoDocumentId = promoDoc.id;
+      final currentData = promoDoc.data();
 
-      for (int i = 0; i < allDocsSnapshot.docs.length; i++) {
-        final doc = allDocsSnapshot.docs[i];
-        final data = doc.data() as Map<String, dynamic>;
+      print('✅ Found promo code document');
+      print('📄 Document ID: $promoDocumentId');
+      print('📊 Current document data: $currentData');
 
-        print('\nDocument ${i + 1} (ID: ${doc.id}):');
-        print('  Raw data: $data');
-
-        // Check item_id field specifically
-        if (data.containsKey('item_id')) {
-          final itemIdValue = data['item_id'];
-          print('  item_id exists:');
-          print('    Value: "$itemIdValue"');
-          print('    Type: ${itemIdValue.runtimeType}');
-          print('    Length: ${itemIdValue.toString().length}');
-          print('    Equals our productId: ${itemIdValue == productId}');
-          print(
-              '    Equals trimmed: ${itemIdValue.toString().trim() == productId.trim()}');
-          print(
-              '    Case-insensitive equals: ${itemIdValue.toString().toLowerCase() == productId.toLowerCase()}');
-
-          // Check for exact match
-          if (itemIdValue == productId) {
-            print('  *** EXACT MATCH FOUND! ***');
-            foundMatchingDoc = true;
-            matchingDoc = doc;
-          }
-
-          // Check for close matches
-          if (itemIdValue.toString().trim() == productId.trim()) {
-            print('  *** TRIMMED MATCH FOUND! ***');
-            if (!foundMatchingDoc) {
-              foundMatchingDoc = true;
-              matchingDoc = doc;
-            }
-          }
-
-          if (itemIdValue.toString().toLowerCase() == productId.toLowerCase()) {
-            print('  *** CASE-INSENSITIVE MATCH FOUND! ***');
-            if (!foundMatchingDoc) {
-              foundMatchingDoc = true;
-              matchingDoc = doc;
-            }
-          }
-        } else {
-          print('  item_id field does NOT exist!');
-          print('  Available fields: ${data.keys.toList()}');
-        }
-
-        // Check is_active field
-        if (data.containsKey('is_active')) {
-          final isActiveValue = data['is_active'];
-          print('  is_active: $isActiveValue (${isActiveValue.runtimeType})');
-        }
-
-        // Check code field
-        if (data.containsKey('code')) {
-          final codeValue = data['code'];
-          print('  code: "$codeValue"');
-        }
-      }
-
-      print('\n--- DIAGNOSTIC SUMMARY ---');
-      print('Found matching document: $foundMatchingDoc');
-
-      // Remove loading snackbar
-      ScaffoldMessenger.of(context).removeCurrentSnackBar();
-
-      if (foundMatchingDoc && matchingDoc != null) {
-        print('Processing the matching document...');
-
-        final data = matchingDoc.data() as Map<String, dynamic>;
-        print('Selected document data: $data');
-
-        // Check if active
-        final isActive = data['is_active'] as bool? ?? false;
-        print('Document is active: $isActive');
-
-        if (!isActive) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Found promo code but it is not active.'),
-              backgroundColor: Colors.orange,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.0),
-              ),
-            ),
-          );
-          return;
-        }
-
-        // Get the code
-        final code = data['code'] as String? ?? '';
-        final discountType = data['discount_type'] as String? ?? 'percentage';
-        final discountValue =
-            (data['discount_value'] as num?)?.toDouble() ?? 0.0;
-        final startDate = (data['start_date'] as Timestamp?)?.toDate();
-        final endDate = (data['end_date'] as Timestamp?)?.toDate();
-        final usageCount = (data['usage_count'] as num?)?.toInt() ?? 0;
-        final maxUsage = (data['max_usage'] as num?)?.toInt() ?? 0;
-
-        print('Extracted code: "$code"');
-
-        if (code.isEmpty) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Found promo code but code field is empty.'),
-              backgroundColor: Colors.orange,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.0),
-              ),
-            ),
-          );
-          return;
-        }
-
-        // Check validity
-        final now = DateTime.now();
-        final isValidDate = (startDate == null || startDate.isBefore(now)) &&
-            (endDate == null || endDate.isAfter(now));
-        final isWithinUsageLimit = maxUsage == 0 || usageCount < maxUsage;
-
-        print('Date valid: $isValidDate');
-        print('Usage valid: $isWithinUsageLimit');
-
-        if (isValidDate && isWithinUsageLimit) {
-          // Copy the promo code to clipboard
-          Clipboard.setData(ClipboardData(text: code));
-
-          // Determine discount text
-          String discountText;
-          if (discountType == 'percentage') {
-            discountText = '${discountValue.toInt()}% OFF';
-          } else if (discountType == 'fixed') {
-            discountText = '\$${discountValue.toStringAsFixed(2)} OFF';
-          } else {
-            discountText = 'DISCOUNT APPLIED';
-          }
-
-          print('SUCCESS: Copied code "$code" with text "$discountText"');
-
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Row(
-                children: [
-                  Icon(
-                    Icons.local_offer,
-                    color: Colors.white,
-                    size: 24.0,
-                  ),
-                  const SizedBox(width: 12.0),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'Promo Code Copied! 🎉',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 16.0,
-                          ),
-                        ),
-                        Text(
-                          '$code - $discountText',
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.9),
-                            fontSize: 14.0,
-                            fontFamily: 'monospace',
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              backgroundColor: Colors.green,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.0),
-              ),
-              duration: const Duration(seconds: 4),
-            ),
-          );
-        } else {
-          String reason = !isValidDate ? 'expired' : 'usage limit reached';
-          print('Code invalid - reason: $reason');
-
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Promo code found but is $reason.'),
-              backgroundColor: Colors.orange,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.0),
-              ),
-            ),
-          );
-        }
-      } else {
-        print('No matching document found!');
-        print('Possible issues:');
-        print('1. Field name is not "item_id"');
-        print('2. Value format/type mismatch');
-        print('3. Extra whitespace or different casing');
-
+      // Validate promo code
+      if (!_isPromoCodeValid(currentData, DateTime.now())) {
+        print('❌ Promo code validation failed');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-                'No matching promo codes found. Check console for details.'),
-            backgroundColor: Colors.blue,
+            content:
+                Text('Promo code found but is expired or reached usage limit.'),
+            backgroundColor: Colors.orange,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12.0),
             ),
           ),
         );
+        return;
       }
 
-      print('=== DIAGNOSTIC END ===');
-    } catch (e) {
-      print('Error in diagnostic: $e');
-      print('Stack trace: ${StackTrace.current}');
+      print('✅ Promo code is valid');
 
-      ScaffoldMessenger.of(context).removeCurrentSnackBar();
+      final promoCode = currentData['code'] ?? '';
+      final discountType = currentData['discount_type'] ?? 'percentage';
+      final discountValue =
+          (currentData['discount_value'] as num?)?.toDouble() ?? 0.0;
+
+      if (promoCode.isEmpty) {
+        print('❌ Promo code field is empty');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Promo code found but code is empty.'),
+            backgroundColor: Colors.orange,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12.0),
+            ),
+          ),
+        );
+        return;
+      }
+
+      // Copy to clipboard
+      print('\n📋 Copying promo code to clipboard: $promoCode');
+      await Clipboard.setData(ClipboardData(text: promoCode));
+
+      // Increment usage count
+      print('\n📈 Incrementing usage count...');
+      final docRef = FirebaseFirestore.instance
+          .collection('discount_codes')
+          .doc(promoDocumentId);
+
+      await docRef.update({
+        'usage_count': FieldValue.increment(1),
+      });
+
+      print('✅ Usage count incremented successfully');
+
+      // Determine discount text
+      String discountText;
+      if (discountType == 'percentage') {
+        discountText = '${discountValue.toInt()}% OFF';
+      } else if (discountType == 'fixed') {
+        discountText = '\$${discountValue.toStringAsFixed(2)} OFF';
+      } else {
+        discountText = 'DISCOUNT APPLIED';
+      }
+
+      // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error: ${e.toString()}'),
-          backgroundColor: Colors.red,
+          content: Row(
+            children: [
+              Icon(
+                Icons.local_offer,
+                color: Colors.white,
+                size: 24.0,
+              ),
+              const SizedBox(width: 12.0),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Promo Code Copied! 🎉',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16.0,
+                      ),
+                    ),
+                    Text(
+                      '$promoCode - $discountText',
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.9),
+                        fontSize: 14.0,
+                        fontFamily: 'monospace',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: Colors.green,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12.0),
           ),
+          duration: const Duration(seconds: 4),
         ),
       );
+
+      print('🎉 === _copyPromoCode COMPLETED SUCCESSFULLY ===\n');
+    } catch (e, stackTrace) {
+      print('\n💥 === _copyPromoCode FAILED ===');
+      print('❌ Error type: ${e.runtimeType}');
+      print('❌ Error message: $e');
+      print('📍 Stack trace: $stackTrace');
+
+      // Remove loading snackbar
+      ScaffoldMessenger.of(context).removeCurrentSnackBar();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.error, color: Colors.white, size: 20),
+              SizedBox(width: 8),
+              Expanded(
+                child: Text('Failed to copy promo code: ${e.toString()}'),
+              ),
+            ],
+          ),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 4),
+        ),
+      );
+      print('💥 === _copyPromoCode ERROR END ===\n');
+    }
+  }
+
+  // ✅ NEW: Promo code validation method
+  bool _isPromoCodeValid(Map<String, dynamic> data, DateTime now) {
+    print('\n🔍 === VALIDATING PROMO CODE ===');
+
+    try {
+      // Check if promo code is active
+      final isActive = data['is_active'] ?? false;
+      print('🔍 is_active: $isActive');
+      if (!isActive) {
+        print('❌ Promo code is not active');
+        return false;
+      }
+
+      // Check usage limits
+      final usageCount = data['usage_count'] ?? 0;
+      final maxUsage = data['max_usage'] ?? 0;
+      print('🔍 usage_count: $usageCount');
+      print('🔍 max_usage: $maxUsage');
+
+      if (maxUsage > 0 && usageCount >= maxUsage) {
+        print('❌ Promo code has reached usage limit ($usageCount/$maxUsage)');
+        return false;
+      }
+
+      // Check start date
+      if (data['start_date'] != null) {
+        final startDate = (data['start_date'] as Timestamp).toDate();
+        print('🔍 start_date: $startDate');
+        print('🔍 current_date: $now');
+        if (now.isBefore(startDate)) {
+          print('❌ Promo code has not started yet');
+          return false;
+        }
+      }
+
+      // Check end date
+      if (data['end_date'] != null) {
+        final endDate = (data['end_date'] as Timestamp).toDate();
+        print('🔍 end_date: $endDate');
+        if (now.isAfter(endDate)) {
+          print('❌ Promo code has expired');
+          return false;
+        }
+      }
+
+      print('✅ Promo code validation passed');
+      return true;
+    } catch (e) {
+      print('❌ Error validating promo code: $e');
+      return false;
     }
   }
 
