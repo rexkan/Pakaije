@@ -38,6 +38,68 @@ class _VendorDashboardWidgetState extends State<VendorDashboardWidget> {
     super.dispose();
   }
 
+  /// Handle logout functionality
+  Future<void> _handleLogout() async {
+    // Show confirmation dialog
+    final shouldLogout = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Logout'),
+        content: Text('Are you sure you want to logout?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.red,
+            ),
+            child: Text('Logout'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldLogout == true) {
+      try {
+        // Show loading indicator
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => Center(
+            child: CircularProgressIndicator(),
+          ),
+        );
+
+        // Sign out the user
+        await authManager.signOut();
+
+        // Close loading dialog
+        if (mounted) {
+          Navigator.of(context).pop();
+
+          // Navigate to login page and clear all previous routes
+          context.goNamedAuth(LoginPageWidget.routeName, context.mounted);
+        }
+      } catch (e) {
+        // Close loading dialog if still open
+        if (mounted) {
+          Navigator.of(context).pop();
+
+          // Show error message
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to logout: $e'),
+              backgroundColor: Colors.red[600],
+            ),
+          );
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -61,7 +123,26 @@ class _VendorDashboardWidgetState extends State<VendorDashboardWidget> {
                   fontWeight: FontWeight.w600,
                 ),
           ),
-          actions: [],
+          actions: [
+            // Logout button
+            Padding(
+              padding: EdgeInsetsDirectional.fromSTEB(0.0, 0.0, 16.0, 0.0),
+              child: FlutterFlowIconButton(
+                borderRadius: 8.0,
+                borderWidth: 0.0,
+                buttonSize: 40.0,
+                fillColor: Colors.transparent,
+                hoverColor: Colors.white.withOpacity(0.1),
+                icon: Icon(
+                  Icons.logout,
+                  color: Colors.white,
+                  size: 24.0,
+                ),
+                onPressed: _handleLogout,
+                showLoadingIndicator: false,
+              ),
+            ),
+          ],
           centerTitle: false,
           elevation: 2.0,
         ),
