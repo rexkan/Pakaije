@@ -17,10 +17,10 @@ class UserProfileModel extends FlutterFlowModel<UserProfileWidget> {
   TextEditingController? usernameTextController;
   String? Function(BuildContext, String?)? usernameTextControllerValidator;
 
-  // State field(s) for Password widget.
-  FocusNode? passwordFocusNode;
-  TextEditingController? passwordTextController;
-  String? Function(BuildContext, String?)? passwordTextControllerValidator;
+  // State field(s) for Phone Number widget.
+  FocusNode? phoneNumberFocusNode;
+  TextEditingController? phoneNumberTextController;
+  String? Function(BuildContext, String?)? phoneNumberTextControllerValidator;
 
   // State for body view image upload
   bool hasUploadedNewImage = false;
@@ -32,16 +32,16 @@ class UserProfileModel extends FlutterFlowModel<UserProfileWidget> {
   bool isLoadingUser = true;
   String? errorMessage;
 
-  // Logout state
-  bool isLoggingOut = false;
+  // ADDED: Callback to notify widget of updates
+  VoidCallback? onUserDataUpdated;
 
   @override
   void initState(BuildContext context) {
     // Initialize with empty controllers
     usernameTextController = TextEditingController();
     usernameFocusNode = FocusNode();
-    passwordTextController = TextEditingController();
-    passwordFocusNode = FocusNode();
+    phoneNumberTextController = TextEditingController();
+    phoneNumberFocusNode = FocusNode();
 
     // Load current user data when model initializes
     loadCurrentUserData();
@@ -51,8 +51,13 @@ class UserProfileModel extends FlutterFlowModel<UserProfileWidget> {
   void dispose() {
     usernameFocusNode?.dispose();
     usernameTextController?.dispose();
-    passwordFocusNode?.dispose();
-    passwordTextController?.dispose();
+    phoneNumberFocusNode?.dispose();
+    phoneNumberTextController?.dispose();
+  }
+
+  // ADDED: Method to set update callback
+  void setUpdateCallback(VoidCallback callback) {
+    onUserDataUpdated = callback;
   }
 
   // Method to load current user data
@@ -82,13 +87,19 @@ class UserProfileModel extends FlutterFlowModel<UserProfileWidget> {
 
       // Update text controllers with user data
       usernameTextController?.text = currentUser?.displayName ?? '';
-      // Don't pre-fill password for security reasons
+      phoneNumberTextController?.text = currentUser?.phoneNumber ?? '';
 
       isLoadingUser = false;
+
+      // ADDED: Notify widget of data update
+      onUserDataUpdated?.call();
     } catch (e) {
       errorMessage = e.toString();
       isLoadingUser = false;
       print('Error loading user data: $e');
+
+      // ADDED: Notify widget even on error
+      onUserDataUpdated?.call();
     }
   }
 
@@ -108,6 +119,8 @@ class UserProfileModel extends FlutterFlowModel<UserProfileWidget> {
 
     try {
       isSavingImage = true;
+      // ADDED: Notify widget of saving state change
+      onUserDataUpdated?.call();
 
       // UPDATED: Create a reference to Firebase Storage with corrected path
       final storageRef = FirebaseStorage.instance.ref();
@@ -165,6 +178,8 @@ class UserProfileModel extends FlutterFlowModel<UserProfileWidget> {
     } catch (e) {
       isSavingImage = false;
       print('Error saving image: $e');
+      // ADDED: Notify widget of error state change
+      onUserDataUpdated?.call();
       throw Exception('Failed to save image: $e');
     }
   }
@@ -188,13 +203,10 @@ class UserProfileModel extends FlutterFlowModel<UserProfileWidget> {
         updateData['display_name'] = usernameTextController!.text;
       }
 
-      // Update password if provided (this should be done through Firebase Auth)
-      if (passwordTextController?.text.isNotEmpty == true) {
-        // Update Firebase Auth user password
-        final firebaseUser = FirebaseAuth.instance.currentUser;
-        if (firebaseUser != null) {
-          await firebaseUser.updatePassword(passwordTextController!.text);
-        }
+      // Update phone number if provided
+      if (phoneNumberTextController?.text.isNotEmpty == true &&
+          phoneNumberTextController!.text != currentUser!.phoneNumber) {
+        updateData['phone_number'] = phoneNumberTextController!.text;
       }
 
       // Update Firestore document if there are changes
@@ -205,26 +217,8 @@ class UserProfileModel extends FlutterFlowModel<UserProfileWidget> {
         // Reload user data
         await loadCurrentUserData();
       }
-
-      // Clear password field for security
-      passwordTextController?.clear();
     } catch (e) {
       throw Exception('Failed to update profile: $e');
-    }
-  }
-
-  // Method to handle user logout
-  Future<void> logoutUser() async {
-    try {
-      isLoggingOut = true;
-
-      // Sign out from Firebase Auth
-      await FirebaseAuth.instance.signOut();
-
-      isLoggingOut = false;
-    } catch (e) {
-      isLoggingOut = false;
-      throw Exception('Failed to logout: $e');
     }
   }
 
@@ -257,6 +251,11 @@ class UserProfileModel extends FlutterFlowModel<UserProfileWidget> {
   // Helper method to get user email
   String getUserEmail() {
     return currentUser?.email ?? 'Not available';
+  }
+
+  // Helper method to get user phone number
+  String getUserPhoneNumber() {
+    return currentUser?.phoneNumber ?? 'Not specified';
   }
 
   // Helper method to get user gender

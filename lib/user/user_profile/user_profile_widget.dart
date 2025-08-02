@@ -31,6 +31,13 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
     super.initState();
     _model = createModel(context, () => UserProfileModel());
 
+    // ADDED: Set update callback to refresh UI when data changes
+    _model.setUpdateCallback(() {
+      if (mounted) {
+        setState(() {});
+      }
+    });
+
     // Clean up any invalid image URLs when the page loads
     WidgetsBinding.instance.addPostFrameCallback((_) {
       safeSetState(() {});
@@ -85,7 +92,7 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
   void _saveImage() async {
     try {
       await _model.saveUploadedImage();
-      setState(() {});
+      // setState is called automatically via callback
 
       // Show success message
       if (mounted) {
@@ -109,10 +116,13 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
     }
   }
 
-  // Method to handle profile update
+  // UPDATED: Method to handle profile update with proper UI refresh
   void _updateProfile() async {
     try {
       await _model.updateUserProfile();
+
+      // ADDED: Explicitly call setState to refresh the information section
+      setState(() {});
 
       // Show success message
       if (mounted) {
@@ -132,74 +142,6 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
             backgroundColor: FlutterFlowTheme.of(context).error,
           ),
         );
-      }
-    }
-  }
-
-  // Method to handle logout
-  void _handleLogout() async {
-    // Show confirmation dialog
-    final bool? shouldLogout = await showDialog<bool>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(
-            'Logout',
-            style: FlutterFlowTheme.of(context).headlineSmall.override(
-                  font: GoogleFonts.inter(fontWeight: FontWeight.bold),
-                ),
-          ),
-          content: Text(
-            'Are you sure you want to logout?',
-            style: FlutterFlowTheme.of(context).bodyMedium,
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: Text(
-                'Cancel',
-                style: TextStyle(
-                  color: FlutterFlowTheme.of(context).underground,
-                ),
-              ),
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: Text(
-                'Logout',
-                style: TextStyle(
-                  color: FlutterFlowTheme.of(context).error,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (shouldLogout == true) {
-      try {
-        await _model.logoutUser();
-
-        // Navigate to login page and clear navigation stack
-        if (mounted) {
-          // Replace 'LoginPage' with your actual login page route name
-          Navigator.of(context).pushNamedAndRemoveUntil(
-            'LoginPage', // Replace with your actual login route name
-            (Route<dynamic> route) => false,
-          );
-        }
-      } catch (e) {
-        // Show error message
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Failed to logout: ${e.toString()}'),
-              backgroundColor: FlutterFlowTheme.of(context).error,
-            ),
-          );
-        }
       }
     }
   }
@@ -355,39 +297,6 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
                       FlutterFlowTheme.of(context).headlineMedium.fontStyle,
                 ),
           ),
-          actions: [
-            // Logout Button
-            Padding(
-              padding: EdgeInsetsDirectional.fromSTEB(0.0, 0.0, 16.0, 0.0),
-              child: _model.isLoggingOut
-                  ? Container(
-                      width: 40.0,
-                      height: 40.0,
-                      child: Center(
-                        child: SizedBox(
-                          width: 20.0,
-                          height: 20.0,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2.0,
-                          ),
-                        ),
-                      ),
-                    )
-                  : FlutterFlowIconButton(
-                      borderColor: Colors.transparent,
-                      borderRadius: 30.0,
-                      borderWidth: 1.0,
-                      buttonSize: 60.0,
-                      icon: Icon(
-                        Icons.logout_rounded,
-                        color: Colors.white,
-                        size: 24.0,
-                      ),
-                      onPressed: _handleLogout,
-                    ),
-            ),
-          ],
           centerTitle: true,
           elevation: 2.0,
         ),
@@ -746,6 +655,75 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
                                               ),
                                             ],
                                           ),
+                                          SizedBox(height: 8.0),
+                                          Row(
+                                            mainAxisSize: MainAxisSize.max,
+                                            children: [
+                                              Text(
+                                                'Phone Number:',
+                                                style: FlutterFlowTheme.of(
+                                                        context)
+                                                    .bodyMedium
+                                                    .override(
+                                                      font: GoogleFonts.inter(
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        fontStyle:
+                                                            FlutterFlowTheme.of(
+                                                                    context)
+                                                                .bodyMedium
+                                                                .fontStyle,
+                                                      ),
+                                                      color:
+                                                          FlutterFlowTheme.of(
+                                                                  context)
+                                                              .underground,
+                                                      letterSpacing: 0.0,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      fontStyle:
+                                                          FlutterFlowTheme.of(
+                                                                  context)
+                                                              .bodyMedium
+                                                              .fontStyle,
+                                                    ),
+                                              ),
+                                              Padding(
+                                                padding: EdgeInsetsDirectional
+                                                    .fromSTEB(
+                                                        10.0, 0.0, 0.0, 0.0),
+                                                child: Text(
+                                                  _model.getUserPhoneNumber(),
+                                                  style: FlutterFlowTheme.of(
+                                                          context)
+                                                      .bodyMedium
+                                                      .override(
+                                                        font: GoogleFonts.inter(
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          fontStyle:
+                                                              FlutterFlowTheme.of(
+                                                                      context)
+                                                                  .bodyMedium
+                                                                  .fontStyle,
+                                                        ),
+                                                        color:
+                                                            FlutterFlowTheme.of(
+                                                                    context)
+                                                                .underground,
+                                                        letterSpacing: 0.0,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        fontStyle:
+                                                            FlutterFlowTheme.of(
+                                                                    context)
+                                                                .bodyMedium
+                                                                .fontStyle,
+                                                      ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
                                         ],
                                       ),
                                     ),
@@ -1069,13 +1047,13 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
                                             ],
                                           ),
                                           SizedBox(height: 20.0),
-                                          // Password Field
+                                          // Phone Number Field
                                           Column(
                                             crossAxisAlignment:
                                                 CrossAxisAlignment.start,
                                             children: [
                                               Text(
-                                                'Password',
+                                                'Phone Number',
                                                 style: FlutterFlowTheme.of(
                                                         context)
                                                     .bodyMedium
@@ -1095,15 +1073,17 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
                                               SizedBox(height: 8.0),
                                               TextFormField(
                                                 controller: _model
-                                                    .passwordTextController,
+                                                    .phoneNumberTextController,
                                                 focusNode:
-                                                    _model.passwordFocusNode,
+                                                    _model.phoneNumberFocusNode,
                                                 autofocus: false,
-                                                obscureText: true,
+                                                obscureText: false,
+                                                keyboardType:
+                                                    TextInputType.phone,
                                                 decoration: InputDecoration(
                                                   isDense: true,
                                                   hintText:
-                                                      'Enter new password',
+                                                      'Enter your phone number',
                                                   hintStyle: FlutterFlowTheme
                                                           .of(context)
                                                       .labelMedium
@@ -1184,7 +1164,7 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
                                                     FlutterFlowTheme.of(context)
                                                         .underground,
                                                 validator: _model
-                                                    .passwordTextControllerValidator
+                                                    .phoneNumberTextControllerValidator
                                                     .asValidator(context),
                                               ),
                                             ],
