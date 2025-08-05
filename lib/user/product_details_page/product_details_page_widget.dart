@@ -15,9 +15,6 @@ import 'package:go_router/go_router.dart';
 import 'product_details_page_model.dart';
 export 'product_details_page_model.dart';
 
-// ═══════════════════════════════════════════════════════════════════
-// 📱 MAIN WIDGET CLASS - Product Details Page
-// ═══════════════════════════════════════════════════════════════════
 class ProductDetailsPageWidget extends StatefulWidget {
   const ProductDetailsPageWidget({super.key});
 
@@ -31,33 +28,23 @@ class ProductDetailsPageWidget extends StatefulWidget {
 
 class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
     with TickerProviderStateMixin {
-  
-  // ═══════════════════════════════════════════════════════════════════
-  // 🔧 STATE VARIABLES AND CONTROLLERS
-  // ═══════════════════════════════════════════════════════════════════
   late ProductDetailsPageModel _model;
   final scaffoldKey = GlobalKey<ScaffoldState>();
-  
-  // Product data container - holds all passed product information
+
+  // This will hold the passed product data
   Map<String, dynamic>? _productData;
-  
-  // Report dialog text controller - handles user input for reporting
+
+  // Report dialog controller
   final TextEditingController _reportReasonController = TextEditingController();
-  
-  // Animation controllers and configurations
+
   final animationsMap = <String, AnimationInfo>{};
 
-  // ═══════════════════════════════════════════════════════════════════
-  // 🎬 ANIMATION SETUP SECTION
-  // ═══════════════════════════════════════════════════════════════════
   @override
   void initState() {
     super.initState();
     _model = createModel(context, () => ProductDetailsPageModel());
 
-    // Configure page load animations
     animationsMap.addAll({
-      // Product image fade and scale animation
       'imageOnPageLoadAnimation': AnimationInfo(
         trigger: AnimationTrigger.onPageLoad,
         effectsBuilder: () => [
@@ -77,8 +64,6 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
           ),
         ],
       ),
-      
-      // Product title text animation
       'textOnPageLoadAnimation': AnimationInfo(
         trigger: AnimationTrigger.onPageLoad,
         effectsBuilder: () => [
@@ -98,8 +83,6 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
           ),
         ],
       ),
-      
-      // Product description container animation
       'containerOnPageLoadAnimation': AnimationInfo(
         trigger: AnimationTrigger.onPageLoad,
         effectsBuilder: () => [
@@ -120,7 +103,6 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
         ],
       ),
     });
-    
     setupAnimations(
       animationsMap.values.where((anim) =>
           anim.trigger == AnimationTrigger.onActionTrigger ||
@@ -128,9 +110,7 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
       this,
     );
 
-    // ═══════════════════════════════════════════════════════════════════
-    // 📊 DATA INITIALIZATION SECTION - Get passed product data
-    // ═══════════════════════════════════════════════════════════════════
+    // Get the passed data - FIXED TO USE QUERY PARAMETERS
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // Try to get data from query parameters (FlutterFlow method)
       final state = GoRouterState.of(context);
@@ -152,18 +132,20 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
             'vendorId': queryParams['vendorId'] ?? '',
           };
         });
-        print('Product data set from query params: $_productData');
+        print(
+            'Product data set from query params: $_productData'); // Debug print
       } else {
         // Fallback to arguments method
         final args = ModalRoute.of(context)?.settings.arguments;
-        print('Fallback - Received arguments: $args');
+        print('Fallback - Received arguments: $args'); // Debug print
         if (args != null && args is Map<String, dynamic>) {
           setState(() {
             _productData = args;
           });
-          print('Product data set from arguments: $_productData');
+          print(
+              'Product data set from arguments: $_productData'); // Debug print
         } else {
-          print('No data received via any method');
+          print('No data received via any method'); // Debug print
         }
       }
     });
@@ -176,9 +158,7 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
     super.dispose();
   }
 
-  // ═══════════════════════════════════════════════════════════════════
-  // 🔍 DATA GETTER METHODS - Safe access to product information
-  // ═══════════════════════════════════════════════════════════════════
+  // Helper methods to safely get product data with null safety
   String get documentId => _productData?['documentId']?.toString() ?? '';
   String get productId =>
       _productData?['itemId']?.toString() ??
@@ -193,7 +173,6 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
   String get productUrl => _productData?['productUrl']?.toString() ?? '';
   String get vendorId => _productData?['vendorId']?.toString() ?? '';
 
-  // Style tags getter - handles list data
   List<String> get styleTags {
     if (_productData?['styleTags'] != null) {
       final tags = _productData!['styleTags'];
@@ -204,7 +183,6 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
     return [];
   }
 
-  // Weather suitability getter - handles list data
   List<String> get weatherSuitability {
     if (_productData?['weatherSuitability'] != null) {
       final weather = _productData!['weatherSuitability'];
@@ -215,80 +193,40 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
     return [];
   }
 
-  // ═══════════════════════════════════════════════════════════════════
-  // 🏗️ MAIN BUILD METHOD - Page Structure
-  // ═══════════════════════════════════════════════════════════════════
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       key: scaffoldKey,
       backgroundColor: FlutterFlowTheme.of(context).secondaryBackground,
-      
-      // ┌─────────────────────────────────────────────────────────────┐
-      // │ 📱 APP BAR SECTION - Navigation and report button           │
-      // └─────────────────────────────────────────────────────────────┘
       appBar: _buildAppBar(),
-      
       body: Column(
         mainAxisSize: MainAxisSize.max,
         children: [
-          // ┌─────────────────────────────────────────────────────────────┐
-          // │ 📜 SCROLLABLE CONTENT SECTION                              │
-          // └─────────────────────────────────────────────────────────────┘
           Expanded(
             child: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  
-                  // ══════════════════════════════════════════════════════════
-                  // 🖼️ PRODUCT IMAGE SECTION - Hero image with animations
-                  // ══════════════════════════════════════════════════════════
                   _buildProductImage(),
-                  
-                  // ══════════════════════════════════════════════════════════
-                  // ℹ️ PRODUCT INFO SECTION - Name, price, category, ID
-                  // ══════════════════════════════════════════════════════════
                   _buildProductInfo(),
-                  
-                  // ══════════════════════════════════════════════════════════
-                  // 📝 PRODUCT DESCRIPTION SECTION - Detailed description
-                  // ══════════════════════════════════════════════════════════
                   _buildProductDescription(),
-                  
-                  // ══════════════════════════════════════════════════════════
-                  // 🏷️ STYLE TAGS SECTION - Product style indicators
-                  // ══════════════════════════════════════════════════════════
                   if (styleTags.isNotEmpty) _buildStyleTags(),
-                  
-                  // ══════════════════════════════════════════════════════════
-                  // 🌤️ WEATHER SUITABILITY SECTION - Weather-based tags
-                  // ══════════════════════════════════════════════════════════
                   if (weatherSuitability.isNotEmpty) _buildWeatherInfo(),
                 ],
               ),
             ),
           ),
-          
-          // ┌─────────────────────────────────────────────────────────────┐
-          // │ ⬇️ BOTTOM ACTION BUTTONS SECTION                           │
-          // └─────────────────────────────────────────────────────────────┘
           _buildBottomActions(),
         ],
       ),
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════════
-  // 📱 APP BAR WIDGET - Back button, title, and report button
-  // ═══════════════════════════════════════════════════════════════════
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
       backgroundColor: FlutterFlowTheme.of(context).underground,
       automaticallyImplyLeading: false,
-      
-      // ← Back Navigation Button
       leading: FlutterFlowIconButton(
         borderColor: Colors.transparent,
         borderRadius: 30.0,
@@ -303,8 +241,6 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
           context.pop();
         },
       ),
-      
-      // App Bar Title
       title: Text(
         'Product Details',
         style: FlutterFlowTheme.of(context).bodyMedium.override(
@@ -317,8 +253,6 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
       ),
       centerTitle: true,
       elevation: 2.0,
-      
-      // 🚩 Report Button - Opens report dialog
       actions: [
         FlutterFlowIconButton(
           borderColor: Colors.transparent,
@@ -338,9 +272,6 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════════
-  // 🖼️ PRODUCT IMAGE WIDGET - Hero image with loading and error states
-  // ═══════════════════════════════════════════════════════════════════
   Widget _buildProductImage() {
     return Container(
       width: double.infinity,
@@ -359,8 +290,6 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
                       width: 350.0,
                       height: 350.0,
                       fit: BoxFit.cover,
-                      
-                      // Loading state indicator
                       loadingBuilder: (context, child, loadingProgress) {
                         if (loadingProgress == null) return child;
                         return Container(
@@ -376,8 +305,6 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
                           ),
                         );
                       },
-                      
-                      // Error state fallback
                       errorBuilder: (context, error, stackTrace) {
                         return Container(
                           width: 350.0,
@@ -391,9 +318,7 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
                         );
                       },
                     )
-                  : 
-                  // No image fallback
-                  Container(
+                  : Container(
                       width: 350.0,
                       height: 350.0,
                       color: FlutterFlowTheme.of(context).alternate,
@@ -410,23 +335,16 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
     ).animateOnPageLoad(animationsMap['imageOnPageLoadAnimation']!);
   }
 
-  // ═══════════════════════════════════════════════════════════════════
-  // ℹ️ PRODUCT INFO WIDGET - Category, ID, name, and price display
-  // ═══════════════════════════════════════════════════════════════════
   Widget _buildProductInfo() {
     return Padding(
       padding: EdgeInsetsDirectional.fromSTEB(24.0, 0.0, 24.0, 0.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          
-          // ┌─────────────────────────────────────────────────────────────┐
-          // │ 🏷️ CATEGORY AND PRODUCT ID ROW                            │
-          // └─────────────────────────────────────────────────────────────┘
+          // Category and Product ID
           if (productCategory.isNotEmpty || productId.isNotEmpty) ...[
             Row(
               children: [
-                // Product Category Badge
                 if (productCategory.isNotEmpty) ...[
                   Container(
                     padding: const EdgeInsets.symmetric(
@@ -455,8 +373,6 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
                   ),
                   const SizedBox(width: 8.0),
                 ],
-                
-                // Product ID Display
                 if (productId.isNotEmpty)
                   Text(
                     'ID: $productId',
@@ -471,9 +387,7 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
             const SizedBox(height: 16.0),
           ],
 
-          // ┌─────────────────────────────────────────────────────────────┐
-          // │ 📝 PRODUCT NAME DISPLAY                                    │
-          // └─────────────────────────────────────────────────────────────┘
+          // Product Name
           Text(
             productName,
             style: FlutterFlowTheme.of(context).headlineSmall.override(
@@ -486,9 +400,7 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
 
           const SizedBox(height: 16.0),
 
-          // ┌─────────────────────────────────────────────────────────────┐
-          // │ 💰 PRODUCT PRICE DISPLAY                                   │
-          // └─────────────────────────────────────────────────────────────┘
+          // Price
           Text(
             productPrice,
             style: FlutterFlowTheme.of(context).headlineSmall.override(
@@ -506,16 +418,12 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════════
-  // 📝 PRODUCT DESCRIPTION WIDGET - Detailed product information
-  // ═══════════════════════════════════════════════════════════════════
   Widget _buildProductDescription() {
     return Padding(
       padding: EdgeInsetsDirectional.fromSTEB(24.0, 0.0, 24.0, 24.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Description Section Header
           Text(
             'Description',
             style: FlutterFlowTheme.of(context).bodyLarge.override(
@@ -525,8 +433,6 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
                 ),
           ),
           const SizedBox(height: 12.0),
-          
-          // Description Content
           Text(
             productDescription,
             style: FlutterFlowTheme.of(context).bodyMedium.override(
@@ -541,16 +447,12 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
     ).animateOnPageLoad(animationsMap['containerOnPageLoadAnimation']!);
   }
 
-  // ═══════════════════════════════════════════════════════════════════
-  // 🏷️ STYLE TAGS WIDGET - Product style indicators and categories
-  // ═══════════════════════════════════════════════════════════════════
   Widget _buildStyleTags() {
     return Padding(
       padding: EdgeInsetsDirectional.fromSTEB(24.0, 0.0, 24.0, 24.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Style Tags Section Header
           Text(
             'Style Tags',
             style: FlutterFlowTheme.of(context).bodyLarge.override(
@@ -560,8 +462,6 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
                 ),
           ),
           const SizedBox(height: 12.0),
-          
-          // Style Tags Container - Wrapping chips
           Wrap(
             spacing: 8.0,
             runSpacing: 8.0,
@@ -593,16 +493,12 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════════
-  // 🌤️ WEATHER SUITABILITY WIDGET - Weather-based recommendations
-  // ═══════════════════════════════════════════════════════════════════
   Widget _buildWeatherInfo() {
     return Padding(
       padding: EdgeInsetsDirectional.fromSTEB(24.0, 0.0, 24.0, 24.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Weather Suitability Section Header
           Text(
             'Weather Suitability',
             style: FlutterFlowTheme.of(context).bodyLarge.override(
@@ -612,8 +508,6 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
                 ),
           ),
           const SizedBox(height: 12.0),
-          
-          // Weather Tags Container - With icons
           Wrap(
             spacing: 8.0,
             runSpacing: 8.0,
@@ -635,15 +529,12 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          // Weather Icon
                           Icon(
                             _getWeatherIcon(weather),
                             size: 16.0,
                             color: FlutterFlowTheme.of(context).underground,
                           ),
                           const SizedBox(width: 6.0),
-                          
-                          // Weather Text
                           Text(
                             weather,
                             style: FlutterFlowTheme.of(context)
@@ -666,9 +557,6 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════════
-  // 🌦️ WEATHER ICON HELPER METHOD - Maps weather strings to icons
-  // ═══════════════════════════════════════════════════════════════════
   IconData _getWeatherIcon(String weather) {
     switch (weather.toLowerCase()) {
       case 'summer':
@@ -689,9 +577,6 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
     }
   }
 
-  // ═══════════════════════════════════════════════════════════════════
-  // ⬇️ BOTTOM ACTION BUTTONS WIDGET - Promo code and visit store
-  // ═══════════════════════════════════════════════════════════════════
   Widget _buildBottomActions() {
     return Material(
       color: Colors.transparent,
@@ -711,10 +596,7 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
         ),
         child: Row(
           children: [
-            
-            // ┌─────────────────────────────────────────────────────────────┐
-            // │ 🎟️ PROMO CODE BUTTON - Copy promotional codes             │
-            // └─────────────────────────────────────────────────────────────┘
+            // Copy Promo Code Button
             Expanded(
               flex: 1,
               child: FFButtonWidget(
@@ -752,9 +634,7 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
 
             const SizedBox(width: 16.0),
 
-            // ┌─────────────────────────────────────────────────────────────┐
-            // │ 🏪 VISIT STORE BUTTON - Open external product link        │
-            // └─────────────────────────────────────────────────────────────┘
+            // Visit Store Button
             Expanded(
               flex: 1,
               child: FFButtonWidget(
@@ -795,9 +675,6 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════════
-  // 🚩 REPORT DIALOG METHOD - Content reporting functionality
-  // ═══════════════════════════════════════════════════════════════════
   void _showReportDialog() {
     showDialog(
       context: context,
@@ -806,10 +683,6 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20.0),
           ),
-          
-          // ┌─────────────────────────────────────────────────────────────┐
-          // │ 📋 REPORT DIALOG HEADER                                    │
-          // └─────────────────────────────────────────────────────────────┘
           title: Row(
             children: [
               Icon(
@@ -828,17 +701,12 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
               ),
             ],
           ),
-          
-          // ┌─────────────────────────────────────────────────────────────┐
-          // │ 📝 REPORT DIALOG CONTENT                                   │
-          // └─────────────────────────────────────────────────────────────┘
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                
-                // Product Name Display
+                // Item Name
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -864,7 +732,7 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
 
                 const SizedBox(height: 16.0),
 
-                // Product ID Display (if available)
+                // Item ID
                 if (productId.isNotEmpty) ...[
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -890,33 +758,7 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
                   const SizedBox(height: 16.0),
                 ],
 
-                // Vendor ID Display (if available)
-                if (vendorId.isNotEmpty) ...[
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Vendor ID = ',
-                        style: FlutterFlowTheme.of(context).bodyMedium.override(
-                              fontFamily: GoogleFonts.inter().fontFamily,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 16.0,
-                            ),
-                      ),
-                      Text(
-                        vendorId,
-                        style: FlutterFlowTheme.of(context).bodyMedium.override(
-                              fontFamily: 'monospace',
-                              fontSize: 16.0,
-                              color: FlutterFlowTheme.of(context).underground,
-                            ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16.0),
-                ],
-
-                // Report Reason Input Field
+                // Reason
                 Text(
                   'Reason',
                   style: FlutterFlowTheme.of(context).bodyMedium.override(
@@ -959,12 +801,7 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
               ],
             ),
           ),
-          
-          // ┌─────────────────────────────────────────────────────────────┐
-          // │ 🔘 REPORT DIALOG ACTION BUTTONS                           │
-          // └─────────────────────────────────────────────────────────────┘
           actions: [
-            // Cancel Button
             TextButton(
               onPressed: () {
                 _reportReasonController.clear();
@@ -979,8 +816,6 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
                     ),
               ),
             ),
-            
-            // Submit Report Button
             ElevatedButton(
               onPressed: () {
                 _submitReport();
@@ -1007,9 +842,6 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════════
-  // 📤 SUBMIT REPORT METHOD - Handles report submission to Firestore
-  // ═══════════════════════════════════════════════════════════════════
   void _submitReport() async {
     if (_reportReasonController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1026,8 +858,8 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
     }
 
     try {
-      // Close dialog and show loading
-      Navigator.of(context).pop();
+      // Show loading indicator
+      Navigator.of(context).pop(); // Close the dialog first
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -1061,28 +893,31 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
         ),
       );
 
-      // ┌─────────────────────────────────────────────────────────────┐
-      // │ 🔄 CREATE AND SUBMIT REPORT DATA                          │
-      // └─────────────────────────────────────────────────────────────┘
+      // Generate a unique report ID
       final reportId = DateTime.now().millisecondsSinceEpoch.toString();
+
+      // Get current user ID (assuming you have authentication set up)
       final currentUserId = currentUserUid ?? 'anonymous';
 
+      // Create the report data
       final reportData = createContentReportsRecordData(
         reportId: reportId,
         itemId: productId,
         reporterId: currentUserId,
         reason: _reportReasonController.text.trim(),
-        status: 'pending',
+        status: 'pending', // Initial status
         timestamp: getCurrentTimestamp,
       );
 
-      // Submit to Firestore
+      // Add to Firestore
       await ContentReportsRecord.collection.add(reportData);
 
+      // Clear the text field
       _reportReasonController.clear();
+
+      // Remove loading snackbar and show success message
       ScaffoldMessenger.of(context).removeCurrentSnackBar();
 
-      // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Row(
@@ -1132,14 +967,15 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
       print('Item ID: $productId');
       print('Reporter ID: $currentUserId');
       print('Reason: ${_reportReasonController.text.trim()}');
-      
     } catch (e) {
       print('Error submitting report: $e');
 
+      // Clear the text field even on error
       _reportReasonController.clear();
+
+      // Remove loading snackbar and show error message
       ScaffoldMessenger.of(context).removeCurrentSnackBar();
 
-      // Show error message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Row(
@@ -1186,9 +1022,7 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
     }
   }
 
-  // ═══════════════════════════════════════════════════════════════════
-  // 🎟️ PROMO CODE COPY METHOD - Fetches and copies promotional codes
-  // ═══════════════════════════════════════════════════════════════════
+  // ✅ UPDATED: Enhanced _copyPromoCode method with usage_count increment
   void _copyPromoCode() async {
     final currentVendorId = vendorId;
 
@@ -1212,9 +1046,7 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
     print('👤 Current User ID: $currentUserUid');
 
     try {
-      // ┌─────────────────────────────────────────────────────────────┐
-      // │ 🔐 AUTHENTICATION CHECK                                    │
-      // └─────────────────────────────────────────────────────────────┘
+      // Check authentication
       if (currentUserUid == null || currentUserUid.isEmpty) {
         print('❌ CRITICAL: User not authenticated');
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1260,9 +1092,7 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
         ),
       );
 
-      // ┌─────────────────────────────────────────────────────────────┐
-      // │ 🔍 FIRESTORE QUERY FOR PROMO CODES                        │
-      // └─────────────────────────────────────────────────────────────┘
+      // Query for active promo codes for this vendor
       print('\n🔍 Searching for promo codes...');
       final promoQuery = await FirebaseFirestore.instance
           .collection('discount_codes')
@@ -1273,6 +1103,7 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
 
       print('Query completed. Found ${promoQuery.docs.length} documents');
 
+      // Remove loading snackbar
       ScaffoldMessenger.of(context).removeCurrentSnackBar();
 
       if (promoQuery.docs.isEmpty) {
@@ -1298,9 +1129,7 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
       print('📄 Document ID: $promoDocumentId');
       print('📊 Current document data: $currentData');
 
-      // ┌─────────────────────────────────────────────────────────────┐
-      // │ ✅ PROMO CODE VALIDATION                                   │
-      // └─────────────────────────────────────────────────────────────┘
+      // Validate promo code
       if (!_isPromoCodeValid(currentData, DateTime.now())) {
         print('❌ Promo code validation failed');
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1339,12 +1168,11 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
         return;
       }
 
-      // ┌─────────────────────────────────────────────────────────────┐
-      // │ 📋 COPY TO CLIPBOARD AND UPDATE USAGE COUNT               │
-      // └─────────────────────────────────────────────────────────────┘
+      // Copy to clipboard
       print('\n📋 Copying promo code to clipboard: $promoCode');
       await Clipboard.setData(ClipboardData(text: promoCode));
 
+      // Increment usage count
       print('\n📈 Incrementing usage count...');
       final docRef = FirebaseFirestore.instance
           .collection('discount_codes')
@@ -1356,9 +1184,7 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
 
       print('✅ Usage count incremented successfully');
 
-      // ┌─────────────────────────────────────────────────────────────┐
-      // │ 💬 SUCCESS MESSAGE DISPLAY                                │
-      // └─────────────────────────────────────────────────────────────┘
+      // Determine discount text
       String discountText;
       if (discountType == 'percentage') {
         discountText = '${discountValue.toInt()}% OFF';
@@ -1368,6 +1194,7 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
         discountText = 'DISCOUNT APPLIED';
       }
 
+      // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Row(
@@ -1414,13 +1241,13 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
       );
 
       print('🎉 === _copyPromoCode COMPLETED SUCCESSFULLY ===\n');
-      
     } catch (e, stackTrace) {
       print('\n💥 === _copyPromoCode FAILED ===');
       print('❌ Error type: ${e.runtimeType}');
       print('❌ Error message: $e');
       print('📍 Stack trace: $stackTrace');
 
+      // Remove loading snackbar
       ScaffoldMessenger.of(context).removeCurrentSnackBar();
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1442,9 +1269,7 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
     }
   }
 
-  // ═══════════════════════════════════════════════════════════════════
-  // ✅ PROMO CODE VALIDATION HELPER METHOD - Checks validity conditions
-  // ═══════════════════════════════════════════════════════════════════
+  // ✅ NEW: Promo code validation method
   bool _isPromoCodeValid(Map<String, dynamic> data, DateTime now) {
     print('\n🔍 === VALIDATING PROMO CODE ===');
 
@@ -1497,14 +1322,8 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
     }
   }
 
-  // ═══════════════════════════════════════════════════════════════════
-  // 🌐 OPEN PRODUCT URL METHOD - Opens external store link or fallback
-  // ═══════════════════════════════════════════════════════════════════
   void _openProductUrl() {
     if (productUrl.isNotEmpty) {
-      // ┌─────────────────────────────────────────────────────────────┐
-      // │ 🔗 OPEN EXTERNAL LINK                                     │
-      // └─────────────────────────────────────────────────────────────┘
       launchURL(productUrl);
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1538,9 +1357,7 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
         ),
       );
     } else {
-      // ┌─────────────────────────────────────────────────────────────┐
-      // │ 📋 FALLBACK: COPY PRODUCT INFO TO CLIPBOARD               │
-      // └─────────────────────────────────────────────────────────────┘
+      // Fallback: copy product info to clipboard
       String productInfo = 'Product: $productName\nPrice: $productPrice';
       if (productCategory.isNotEmpty) {
         productInfo += '\nCategory: $productCategory';
@@ -1594,19 +1411,3 @@ class _ProductDetailsPageWidgetState extends State<ProductDetailsPageWidget>
     }
   }
 }
-
-// ═══════════════════════════════════════════════════════════════════
-// 📋 SUMMARY OF DELETABLE SECTIONS FOR PRESENTATION:
-// ═══════════════════════════════════════════════════════════════════
-/*
-1. 🎬 ANIMATION SETUP SECTION (lines 40-110) - Remove all animations
-2. 🖼️ PRODUCT IMAGE SECTION - Remove image display
-3. 🏷️ CATEGORY AND PRODUCT ID ROW - Remove category/ID display  
-4. 💰 PRODUCT PRICE DISPLAY - Remove price section
-5. 📝 PRODUCT DESCRIPTION SECTION - Remove description
-6. 🏷️ STYLE TAGS WIDGET - Remove style tags
-7. 🌤️ WEATHER SUITABILITY WIDGET - Remove weather info
-8. 🎟️ PROMO CODE BUTTON - Remove promo functionality
-9. 🏪 VISIT STORE BUTTON - Remove store link
-10. 🚩 REPORT DIALOG METHOD - Remove reporting feature
-*/

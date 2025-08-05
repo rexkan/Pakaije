@@ -1,3 +1,6 @@
+// ============================================================================
+// IMPORTS SECTION - All required packages and dependencies
+// ============================================================================
 import '/flutter_flow/flutter_flow_drop_down.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
@@ -13,9 +16,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'add_new_item_model.dart';
 export 'add_new_item_model.dart';
 
-
-
-// MAIN WIDGET CLASS - AddNewItemWidget
+// ============================================================================
+// MAIN WIDGET CLASS DECLARATION - StatefulWidget for Add New Item Page
+// ============================================================================
 class AddNewItemWidget extends StatefulWidget {
   const AddNewItemWidget({super.key});
 
@@ -26,15 +29,17 @@ class AddNewItemWidget extends StatefulWidget {
   State<AddNewItemWidget> createState() => _AddNewItemWidgetState();
 }
 
-
-// WIDGET STATE CLASS - Contains all the logic and UI
-
+// ============================================================================
+// STATE CLASS - Contains all the state management and UI building logic
+// ============================================================================
 class _AddNewItemWidgetState extends State<AddNewItemWidget> {
   late AddNewItemModel _model;
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
+  // ============================================================================
   // INITIALIZATION SECTION - Setup controllers and focus nodes
+  // ============================================================================
   @override
   void initState() {
     super.initState();
@@ -44,16 +49,18 @@ class _AddNewItemWidgetState extends State<AddNewItemWidget> {
     _model.itemNameFocusNode ??= FocusNode();
   }
 
-
-  // DISPOSAL SECTION - Clean up resources
+  // ============================================================================
+  // DISPOSAL SECTION - Cleanup resources
+  // ============================================================================
   @override
   void dispose() {
     _model.dispose();
     super.dispose();
   }
 
-  // UI BUILD METHOD - Main UI structure
-
+  // ============================================================================
+  // BUILD METHOD - Main UI construction
+  // ============================================================================
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -64,13 +71,15 @@ class _AddNewItemWidgetState extends State<AddNewItemWidget> {
       child: Scaffold(
         key: scaffoldKey,
         backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
-        
-        // APP BAR SECTION - Navigation and title
+
+        // ========================================================================
+        // APP BAR SECTION - Top navigation bar with back button and title
+        // ========================================================================
         appBar: AppBar(
           backgroundColor: FlutterFlowTheme.of(context).underground,
           automaticallyImplyLeading: false,
-          
-          // Back Button Widget
+
+          // BACK BUTTON WIDGET
           leading: FlutterFlowIconButton(
             borderColor: Colors.transparent,
             borderRadius: 30.0,
@@ -85,8 +94,8 @@ class _AddNewItemWidgetState extends State<AddNewItemWidget> {
               context.safePop();
             },
           ),
-          
-          // App Bar Title Widget
+
+          // APP BAR TITLE WIDGET
           title: Text(
             FFLocalizations.of(context).getText(
               'ow3qma8g' /* Add New Item */,
@@ -111,8 +120,10 @@ class _AddNewItemWidgetState extends State<AddNewItemWidget> {
           centerTitle: true,
           elevation: 2.0,
         ),
-        
-        // BODY SECTION - Main content area
+
+        // ========================================================================
+        // BODY SECTION - Main content area with all form components
+        // ========================================================================
         body: SafeArea(
           top: true,
           child: Stack(
@@ -125,10 +136,9 @@ class _AddNewItemWidgetState extends State<AddNewItemWidget> {
                       mainAxisSize: MainAxisSize.max,
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        
-                        // IMAGE UPLOAD SECTION - Image display and upload
-                        
-                        // Image Display Widget
+                        // ================================================================
+                        // IMAGE DISPLAY SECTION - Shows uploaded image or placeholder
+                        // ================================================================
                         Align(
                           alignment: AlignmentDirectional(0.0, 0.0),
                           child: Padding(
@@ -152,11 +162,10 @@ class _AddNewItemWidgetState extends State<AddNewItemWidget> {
                             ),
                           ),
                         ),
-                        
-                        // Spacing between image and upload button
-                        SizedBox(height: 10.0),
-                        
-                        // Upload Button Widget
+
+                        // ================================================================
+                        // IMAGE UPLOAD BUTTON SECTION - Button to upload image from library
+                        // ================================================================
                         Align(
                           alignment: AlignmentDirectional(0.0, 0.0),
                           child: Padding(
@@ -275,11 +284,10 @@ class _AddNewItemWidgetState extends State<AddNewItemWidget> {
                             ),
                           ),
                         ),
-                        
-                        // Spacing between upload section and form fields
-                        SizedBox(height: 20.0),
-                        
-                        // FORM FIELDS SECTION - Input fields and dropdowns
+
+                        // ================================================================
+                        // FORM FIELDS CONTAINER SECTION - Contains all input fields
+                        // ================================================================
                         Align(
                           alignment: AlignmentDirectional(0.0, 0.0),
                           child: Padding(
@@ -288,10 +296,11 @@ class _AddNewItemWidgetState extends State<AddNewItemWidget> {
                             child: Column(
                               mainAxisSize: MainAxisSize.max,
                               children: [
-                                
-                                // ITEM NAME FIELD SECTION
-                                
-                                // Item Name Label Widget
+                                // ========================================================
+                                // ITEM NAME INPUT SECTION - Text field for item name
+                                // ========================================================
+
+                                // Item Name Label
                                 Align(
                                   alignment: AlignmentDirectional(-1.0, 0.0),
                                   child: Padding(
@@ -323,8 +332,8 @@ class _AddNewItemWidgetState extends State<AddNewItemWidget> {
                                     ),
                                   ),
                                 ),
-                                
-                                // Item Name Text Field Widget
+
+                                // Item Name Text Field
                                 Align(
                                   alignment: AlignmentDirectional(-1.0, 0.0),
                                   child: Padding(
@@ -469,14 +478,11 @@ class _AddNewItemWidgetState extends State<AddNewItemWidget> {
                                   ),
                                 ),
 
-                                // Spacing between sections
-                                SizedBox(height: 10.0),
+                                // ========================================================
+                                // CATEGORY DROPDOWN SECTION - Dropdown for clothing category
+                                // ========================================================
 
-                                // =========================================
-                                // CATEGORY DROPDOWN SECTION
-                                // =========================================
-                                
-                                // Category Label Widget
+                                // Category Label
                                 Align(
                                   alignment: AlignmentDirectional(-1.0, 0.0),
                                   child: Padding(
@@ -508,7 +514,7 @@ class _AddNewItemWidgetState extends State<AddNewItemWidget> {
                                     ),
                                   ),
                                 ),
-                                
+
                                 // Category Dropdown Widget
                                 Align(
                                   alignment: AlignmentDirectional(-1.0, 0.0),
@@ -572,14 +578,11 @@ class _AddNewItemWidgetState extends State<AddNewItemWidget> {
                                   ),
                                 ),
 
-                                // Spacing between sections
-                                SizedBox(height: 10.0),
+                                // ========================================================
+                                // COLOR DROPDOWN SECTION - Dropdown for color selection
+                                // ========================================================
 
-                                // =========================================
-                                // COLOR DROPDOWN SECTION
-                                // =========================================
-                                
-                                // Color Label Widget
+                                // Color Label
                                 Align(
                                   alignment: AlignmentDirectional(-1.0, 0.0),
                                   child: Padding(
@@ -611,7 +614,7 @@ class _AddNewItemWidgetState extends State<AddNewItemWidget> {
                                     ),
                                   ),
                                 ),
-                                
+
                                 // Color Dropdown Widget
                                 Align(
                                   alignment: AlignmentDirectional(-1.0, 0.0),
@@ -715,14 +718,11 @@ class _AddNewItemWidgetState extends State<AddNewItemWidget> {
                                   ),
                                 ),
 
-                                // Spacing between sections
-                                SizedBox(height: 10.0),
+                                // ========================================================
+                                // WEATHER SUITABILITY DROPDOWN SECTION - Weather conditions
+                                // ========================================================
 
-                                // =========================================
-                                // WEATHER SUITABILITY DROPDOWN SECTION
-                                // =========================================
-                                
-                                // Weather Suitability Label Widget
+                                // Weather Label
                                 Align(
                                   alignment: AlignmentDirectional(-1.0, 0.0),
                                   child: Padding(
@@ -752,8 +752,8 @@ class _AddNewItemWidgetState extends State<AddNewItemWidget> {
                                     ),
                                   ),
                                 ),
-                                
-                                // Weather Suitability Dropdown Widget
+
+                                // Weather Dropdown Widget
                                 Align(
                                   alignment: AlignmentDirectional(-1.0, 0.0),
                                   child: Padding(
@@ -816,14 +816,11 @@ class _AddNewItemWidgetState extends State<AddNewItemWidget> {
                                   ),
                                 ),
 
-                                // Spacing between sections
-                                SizedBox(height: 15.0),
+                                // ========================================================
+                                // STYLE CATEGORY SECTION - Buttons for style selection
+                                // ========================================================
 
-                                // =========================================
-                                // STYLE CATEGORY BUTTONS SECTION
-                                // =========================================
-                                
-                                // Style Category Label Widget
+                                // Style Category Label
                                 Align(
                                   alignment: AlignmentDirectional(-1.0, 0.0),
                                   child: Padding(
@@ -853,16 +850,15 @@ class _AddNewItemWidgetState extends State<AddNewItemWidget> {
                                     ),
                                   ),
                                 ),
-                                
-                                // Style Category Buttons Row Widget
+
+                                // Style Category Buttons Row
                                 Padding(
                                   padding: EdgeInsetsDirectional.fromSTEB(
                                       0.0, 0.0, 0.0, 15.0),
                                   child: Row(
                                     mainAxisSize: MainAxisSize.max,
                                     children: [
-                                      
-                                      // Casual Button Widget
+                                      // CASUAL BUTTON WIDGET
                                       Align(
                                         alignment:
                                             AlignmentDirectional(-1.0, 0.0),
@@ -943,8 +939,8 @@ class _AddNewItemWidgetState extends State<AddNewItemWidget> {
                                           ),
                                         ),
                                       ),
-                                      
-                                      // Formal Button Widget
+
+                                      // FORMAL BUTTON WIDGET
                                       Align(
                                         alignment:
                                             AlignmentDirectional(-1.0, 0.0),
@@ -1025,8 +1021,8 @@ class _AddNewItemWidgetState extends State<AddNewItemWidget> {
                                           ),
                                         ),
                                       ),
-                                      
-                                      // Party Button Widget
+
+                                      // PARTY BUTTON WIDGET
                                       Align(
                                         alignment:
                                             AlignmentDirectional(-1.0, 0.0),
@@ -1111,14 +1107,9 @@ class _AddNewItemWidgetState extends State<AddNewItemWidget> {
                                   ),
                                 ),
 
-                                // Spacing before save button
-                                SizedBox(height: 20.0),
-
-
-                                // SAVE BUTTON SECTION
-
-                                
-                                // Save Button Widget
+                                // ========================================================
+                                // SAVE BUTTON SECTION - Submit form and save to database
+                                // ========================================================
                                 Align(
                                   alignment: AlignmentDirectional(0.0, 0.0),
                                   child: Padding(
@@ -1126,12 +1117,7 @@ class _AddNewItemWidgetState extends State<AddNewItemWidget> {
                                         0.0, 20.0, 0.0, 0.0),
                                     child: FFButtonWidget(
                                       onPressed: () async {
-                                        
-
-                                        // VALIDATION LOGIC SECTION
-
-                                        
-                                        // Validate Item Name
+                                        // VALIDATION LOGIC - Check all required fields
                                         if (_model.itemNameTextController.text
                                             .isEmpty) {
                                           ScaffoldMessenger.of(context)
@@ -1147,7 +1133,6 @@ class _AddNewItemWidgetState extends State<AddNewItemWidget> {
                                           return;
                                         }
 
-                                        // Validate Category Selection
                                         if (_model.categoryDropDownValue ==
                                             null) {
                                           ScaffoldMessenger.of(context)
@@ -1163,7 +1148,6 @@ class _AddNewItemWidgetState extends State<AddNewItemWidget> {
                                           return;
                                         }
 
-                                        // Validate Color Selection
                                         if (_model.colorDropDownValue == null) {
                                           ScaffoldMessenger.of(context)
                                               .showSnackBar(
@@ -1178,7 +1162,6 @@ class _AddNewItemWidgetState extends State<AddNewItemWidget> {
                                           return;
                                         }
 
-                                        // Validate Weather Selection
                                         if (_model.weatherDropDownValue ==
                                             null) {
                                           ScaffoldMessenger.of(context)
@@ -1194,7 +1177,6 @@ class _AddNewItemWidgetState extends State<AddNewItemWidget> {
                                           return;
                                         }
 
-                                        // Validate Image Upload
                                         if (_model.uploadedFileUrl.isEmpty) {
                                           ScaffoldMessenger.of(context)
                                               .showSnackBar(
@@ -1209,9 +1191,7 @@ class _AddNewItemWidgetState extends State<AddNewItemWidget> {
                                           return;
                                         }
 
-                                        // DATA SAVING LOGIC SECTION
-                                        
-                                        // Create the wardrobe item
+                                        // DATABASE SAVE LOGIC - Create new wardrobe item
                                         try {
                                           // Prepare occasion list (style category)
                                           List<String> occasionList = [];
@@ -1228,7 +1208,7 @@ class _AddNewItemWidgetState extends State<AddNewItemWidget> {
                                                 _model.weatherDropDownValue!);
                                           }
 
-                                          // Save to Firebase Database
+                                          // Save to Firestore database
                                           await WardrobeItemsRecord.collection
                                               .add({
                                             'user_id': currentUserUid,
@@ -1244,7 +1224,7 @@ class _AddNewItemWidgetState extends State<AddNewItemWidget> {
                                             'is_favourite': false,
                                           });
 
-                                          // Show success message
+                                          // SUCCESS MESSAGE - Show confirmation
                                           ScaffoldMessenger.of(context)
                                               .showSnackBar(
                                             SnackBar(
@@ -1254,10 +1234,10 @@ class _AddNewItemWidgetState extends State<AddNewItemWidget> {
                                             ),
                                           );
 
-                                          // Navigate back to previous screen
+                                          // NAVIGATION - Go back to previous screen
                                           context.safePop();
                                         } catch (e) {
-                                          // Show error message
+                                          // ERROR HANDLING - Show error message
                                           ScaffoldMessenger.of(context)
                                               .showSnackBar(
                                             SnackBar(
@@ -1330,19 +1310,3 @@ class _AddNewItemWidgetState extends State<AddNewItemWidget> {
     );
   }
 }
-
-// =============================================================================
-// SUMMARY OF SECTIONS FOR PRESENTATION:
-// =============================================================================
-/*
-1. APP BAR SECTION - Contains back button and title
-2. IMAGE UPLOAD SECTION - Image display and upload button
-3. ITEM NAME FIELD SECTION - Text input for item name
-4. CATEGORY DROPDOWN SECTION - Dropdown for clothing category
-5. COLOR DROPDOWN SECTION - Dropdown for color selection
-6. WEATHER SUITABILITY DROPDOWN SECTION - Dropdown for weather conditions
-7. STYLE CATEGORY BUTTONS SECTION - Toggle buttons for style selection
-8. SAVE BUTTON SECTION - Final save action with validation and database logic
-9. VALIDATION LOGIC SECTION - Input validation checks
-10. DATA SAVING LOGIC SECTION - Firebase database operations
-*/
