@@ -13,6 +13,9 @@ import 'dart:math' as math;
 import 'outfit_planner2_model.dart';
 export 'outfit_planner2_model.dart';
 
+// ============================================================================
+// MAIN OUTFIT PLANNER WIDGET CLASS
+// ============================================================================
 class OutfitPlanner2Widget extends StatefulWidget {
   const OutfitPlanner2Widget({super.key});
 
@@ -25,10 +28,12 @@ class OutfitPlanner2Widget extends StatefulWidget {
 
 class _OutfitPlanner2WidgetState extends State<OutfitPlanner2Widget> {
   late OutfitPlanner2Model _model;
-
   final scaffoldKey = GlobalKey<ScaffoldState>();
   bool _calendarInitialized = false;
 
+  // ============================================================================
+  // INITIALIZATION SECTION
+  // ============================================================================
   @override
   void initState() {
     super.initState();
@@ -50,6 +55,10 @@ class _OutfitPlanner2WidgetState extends State<OutfitPlanner2Widget> {
     super.dispose();
   }
 
+  // ============================================================================
+  // OUTFIT SELECTION DIALOG FUNCTIONALITY SECTION
+  // ============================================================================
+  
   // Show outfit selection popup
   void _showOutfitSelectionDialog(DateTime selectedDate) {
     showDialog(
@@ -66,7 +75,12 @@ class _OutfitPlanner2WidgetState extends State<OutfitPlanner2Widget> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header
+                
+                // ========================================================
+                // DIALOG HEADER SECTION
+                // ========================================================
+                
+                // Header Row with title and close button
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -95,6 +109,10 @@ class _OutfitPlanner2WidgetState extends State<OutfitPlanner2Widget> {
 
                 const Divider(height: 20.0),
 
+                // ========================================================
+                // EXISTING SELECTION DISPLAY SECTION
+                // ========================================================
+                
                 // Show existing selection if any
                 FutureBuilder<OutfitsRecord?>(
                   future: _model.getOutfitForDate(selectedDate),
@@ -163,16 +181,24 @@ class _OutfitPlanner2WidgetState extends State<OutfitPlanner2Widget> {
                   },
                 ),
 
+                // ========================================================
+                // OUTFIT GRID SELECTION SECTION
+                // ========================================================
+                
                 // Loading state or outfit grid
                 Expanded(
                   child: _model.isLoadingOutfits
-                      ? Center(
+                      ? 
+                        // Loading State Widget
+                        Center(
                           child: CircularProgressIndicator(
                             color: FlutterFlowTheme.of(context).primary,
                           ),
                         )
                       : _model.availableOutfits.isEmpty
-                          ? Center(
+                          ? 
+                            // Empty State Widget
+                            Center(
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
@@ -207,7 +233,9 @@ class _OutfitPlanner2WidgetState extends State<OutfitPlanner2Widget> {
                                 ],
                               ),
                             )
-                          : GridView.builder(
+                          : 
+                            // Outfit Grid Widget
+                            GridView.builder(
                               gridDelegate:
                                   const SliverGridDelegateWithFixedCrossAxisCount(
                                 crossAxisCount: 2,
@@ -226,6 +254,7 @@ class _OutfitPlanner2WidgetState extends State<OutfitPlanner2Widget> {
                                         snapshot.data?.reference.id ==
                                             outfit.reference.id;
 
+                                    // Individual Outfit Grid Item
                                     return GestureDetector(
                                       onTap: () async {
                                         // Show loading dialog
@@ -316,7 +345,8 @@ class _OutfitPlanner2WidgetState extends State<OutfitPlanner2Widget> {
                                           crossAxisAlignment:
                                               CrossAxisAlignment.center,
                                           children: [
-                                            // Outfit placeholder
+                                            
+                                            // Outfit Image Placeholder
                                             Expanded(
                                               flex: 4,
                                               child: Container(
@@ -348,7 +378,7 @@ class _OutfitPlanner2WidgetState extends State<OutfitPlanner2Widget> {
                                               ),
                                             ),
 
-                                            // Outfit Details
+                                            // Outfit Details Section
                                             Container(
                                               width: double.infinity,
                                               padding:
@@ -443,6 +473,10 @@ class _OutfitPlanner2WidgetState extends State<OutfitPlanner2Widget> {
     );
   }
 
+  // ============================================================================
+  // PLANNED OUTFIT LIST ITEM BUILDER SECTION
+  // ============================================================================
+  
   // Build planned outfit list item
   Widget _buildPlannedOutfitItem(PlannedOutfit plannedOutfit) {
     return Padding(
@@ -466,7 +500,8 @@ class _OutfitPlanner2WidgetState extends State<OutfitPlanner2Widget> {
             mainAxisSize: MainAxisSize.max,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Outfit icon on the left
+              
+              // Outfit Icon Section
               GestureDetector(
                 onTap: () => _showOutfitSelectionDialog(plannedOutfit.date),
                 child: Container(
@@ -488,7 +523,8 @@ class _OutfitPlanner2WidgetState extends State<OutfitPlanner2Widget> {
                   ),
                 ),
               ),
-              // Outfit details
+
+              // Outfit Details Section
               Expanded(
                 child: Column(
                   mainAxisSize: MainAxisSize.max,
@@ -558,6 +594,10 @@ class _OutfitPlanner2WidgetState extends State<OutfitPlanner2Widget> {
     );
   }
 
+  // ============================================================================
+  // NAVIGATION ITEM BUILDER SECTION
+  // ============================================================================
+  
   // Navigation Item Builder - UPDATED TO MATCH HOME PAGE
   Widget _buildNavItem({
     required BuildContext context,
@@ -605,6 +645,9 @@ class _OutfitPlanner2WidgetState extends State<OutfitPlanner2Widget> {
     );
   }
 
+  // ============================================================================
+  // MAIN BUILD METHOD - UI STRUCTURE
+  // ============================================================================
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -615,6 +658,10 @@ class _OutfitPlanner2WidgetState extends State<OutfitPlanner2Widget> {
       child: Scaffold(
         key: scaffoldKey,
         backgroundColor: FlutterFlowTheme.of(context).secondaryBackground,
+        
+        // ========================================================================
+        // APP BAR SECTION
+        // ========================================================================
         appBar: AppBar(
           backgroundColor: FlutterFlowTheme.of(context).secondaryBackground,
           automaticallyImplyLeading: false,
@@ -651,6 +698,10 @@ class _OutfitPlanner2WidgetState extends State<OutfitPlanner2Widget> {
           centerTitle: false,
           elevation: 0.0,
         ),
+
+        // ========================================================================
+        // MAIN BODY SECTION
+        // ========================================================================
         body: Column(
           mainAxisSize: MainAxisSize.max,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -670,6 +721,11 @@ class _OutfitPlanner2WidgetState extends State<OutfitPlanner2Widget> {
                       mainAxisSize: MainAxisSize.max,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        
+                        // ====================================================
+                        // CALENDAR WIDGET SECTION
+                        // ====================================================
+                        
                         // Calendar Widget with highlighting
                         StreamBuilder<List<OutfitPlansRecord>>(
                           stream: queryOutfitPlansRecord(
@@ -771,11 +827,17 @@ class _OutfitPlanner2WidgetState extends State<OutfitPlanner2Widget> {
                           },
                         ),
 
+                        // ====================================================
+                        // UPCOMING OUTFITS SECTION
+                        // ====================================================
+                        
                         // Upcoming Outfits Section
                         Column(
                           mainAxisSize: MainAxisSize.max,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            
+                            // Section Header Row
                             Padding(
                               padding: const EdgeInsetsDirectional.fromSTEB(
                                   20.0, 16.0, 20.0, 0.0),
@@ -811,7 +873,7 @@ class _OutfitPlanner2WidgetState extends State<OutfitPlanner2Widget> {
                               ),
                             ),
 
-                            // Upcoming outfits list - Fast synchronous version
+                            // Upcoming Outfits List Section
                             Padding(
                               padding: const EdgeInsetsDirectional.fromSTEB(
                                   0.0, 12.0, 0.0, 0.0),
@@ -846,50 +908,52 @@ class _OutfitPlanner2WidgetState extends State<OutfitPlanner2Widget> {
                                       _model.getUpcomingOutfitsSync();
 
                                   if (upcomingOutfits.isEmpty) {
-                                    return Center(
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(20.0),
-                                        child: Column(
-                                          children: [
-                                            Icon(
-                                              Icons.calendar_today_outlined,
-                                              size: 48.0,
-                                              color:
-                                                  FlutterFlowTheme.of(context)
-                                                      .secondaryText,
-                                            ),
-                                            const SizedBox(height: 12.0),
-                                            Text(
-                                              'No upcoming outfit plans',
-                                              style: FlutterFlowTheme.of(
-                                                      context)
-                                                  .titleMedium
-                                                  .override(
-                                                    fontFamily: 'Inter Tight',
-                                                    color: FlutterFlowTheme.of(
-                                                            context)
+                                    return 
+                                      // Empty State Widget
+                                      Center(
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(20.0),
+                                          child: Column(
+                                            children: [
+                                              Icon(
+                                                Icons.calendar_today_outlined,
+                                                size: 48.0,
+                                                color:
+                                                    FlutterFlowTheme.of(context)
                                                         .secondaryText,
-                                                  ),
-                                            ),
-                                            const SizedBox(height: 8.0),
-                                            Text(
-                                              'Tap on calendar dates to plan your outfits!',
-                                              style:
-                                                  FlutterFlowTheme.of(context)
-                                                      .bodyMedium
-                                                      .override(
-                                                        fontFamily: 'Inter',
-                                                        color:
-                                                            FlutterFlowTheme.of(
-                                                                    context)
-                                                                .secondaryText,
-                                                      ),
-                                              textAlign: TextAlign.center,
-                                            ),
-                                          ],
+                                              ),
+                                              const SizedBox(height: 12.0),
+                                              Text(
+                                                'No upcoming outfit plans',
+                                                style: FlutterFlowTheme.of(
+                                                        context)
+                                                    .titleMedium
+                                                    .override(
+                                                      fontFamily: 'Inter Tight',
+                                                      color: FlutterFlowTheme.of(
+                                                              context)
+                                                          .secondaryText,
+                                                    ),
+                                              ),
+                                              const SizedBox(height: 8.0),
+                                              Text(
+                                                'Tap on calendar dates to plan your outfits!',
+                                                style:
+                                                    FlutterFlowTheme.of(context)
+                                                        .bodyMedium
+                                                        .override(
+                                                          fontFamily: 'Inter',
+                                                          color:
+                                                              FlutterFlowTheme.of(
+                                                                      context)
+                                                                  .secondaryText,
+                                                        ),
+                                                textAlign: TextAlign.center,
+                                              ),
+                                            ],
+                                          ),
                                         ),
-                                      ),
-                                    );
+                                      );
                                   }
 
                                   // Build the list directly with immediate data
@@ -913,6 +977,11 @@ class _OutfitPlanner2WidgetState extends State<OutfitPlanner2Widget> {
             ),
           ],
         ),
+
+        // ========================================================================
+        // BOTTOM NAVIGATION BAR SECTION
+        // ========================================================================
+        
         // Modern Bottom Navigation Bar - UPDATED TO MATCH HOME PAGE
         bottomNavigationBar: Container(
           decoration: BoxDecoration(
@@ -932,6 +1001,8 @@ class _OutfitPlanner2WidgetState extends State<OutfitPlanner2Widget> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
+                  
+                  // Home Navigation Item
                   _buildNavItem(
                     context: context,
                     icon: Icons.home_rounded,
@@ -940,6 +1011,8 @@ class _OutfitPlanner2WidgetState extends State<OutfitPlanner2Widget> {
                     isActive: false,
                     onTap: () => context.pushNamed('HomePage'),
                   ),
+
+                  // Wardrobe Navigation Item
                   _buildNavItem(
                     context: context,
                     icon: Icons.checkroom_rounded,
@@ -948,6 +1021,8 @@ class _OutfitPlanner2WidgetState extends State<OutfitPlanner2Widget> {
                     isActive: false,
                     onTap: () => context.pushNamed('MyWardrobe'),
                   ),
+
+                  // Match Navigation Item
                   _buildNavItem(
                     context: context,
                     icon: Icons.style_rounded,
@@ -956,6 +1031,8 @@ class _OutfitPlanner2WidgetState extends State<OutfitPlanner2Widget> {
                     isActive: false,
                     onTap: () => context.pushNamed('OutfitMatch'),
                   ),
+
+                  // Shop Navigation Item
                   _buildNavItem(
                     context: context,
                     icon: Icons.shopping_bag_rounded,
@@ -964,6 +1041,8 @@ class _OutfitPlanner2WidgetState extends State<OutfitPlanner2Widget> {
                     isActive: false,
                     onTap: () => context.pushNamed('BuyClothes'),
                   ),
+
+                  // Calendar Navigation Item (Current Page)
                   _buildNavItem(
                     context: context,
                     icon: Icons.calendar_month_rounded,
@@ -974,6 +1053,8 @@ class _OutfitPlanner2WidgetState extends State<OutfitPlanner2Widget> {
                       // Already on calendar page
                     },
                   ),
+
+                  // Profile Navigation Item
                   _buildNavItem(
                     context: context,
                     icon: Icons.person_rounded,

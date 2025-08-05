@@ -11,6 +11,9 @@ import 'dart:io';
 import 'user_profile_model.dart';
 export 'user_profile_model.dart';
 
+// ============================================================================
+// MAIN USER PROFILE WIDGET CLASS
+// ============================================================================
 class UserProfileWidget extends StatefulWidget {
   const UserProfileWidget({super.key});
 
@@ -23,9 +26,11 @@ class UserProfileWidget extends StatefulWidget {
 
 class _UserProfileWidgetState extends State<UserProfileWidget> {
   late UserProfileModel _model;
-
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
+  // ============================================================================
+  // INITIALIZATION SECTION
+  // ============================================================================
   @override
   void initState() {
     super.initState();
@@ -51,6 +56,10 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
     super.dispose();
   }
 
+  // ============================================================================
+  // IMAGE UPLOAD FUNCTIONALITY SECTION
+  // ============================================================================
+  
   // Method to handle image upload from gallery
   Future<void> _uploadImageFromGallery() async {
     final ImagePicker picker = ImagePicker();
@@ -116,6 +125,10 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
     }
   }
 
+  // ============================================================================
+  // PROFILE UPDATE FUNCTIONALITY SECTION
+  // ============================================================================
+  
   // UPDATED: Method to handle profile update with proper UI refresh
   void _updateProfile() async {
     try {
@@ -146,6 +159,10 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
     }
   }
 
+  // ============================================================================
+  // IMAGE DISPLAY WIDGET BUILDER SECTION
+  // ============================================================================
+  
   // Helper method to build the image display widget
   Widget _buildImageDisplay() {
     // Priority 1: Show locally selected image (before saving)
@@ -250,6 +267,9 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
     );
   }
 
+  // ============================================================================
+  // MAIN BUILD METHOD - UI STRUCTURE
+  // ============================================================================
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -260,6 +280,10 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
       child: Scaffold(
         key: scaffoldKey,
         backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
+        
+        // ========================================================================
+        // APP BAR SECTION
+        // ========================================================================
         appBar: AppBar(
           backgroundColor: FlutterFlowTheme.of(context).underground,
           automaticallyImplyLeading: false,
@@ -300,16 +324,28 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
           centerTitle: true,
           elevation: 2.0,
         ),
+
+        // ========================================================================
+        // MAIN BODY SECTION
+        // ========================================================================
         body: SafeArea(
           top: true,
           child: _model.isLoadingUser
-              ? Center(
+              ? 
+                // ================================================================
+                // LOADING STATE WIDGET
+                // ================================================================
+                Center(
                   child: CircularProgressIndicator(
                     color: FlutterFlowTheme.of(context).underground,
                   ),
                 )
               : _model.errorMessage != null
-                  ? Center(
+                  ? 
+                    // ============================================================
+                    // ERROR STATE WIDGET
+                    // ============================================================
+                    Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -353,7 +389,11 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
                         ],
                       ),
                     )
-                  : Column(
+                  : 
+                    // ============================================================
+                    // MAIN CONTENT COLUMN
+                    // ============================================================
+                    Column(
                       children: [
                         Expanded(
                           child: Padding(
@@ -363,7 +403,12 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  // Information Section
+                                  
+                                  // ========================================
+                                  // USER INFORMATION SECTION
+                                  // ========================================
+                                  
+                                  // Information Section Header
                                   Row(
                                     mainAxisSize: MainAxisSize.max,
                                     children: [
@@ -417,7 +462,10 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
                                       ),
                                     ],
                                   ),
+
                                   SizedBox(height: 10.0),
+
+                                  // Information Card Container
                                   Container(
                                     width: double.infinity,
                                     decoration: BoxDecoration(
@@ -438,6 +486,8 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
                                       child: Column(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
+                                          
+                                          // Username Row
                                           Row(
                                             mainAxisSize: MainAxisSize.max,
                                             children: [
@@ -509,7 +559,10 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
                                               ),
                                             ],
                                           ),
+
                                           SizedBox(height: 8.0),
+
+                                          // Gender Row
                                           Row(
                                             mainAxisSize: MainAxisSize.max,
                                             children: [
@@ -581,7 +634,10 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
                                               ),
                                             ],
                                           ),
+
                                           SizedBox(height: 8.0),
+
+                                          // Email Row
                                           Row(
                                             mainAxisSize: MainAxisSize.max,
                                             children: [
@@ -655,7 +711,10 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
                                               ),
                                             ],
                                           ),
+
                                           SizedBox(height: 8.0),
+
+                                          // Phone Number Row
                                           Row(
                                             mainAxisSize: MainAxisSize.max,
                                             children: [
@@ -729,8 +788,13 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
                                     ),
                                   ),
 
-                                  // Body View Section
+                                  // ========================================
+                                  // BODY VIEW SECTION (IMAGE UPLOAD)
+                                  // ========================================
+                                  
                                   SizedBox(height: 35.0),
+
+                                  // Body View Section Header
                                   Align(
                                     alignment: AlignmentDirectional(-1.0, 0.0),
                                     child: Text(
@@ -759,8 +823,10 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
                                           ),
                                     ),
                                   ),
+
                                   SizedBox(height: 15.0),
-                                  // Image display with fixed logic
+
+                                  // Image Display Container
                                   Center(
                                     child: Container(
                                       width: 180.0,
@@ -790,11 +856,14 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
                                       ),
                                     ),
                                   ),
+
                                   SizedBox(height: 15.0),
-                                  // Button section with improved logic
+
+                                  // Upload and Save Buttons Row
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.end,
                                     children: [
+                                      
                                       // Upload Button
                                       FFButtonWidget(
                                         onPressed: _uploadImageFromGallery,
@@ -829,7 +898,9 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
                                               BorderRadius.circular(8.0),
                                         ),
                                       ),
+
                                       SizedBox(width: 10.0),
+
                                       // Save Button
                                       FFButtonWidget(
                                         onPressed:
@@ -875,8 +946,13 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
                                     ],
                                   ),
 
-                                  // Update Profile Details Section (Card Design)
+                                  // ========================================
+                                  // UPDATE PROFILE DETAILS SECTION
+                                  // ========================================
+                                  
                                   SizedBox(height: 35.0),
+
+                                  // Update Profile Details Header
                                   Align(
                                     alignment: AlignmentDirectional(-1.0, 0.0),
                                     child: Text(
@@ -905,7 +981,10 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
                                           ),
                                     ),
                                   ),
+
                                   SizedBox(height: 15.0),
+
+                                  // Update Profile Form Container
                                   Container(
                                     width: double.infinity,
                                     decoration: BoxDecoration(
@@ -926,7 +1005,8 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
                                       child: Column(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          // Username Field
+                                          
+                                          // Username Input Field
                                           Column(
                                             crossAxisAlignment:
                                                 CrossAxisAlignment.start,
@@ -1046,8 +1126,10 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
                                               ),
                                             ],
                                           ),
+
                                           SizedBox(height: 20.0),
-                                          // Phone Number Field
+
+                                          // Phone Number Input Field
                                           Column(
                                             crossAxisAlignment:
                                                 CrossAxisAlignment.start,
@@ -1169,8 +1251,10 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
                                               ),
                                             ],
                                           ),
+
                                           SizedBox(height: 25.0),
-                                          // Update Button - Enhanced styling and text
+
+                                          // Update Button
                                           Align(
                                             alignment:
                                                 AlignmentDirectional(1.0, 0.0),
@@ -1213,9 +1297,9 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
                                       ),
                                     ),
                                   ),
-                                  SizedBox(
-                                      height:
-                                          100.0), // Add bottom spacing for nav bar
+
+                                  // Bottom spacing for navigation bar
+                                  SizedBox(height: 100.0),
                                 ],
                               ),
                             ),
@@ -1224,7 +1308,10 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
                       ],
                     ),
         ),
-        // Modern Bottom Navigation Bar
+
+        // ========================================================================
+        // BOTTOM NAVIGATION BAR SECTION
+        // ========================================================================
         bottomNavigationBar: Container(
           decoration: BoxDecoration(
             color: FlutterFlowTheme.of(context).underground,
@@ -1242,6 +1329,8 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
+                  
+                  // Home Navigation Item
                   _buildNavItem(
                     context: context,
                     icon: Icons.home_rounded,
@@ -1250,6 +1339,8 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
                     isActive: false,
                     onTap: () => context.pushNamed(HomePageWidget.routeName),
                   ),
+
+                  // Wardrobe Navigation Item
                   _buildNavItem(
                     context: context,
                     icon: Icons.checkroom_rounded,
@@ -1258,6 +1349,8 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
                     isActive: false,
                     onTap: () => context.pushNamed(MyWardrodeWidget.routeName),
                   ),
+
+                  // Match Navigation Item
                   _buildNavItem(
                     context: context,
                     icon: Icons.style_rounded,
@@ -1266,6 +1359,8 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
                     isActive: false,
                     onTap: () => context.pushNamed(OutfitMatchWidget.routeName),
                   ),
+
+                  // Shop Navigation Item
                   _buildNavItem(
                     context: context,
                     icon: Icons.shopping_bag_rounded,
@@ -1274,6 +1369,8 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
                     isActive: false,
                     onTap: () => context.pushNamed(BuyClothesWidget.routeName),
                   ),
+
+                  // Calendar Navigation Item
                   _buildNavItem(
                     context: context,
                     icon: Icons.calendar_month_rounded,
@@ -1283,6 +1380,8 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
                     onTap: () =>
                         context.pushNamed(OutfitPlanner2Widget.routeName),
                   ),
+
+                  // Profile Navigation Item (Current Page)
                   _buildNavItem(
                     context: context,
                     icon: Icons.person_rounded,
@@ -1302,6 +1401,9 @@ class _UserProfileWidgetState extends State<UserProfileWidget> {
     );
   }
 
+  // ============================================================================
+  // NAVIGATION ITEM BUILDER WIDGET
+  // ============================================================================
   Widget _buildNavItem({
     required BuildContext context,
     required IconData icon,
