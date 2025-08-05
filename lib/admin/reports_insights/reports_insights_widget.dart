@@ -30,6 +30,7 @@ class ReportsInsightsWidget extends StatefulWidget {
 class _ReportsInsightsWidgetState extends State<ReportsInsightsWidget> {
   late ReportsInsightsModel _model;
 
+  // ==================== STATE VARIABLES ====================
   final scaffoldKey = GlobalKey<ScaffoldState>();
   int _selectedIndex = 4;
   String _selectedTimeRange = '7d'; // 7d, 30d, 90d
@@ -54,6 +55,7 @@ class _ReportsInsightsWidgetState extends State<ReportsInsightsWidget> {
   // Vendor performance statistics
   List<Map<String, dynamic>> vendorPerformanceData = [];
 
+  // ==================== INITIALIZATION ====================
   @override
   void initState() {
     super.initState();
@@ -61,6 +63,7 @@ class _ReportsInsightsWidgetState extends State<ReportsInsightsWidget> {
     _loadDashboardData();
   }
 
+  // ==================== CSV EXPORT FUNCTIONALITY ====================
   // 🔥 SIMPLIFIED: Download CSV and show success message
   Future<void> _downloadCSV() async {
     try {
@@ -185,6 +188,7 @@ class _ReportsInsightsWidgetState extends State<ReportsInsightsWidget> {
     }
   }
 
+  // ==================== SUMMARY EXPORT FUNCTIONALITY ====================
   // 🔥 SIMPLIFIED: Export Summary and show success message
   Future<void> _exportSummary() async {
     try {
@@ -264,6 +268,7 @@ class _ReportsInsightsWidgetState extends State<ReportsInsightsWidget> {
     }
   }
 
+  // ==================== SUMMARY GENERATION HELPER ====================
   // 🔥 Generate detailed summary report
   String _generateDetailedSummary() {
     final now = DateTime.now();
@@ -384,6 +389,7 @@ For technical support or data inquiries, please contact the analytics team.
 ''';
   }
 
+  // ==================== SUMMARY HELPER METHODS ====================
   // Helper methods for summary generation
   String _calculateUserGrowthTrend() {
     if (userGrowthData.length < 2) return 'Insufficient data';
@@ -579,6 +585,7 @@ For technical support or data inquiries, please contact the analytics team.
     return 'LOW (<20 data points)';
   }
 
+  // ==================== DATA LOADING SECTION ====================
   // Load data from Firestore
   Future<void> _loadDashboardData() async {
     try {
@@ -1279,6 +1286,7 @@ For technical support or data inquiries, please contact the analytics team.
     }
   }
 
+  // ==================== NAVIGATION FUNCTIONS ====================
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
@@ -1309,12 +1317,16 @@ For technical support or data inquiries, please contact the analytics team.
     _loadDashboardData(); // Reload data for new time range
   }
 
+  // ==================== DISPOSE ====================
   @override
   void dispose() {
     _model.dispose();
     super.dispose();
   }
 
+  // ==================== UI WIDGET BUILDERS ====================
+
+  // ===== TIME RANGE SELECTOR WIDGET =====
   Widget _buildTimeRangeSelector() {
     return Container(
       margin: EdgeInsetsDirectional.fromSTEB(22.0, 10.0, 22.0, 0.0),
@@ -1357,6 +1369,7 @@ For technical support or data inquiries, please contact the analytics team.
     );
   }
 
+  // ===== KPI CARDS WIDGET =====
   Widget _buildKPICard({
     required String title,
     required String value,
@@ -1432,6 +1445,7 @@ For technical support or data inquiries, please contact the analytics team.
     );
   }
 
+  // ===== USER GROWTH CHART WIDGET =====
   Widget _buildUserGrowthChart() {
     return Container(
       width: double.infinity,
@@ -1587,6 +1601,7 @@ For technical support or data inquiries, please contact the analytics team.
     );
   }
 
+  // ===== PROMO CONVERSION CHART WIDGET =====
   Widget _buildPromoConversionChart() {
     return Container(
       width: double.infinity,
@@ -1789,6 +1804,7 @@ For technical support or data inquiries, please contact the analytics team.
     );
   }
 
+  // ===== WARDROBE CATEGORIES WIDGET =====
   Widget _buildTopStyleTags() {
     return Container(
       margin: EdgeInsetsDirectional.fromSTEB(22.0, 20.0, 22.0, 0.0),
@@ -1875,6 +1891,7 @@ For technical support or data inquiries, please contact the analytics team.
     );
   }
 
+  // ===== VENDOR PERFORMANCE CHART WIDGET =====
   Widget _buildVendorPerformance() {
     return Container(
       width: double.infinity,
@@ -2068,6 +2085,7 @@ For technical support or data inquiries, please contact the analytics team.
     );
   }
 
+  // ==================== MAIN BUILD METHOD ====================
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -2078,6 +2096,8 @@ For technical support or data inquiries, please contact the analytics team.
       child: Scaffold(
         key: scaffoldKey,
         backgroundColor: FlutterFlowTheme.of(context).secondaryBackground,
+
+        // ===== APP BAR SECTION =====
         appBar: AppBar(
           backgroundColor: FlutterFlowTheme.of(context).underground,
           automaticallyImplyLeading: false,
@@ -2093,6 +2113,8 @@ For technical support or data inquiries, please contact the analytics team.
           centerTitle: false,
           elevation: 0.0,
         ),
+
+        // ===== BOTTOM NAVIGATION BAR SECTION =====
         bottomNavigationBar: BottomNavigationBar(
           type: BottomNavigationBarType.fixed,
           backgroundColor: FlutterFlowTheme.of(context).underground,
@@ -2112,15 +2134,18 @@ For technical support or data inquiries, please contact the analytics team.
                 icon: Icon(Icons.analytics), label: "Reports"),
           ],
         ),
+
+        // ===== MAIN BODY SECTION =====
         body: SafeArea(
           top: true,
           child: SingleChildScrollView(
             child: Column(
               children: [
-                // Time Range Selector
+                // ===== SECTION 1: TIME RANGE SELECTOR =====
                 _buildTimeRangeSelector(),
+                SizedBox(height: 10), // Spacer between sections
 
-                // KPI Cards - 3 Card Layout
+                // ===== SECTION 2: KPI CARDS - 3 Card Layout =====
                 Container(
                   margin: EdgeInsetsDirectional.fromSTEB(22.0, 20.0, 22.0, 0.0),
                   child: Column(
@@ -2176,24 +2201,29 @@ For technical support or data inquiries, please contact the analytics team.
                     ],
                   ),
                 ),
+                SizedBox(height: 20), // Spacer between sections
 
-                // User Growth Chart
+                // ===== SECTION 3: USER GROWTH CHART =====
                 _buildUserGrowthChart(),
+                SizedBox(height: 20), // Spacer between sections
 
-                // Trending Style Tags
+                // ===== SECTION 4: WARDROBE CATEGORIES (TRENDING STYLE TAGS) =====
                 _buildTopStyleTags(),
+                SizedBox(height: 20), // Spacer between sections
 
-                // Promo Conversion Chart
+                // ===== SECTION 5: PROMO CONVERSION CHART =====
                 _buildPromoConversionChart(),
+                SizedBox(height: 20), // Spacer between sections
 
-                // Vendor Performance Chart
+                // ===== SECTION 6: VENDOR PERFORMANCE CHART =====
                 _buildVendorPerformance(),
+                SizedBox(height: 30), // Extra spacer before action buttons
 
-                // 🔥 SIMPLIFIED: Action Buttons with Local File Generation
+                // ===== SECTION 7: ACTION BUTTONS (CSV & SUMMARY EXPORT) =====
                 Container(
                   width: double.infinity,
                   margin:
-                      EdgeInsetsDirectional.fromSTEB(22.0, 30.0, 22.0, 100.0),
+                      EdgeInsetsDirectional.fromSTEB(22.0, 0.0, 22.0, 100.0),
                   child: Column(
                     children: [
                       Row(

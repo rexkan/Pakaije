@@ -1,7 +1,6 @@
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
-import '/flutter_flow/flutter_flow_widgets.dart';
 import '/index.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -37,6 +36,9 @@ class _AdminDashboardWidgetState extends State<AdminDashboardWidget>
     super.dispose();
   }
 
+  // ============================================================================
+  // NAVIGATION STATE MANAGEMENT SECTION
+  // ============================================================================
   int _selectedIndex = 0;
 
   void _onItemTapped(int index) {
@@ -72,9 +74,15 @@ class _AdminDashboardWidgetState extends State<AdminDashboardWidget>
       },
       child: Scaffold(
         key: scaffoldKey,
+
+        // ====================================================================
+        // APP BAR SECTION - Contains title and action buttons
+        // ====================================================================
         appBar: AppBar(
           backgroundColor: FlutterFlowTheme.of(context).underground,
           automaticallyImplyLeading: false,
+
+          // App Bar Title Widget
           title: Text(
             FFLocalizations.of(context).getText(
               '3qdzok6f' /* Admin Dashboard */,
@@ -94,7 +102,10 @@ class _AdminDashboardWidgetState extends State<AdminDashboardWidget>
                       FlutterFlowTheme.of(context).headlineMedium.fontStyle,
                 ),
           ),
+
+          // App Bar Action Buttons Section
           actions: [
+            // Profile Button Widget
             Padding(
               padding: EdgeInsetsDirectional.fromSTEB(0.0, 0.0, 8.0, 0.0),
               child: FlutterFlowIconButton(
@@ -112,6 +123,8 @@ class _AdminDashboardWidgetState extends State<AdminDashboardWidget>
                 },
               ),
             ),
+
+            // Logout Button Widget with Confirmation Dialog
             Padding(
               padding: EdgeInsetsDirectional.fromSTEB(0.0, 0.0, 12.0, 0.0),
               child: FlutterFlowIconButton(
@@ -147,9 +160,6 @@ class _AdminDashboardWidgetState extends State<AdminDashboardWidget>
                   );
 
                   if (shouldLogout == true) {
-                    // Add your logout logic here
-                    // For example:
-                    // await FirebaseAuth.instance.signOut();
                     context.pushReplacementNamed('LoginPage');
                     print('User logged out');
                   }
@@ -160,6 +170,10 @@ class _AdminDashboardWidgetState extends State<AdminDashboardWidget>
           centerTitle: false,
           elevation: 0.0,
         ),
+
+        // ====================================================================
+        // BOTTOM NAVIGATION BAR SECTION - 5 navigation items
+        // ====================================================================
         bottomNavigationBar: BottomNavigationBar(
           type: BottomNavigationBarType.fixed,
           backgroundColor:
@@ -192,13 +206,19 @@ class _AdminDashboardWidgetState extends State<AdminDashboardWidget>
             ),
           ],
         ),
+
+        // ====================================================================
+        // MAIN BODY SECTION - Contains all dashboard content
+        // ====================================================================
         body: SafeArea(
           top: true,
           child: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // 🔥 FIXED: Centered Active Users and Active Vendors Cards
+                // ============================================================
+                // STATISTICS CARDS SECTION - Active Users & Active Vendors
+                // ============================================================
                 Container(
                   width: double.infinity,
                   height: 148.88,
@@ -228,12 +248,13 @@ class _AdminDashboardWidgetState extends State<AdminDashboardWidget>
                                 0.0, 8.0, 0.0, 0.0),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment
-                                  .spaceEvenly, // 🔥 CHANGED: Center the cards
+                                  .spaceEvenly, // Center the cards
                               children: [
-                                // Active Users Card
+                                // ----------------------------------------
+                                // ACTIVE USERS CARD WIDGET
+                                // ----------------------------------------
                                 Container(
-                                  width:
-                                      160, // 🔥 CHANGED: Fixed width for both cards
+                                  width: 160, // Fixed width for both cards
                                   decoration: BoxDecoration(
                                     color: FlutterFlowTheme.of(context)
                                         .blankCanvas,
@@ -257,6 +278,7 @@ class _AdminDashboardWidgetState extends State<AdminDashboardWidget>
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
+                                        // Active Users Count - Firebase Stream
                                         StreamBuilder<QuerySnapshot>(
                                           stream: FirebaseFirestore.instance
                                               .collection('users')
@@ -315,6 +337,8 @@ class _AdminDashboardWidgetState extends State<AdminDashboardWidget>
                                             );
                                           },
                                         ),
+
+                                        // Active Users Label
                                         Padding(
                                           padding:
                                               EdgeInsetsDirectional.fromSTEB(
@@ -360,9 +384,11 @@ class _AdminDashboardWidgetState extends State<AdminDashboardWidget>
                                   ),
                                 ),
 
-                                // Active Vendors Card
+                                // ----------------------------------------
+                                // ACTIVE VENDORS CARD WIDGET
+                                // ----------------------------------------
                                 Container(
-                                  width: 160, // 🔥 CHANGED: Same fixed width
+                                  width: 160, // Same fixed width
                                   decoration: BoxDecoration(
                                     color: FlutterFlowTheme.of(context)
                                         .blankCanvas,
@@ -386,6 +412,7 @@ class _AdminDashboardWidgetState extends State<AdminDashboardWidget>
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
+                                        // Active Vendors Count - Firebase Stream
                                         StreamBuilder<QuerySnapshot>(
                                           stream: FirebaseFirestore.instance
                                               .collection('users')
@@ -451,6 +478,8 @@ class _AdminDashboardWidgetState extends State<AdminDashboardWidget>
                                             );
                                           },
                                         ),
+
+                                        // Active Vendors Label
                                         Padding(
                                           padding:
                                               EdgeInsetsDirectional.fromSTEB(
@@ -504,7 +533,12 @@ class _AdminDashboardWidgetState extends State<AdminDashboardWidget>
                   ),
                 ),
 
-                // Urgent Tasks Section
+                // Add spacing between sections
+                SizedBox(height: 16.0),
+
+                // ============================================================
+                // URGENT TASKS SECTION - Pending Approvals Management
+                // ============================================================
                 Container(
                   width: 422.5,
                   decoration: BoxDecoration(
@@ -513,6 +547,9 @@ class _AdminDashboardWidgetState extends State<AdminDashboardWidget>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // ----------------------------------------
+                      // URGENT TASKS TITLE WIDGET
+                      // ----------------------------------------
                       Padding(
                         padding: EdgeInsetsDirectional.fromSTEB(
                             16.0, 12.0, 0.0, 0.0),
@@ -534,7 +571,9 @@ class _AdminDashboardWidgetState extends State<AdminDashboardWidget>
                       ),
                       const SizedBox(height: 12.0),
 
-                      // Urgent task list - Updated to use account_status
+                      // ----------------------------------------
+                      // URGENT TASKS LIST WIDGET - Pending Approvals
+                      // ----------------------------------------
                       StreamBuilder<QuerySnapshot>(
                         stream: FirebaseFirestore.instance
                             .collection('users')
@@ -548,6 +587,7 @@ class _AdminDashboardWidgetState extends State<AdminDashboardWidget>
 
                           final tasks = snapshot.data!.docs;
 
+                          // Empty State Widget
                           if (tasks.isEmpty) {
                             return Padding(
                               padding: EdgeInsetsDirectional.fromSTEB(
@@ -559,6 +599,7 @@ class _AdminDashboardWidgetState extends State<AdminDashboardWidget>
                             );
                           }
 
+                          // Pending Tasks List
                           return ListView.builder(
                             shrinkWrap: true,
                             physics: NeverScrollableScrollPhysics(),
@@ -570,6 +611,7 @@ class _AdminDashboardWidgetState extends State<AdminDashboardWidget>
                                   data['display_name'] ?? 'Unknown User';
                               final userRole = data['role'] ?? 'Unknown';
 
+                              // Individual Task Card Widget
                               return Padding(
                                 padding: const EdgeInsetsDirectional.fromSTEB(
                                     16.0, 8.0, 16.0, 8.0),
@@ -580,21 +622,29 @@ class _AdminDashboardWidgetState extends State<AdminDashboardWidget>
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: ListTile(
+                                    // Task Icon
                                     leading: Icon(
                                         userRole == 'Vendor'
                                             ? Icons.store
                                             : Icons.admin_panel_settings,
                                         color: Colors.orange,
                                         size: 28),
+
+                                    // Task Title
                                     title: Text(
                                       'Pending $userRole Approval',
                                       style: FlutterFlowTheme.of(context)
                                           .bodyLarge,
                                     ),
+
+                                    // Task Subtitle
                                     subtitle: Text('$userRole: $userName'),
+
+                                    // Action Buttons Row
                                     trailing: Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
+                                        // Approve Button Widget
                                         IconButton(
                                           icon: Icon(Icons.check_circle,
                                               color: Colors.green, size: 30),
@@ -614,6 +664,8 @@ class _AdminDashboardWidgetState extends State<AdminDashboardWidget>
                                             );
                                           },
                                         ),
+
+                                        // Suspend Button Widget with Confirmation
                                         IconButton(
                                           icon: Icon(Icons.block,
                                               color: Colors.red, size: 30),
@@ -679,7 +731,12 @@ class _AdminDashboardWidgetState extends State<AdminDashboardWidget>
                   ),
                 ),
 
-                // Recent Activity Section
+                // Add spacing between sections
+                SizedBox(height: 16.0),
+
+                // ============================================================
+                // RECENT ACTIVITY SECTION - Latest User Registrations
+                // ============================================================
                 Container(
                   width: 422.5,
                   decoration: BoxDecoration(
@@ -688,6 +745,9 @@ class _AdminDashboardWidgetState extends State<AdminDashboardWidget>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // ----------------------------------------
+                      // RECENT ACTIVITY TITLE WIDGET
+                      // ----------------------------------------
                       Padding(
                         padding: EdgeInsetsDirectional.fromSTEB(
                             16.0, 12.0, 0.0, 0.0),
@@ -708,7 +768,10 @@ class _AdminDashboardWidgetState extends State<AdminDashboardWidget>
                         ),
                       ),
                       SizedBox(height: 10),
-                      // Recent activity list
+
+                      // ----------------------------------------
+                      // RECENT ACTIVITY LIST WIDGET - Latest 10 Users
+                      // ----------------------------------------
                       StreamBuilder<QuerySnapshot>(
                         stream: FirebaseFirestore.instance
                             .collection('users')
@@ -737,6 +800,7 @@ class _AdminDashboardWidgetState extends State<AdminDashboardWidget>
                               final accountStatus =
                                   data['account_status'] ?? 'unknown';
 
+                              // Individual Activity Item Widget
                               return Container(
                                 margin: const EdgeInsets.symmetric(
                                     vertical: 5, horizontal: 10),
@@ -759,6 +823,7 @@ class _AdminDashboardWidgetState extends State<AdminDashboardWidget>
                                   ],
                                 ),
                                 child: ListTile(
+                                  // Activity Icon
                                   leading: Icon(
                                       role == 'Vendor'
                                           ? Icons.store
@@ -767,20 +832,27 @@ class _AdminDashboardWidgetState extends State<AdminDashboardWidget>
                                               : Icons.person,
                                       color: FlutterFlowTheme.of(context)
                                           .northAtlantic),
+
+                                  // Activity Title
                                   title: Text(
                                     "New $role signed up: $name",
                                     style:
                                         FlutterFlowTheme.of(context).titleSmall,
                                   ),
+
+                                  // Activity Details
                                   subtitle: Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
+                                      // Time Difference Widget
                                       Text(
                                         timeDifference(createdTime),
                                         style: FlutterFlowTheme.of(context)
                                             .bodyMedium,
                                       ),
+
+                                      // Account Status Widget
                                       Text(
                                         'Status: ${accountStatus.toUpperCase()}',
                                         style: TextStyle(
@@ -801,7 +873,10 @@ class _AdminDashboardWidgetState extends State<AdminDashboardWidget>
                           );
                         },
                       ),
-                      // Add some bottom padding to give space from the bottom nav bar
+
+                      // ----------------------------------------
+                      // BOTTOM SPACING WIDGET - Space from bottom nav bar
+                      // ----------------------------------------
                       SizedBox(height: 20),
                     ],
                   ),
@@ -815,6 +890,11 @@ class _AdminDashboardWidgetState extends State<AdminDashboardWidget>
   }
 }
 
+// ============================================================================
+// UTILITY FUNCTIONS SECTION
+// ============================================================================
+
+// Time Difference Calculator Function - Converts DateTime to readable format
 String timeDifference(DateTime time) {
   final difference = DateTime.now().difference(time);
   if (difference.inMinutes < 1) return "just now";

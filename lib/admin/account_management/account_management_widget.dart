@@ -20,6 +20,9 @@ class AccountManagementWidget extends StatefulWidget {
       _AccountManagementWidgetState();
 }
 
+// ============================================================================
+// GLOBAL SEARCH VARIABLES SECTION
+// ============================================================================
 String _searchQuery = '';
 String _adminSearchQuery = ''; // Add admin search query
 String _vendorSearchQuery = ''; // Add vendor search query
@@ -31,6 +34,9 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
   final scaffoldKey = GlobalKey<ScaffoldState>();
   int _selectedIndex = 1; // Set to 1 for Accounts tab
 
+  // ============================================================================
+  // INITIALIZATION SECTION
+  // ============================================================================
   @override
   void initState() {
     super.initState();
@@ -52,6 +58,9 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
     _model.searchBarFocusNode3 ??= FocusNode();
   }
 
+  // ============================================================================
+  // NAVIGATION HANDLER SECTION
+  // ============================================================================
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
@@ -79,7 +88,6 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
   @override
   void dispose() {
     _model.dispose();
-
     super.dispose();
   }
 
@@ -93,9 +101,15 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
       child: Scaffold(
         key: scaffoldKey,
         backgroundColor: FlutterFlowTheme.of(context).secondaryBackground,
+
+        // ====================================================================
+        // APP BAR SECTION - Contains page title
+        // ====================================================================
         appBar: AppBar(
           backgroundColor: FlutterFlowTheme.of(context).underground,
           automaticallyImplyLeading: false,
+
+          // App Bar Title Widget
           title: Text(
             FFLocalizations.of(context).getText(
               'uh4cjov9' /* Account Management */,
@@ -119,6 +133,10 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
           centerTitle: false,
           elevation: 0.0,
         ),
+
+        // ====================================================================
+        // BOTTOM NAVIGATION BAR SECTION - 5 navigation items
+        // ====================================================================
         bottomNavigationBar: BottomNavigationBar(
           type: BottomNavigationBarType.fixed,
           backgroundColor: FlutterFlowTheme.of(context).underground,
@@ -149,6 +167,10 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
             ),
           ],
         ),
+
+        // ====================================================================
+        // MAIN BODY SECTION - Contains tabbed interface
+        // ====================================================================
         body: SafeArea(
           top: true,
           child: Column(
@@ -160,6 +182,9 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
                   padding: EdgeInsetsDirectional.fromSTEB(0.0, 30.0, 0.0, 0.0),
                   child: Column(
                     children: [
+                      // ============================================================
+                      // TAB BAR SECTION - User, Admin, Vendor tabs
+                      // ============================================================
                       Align(
                         alignment: Alignment(0.0, 0),
                         child: FlutterFlowButtonTabBar(
@@ -221,20 +246,31 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
                           },
                         ),
                       ),
+
+                      // Add spacing between tab bar and content
+                      SizedBox(height: 16.0),
+
+                      // ============================================================
+                      // TAB BAR VIEW SECTION - Content for each tab
+                      // ============================================================
                       Expanded(
                         child: TabBarView(
                           controller: _model.tabBarController,
                           children: [
-                            // ===== USER TAB =====
+                            // ========================================================
+                            // USER TAB CONTENT SECTION
+                            // ========================================================
                             SingleChildScrollView(
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(
                                     horizontal:
-                                        35.0), // ⬅️ global left/right padding
+                                        35.0), // global left/right padding
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    // "Accounts" Title
+                                    // ----------------------------------------
+                                    // USER TAB TITLE WIDGET
+                                    // ----------------------------------------
                                     Padding(
                                       padding: const EdgeInsets.only(
                                           top: 16.0, bottom: 16.0, left: 8),
@@ -263,7 +299,9 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
                                       ),
                                     ),
 
-                                    // Search Bar
+                                    // ----------------------------------------
+                                    // USER SEARCH BAR WIDGET
+                                    // ----------------------------------------
                                     Container(
                                       width: double.infinity,
                                       decoration: BoxDecoration(
@@ -314,7 +352,7 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
                                           suffixIcon: Row(
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
-                                              // Search Button
+                                              // Search Button Widget
                                               IconButton(
                                                 icon: Icon(Icons.search,
                                                     color: FlutterFlowTheme.of(
@@ -329,7 +367,7 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
                                                   });
                                                 },
                                               ),
-                                              // Clear Button
+                                              // Clear Button Widget
                                               if (_searchQuery.isNotEmpty)
                                                 IconButton(
                                                   icon: Icon(Icons.clear,
@@ -357,7 +395,9 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
 
                                     SizedBox(height: 12.0),
 
-                                    // Users List
+                                    // ----------------------------------------
+                                    // USER LIST WIDGET - Active Users Display
+                                    // ----------------------------------------
                                     StreamBuilder<QuerySnapshot>(
                                       stream: (_searchQuery.isEmpty)
                                           ? FirebaseFirestore.instance
@@ -425,6 +465,7 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
                                                         .split(' ')[0] ??
                                                     'N/A';
 
+                                            // Individual User Card Widget
                                             return Padding(
                                               padding: const EdgeInsets.only(
                                                   bottom: 12.0),
@@ -453,7 +494,7 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
                                                         MainAxisAlignment
                                                             .spaceBetween,
                                                     children: [
-                                                      // Left: User Info
+                                                      // User Info Section
                                                       Expanded(
                                                         child: Column(
                                                           mainAxisAlignment:
@@ -486,7 +527,8 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
                                                           ],
                                                         ),
                                                       ),
-                                                      // Right: Suspend Button
+
+                                                      // User Suspend Button Widget
                                                       InkWell(
                                                         onTap: () async {
                                                           final confirm =
@@ -606,7 +648,9 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
                               ),
                             ),
 
-                            // Admin Tab
+                            // ========================================================
+                            // ADMIN TAB CONTENT SECTION
+                            // ========================================================
                             SingleChildScrollView(
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(
@@ -614,7 +658,9 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    // Search Bar
+                                    // ----------------------------------------
+                                    // ADMIN SEARCH BAR WIDGET
+                                    // ----------------------------------------
                                     Padding(
                                       padding: const EdgeInsets.only(
                                           top: 22.0, bottom: 16.0),
@@ -669,7 +715,7 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
                                                   mainAxisSize:
                                                       MainAxisSize.min,
                                                   children: [
-                                                    // Search Button
+                                                    // Admin Search Button Widget
                                                     IconButton(
                                                       icon: Icon(Icons.search,
                                                           color: FlutterFlowTheme
@@ -684,7 +730,7 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
                                                         });
                                                       },
                                                     ),
-                                                    // Clear Button
+                                                    // Admin Clear Button Widget
                                                     if (_adminSearchQuery
                                                         .isNotEmpty)
                                                       IconButton(
@@ -714,7 +760,9 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
                                       ),
                                     ),
 
-                                    // === Application Section ===
+                                    // ----------------------------------------
+                                    // ADMIN APPLICATIONS SECTION TITLE WIDGET
+                                    // ----------------------------------------
                                     Padding(
                                       padding: const EdgeInsets.only(
                                           top: 8.0, bottom: 16.0),
@@ -731,7 +779,9 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
                                       ),
                                     ),
 
-                                    // Pending Admin Applications - Updated to use account_status
+                                    // ----------------------------------------
+                                    // PENDING ADMIN APPLICATIONS WIDGET
+                                    // ----------------------------------------
                                     StreamBuilder<QuerySnapshot>(
                                       stream: (_adminSearchQuery.isEmpty)
                                           ? FirebaseFirestore.instance
@@ -820,6 +870,7 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
                                                         .split(' ')[0]
                                                     : 'N/A';
 
+                                            // Individual Admin Application Card Widget
                                             return Padding(
                                               padding:
                                                   EdgeInsets.only(bottom: 12.0),
@@ -856,7 +907,7 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
                                                     mainAxisSize:
                                                         MainAxisSize.min,
                                                     children: [
-                                                      // Accept Button
+                                                      // Admin Accept Button Widget
                                                       TextButton(
                                                         onPressed: () async {
                                                           try {
@@ -906,7 +957,8 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
                                                                   Colors.green),
                                                         ),
                                                       ),
-                                                      // Reject Button
+
+                                                      // Admin Reject Button Widget
                                                       TextButton(
                                                         onPressed: () async {
                                                           final confirm =
@@ -997,7 +1049,12 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
                                       },
                                     ),
 
-                                    // === Approved Admin Accounts Section ===
+                                    // Add spacing between sections
+                                    SizedBox(height: 24.0),
+
+                                    // ----------------------------------------
+                                    // ADMIN ACCOUNTS SECTION TITLE WIDGET
+                                    // ----------------------------------------
                                     Padding(
                                       padding: const EdgeInsets.only(
                                           top: 24.0, bottom: 16.0),
@@ -1014,7 +1071,9 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
                                       ),
                                     ),
 
-                                    // Approved Admins List - Updated to use account_status
+                                    // ----------------------------------------
+                                    // APPROVED ADMIN ACCOUNTS WIDGET
+                                    // ----------------------------------------
                                     StreamBuilder<QuerySnapshot>(
                                       stream: (_adminSearchQuery.isEmpty)
                                           ? FirebaseFirestore.instance
@@ -1102,6 +1161,7 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
                                                         .split(' ')[0]
                                                     : 'N/A';
 
+                                            // Individual Admin Account Card Widget
                                             return Padding(
                                               padding:
                                                   EdgeInsets.only(bottom: 12.0),
@@ -1130,7 +1190,7 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
                                                         MainAxisAlignment
                                                             .spaceBetween,
                                                     children: [
-                                                      // Left: Admin Info
+                                                      // Admin Info Section
                                                       Expanded(
                                                         child: Column(
                                                           mainAxisAlignment:
@@ -1163,7 +1223,8 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
                                                           ],
                                                         ),
                                                       ),
-                                                      // Right: Suspend Button
+
+                                                      // Admin Suspend Button Widget
                                                       InkWell(
                                                         onTap: () async {
                                                           final confirm =
@@ -1307,7 +1368,9 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
                               ),
                             ),
 
-                            // Vendor Tab
+                            // ========================================================
+                            // VENDOR TAB CONTENT SECTION
+                            // ========================================================
                             SingleChildScrollView(
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(
@@ -1315,7 +1378,9 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    // Search Bar
+                                    // ----------------------------------------
+                                    // VENDOR SEARCH BAR WIDGET
+                                    // ----------------------------------------
                                     Padding(
                                       padding: const EdgeInsets.only(
                                           top: 22.0, bottom: 16.0),
@@ -1366,7 +1431,7 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
                                                   mainAxisSize:
                                                       MainAxisSize.min,
                                                   children: [
-                                                    // Search Button
+                                                    // Vendor Search Button Widget
                                                     IconButton(
                                                       icon: Icon(Icons.search,
                                                           color: FlutterFlowTheme
@@ -1382,7 +1447,7 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
                                                         });
                                                       },
                                                     ),
-                                                    // Clear Button
+                                                    // Vendor Clear Button Widget
                                                     if (_vendorSearchQuery
                                                         .isNotEmpty)
                                                       IconButton(
@@ -1412,7 +1477,9 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
                                       ),
                                     ),
 
-                                    // === Applications Section ===
+                                    // ----------------------------------------
+                                    // VENDOR APPLICATIONS SECTION TITLE WIDGET
+                                    // ----------------------------------------
                                     Padding(
                                       padding: const EdgeInsets.only(
                                           top: 8.0, bottom: 16.0),
@@ -1429,7 +1496,9 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
                                       ),
                                     ),
 
-                                    // Pending Vendor Applications - Updated to use account_status
+                                    // ----------------------------------------
+                                    // PENDING VENDOR APPLICATIONS WIDGET
+                                    // ----------------------------------------
                                     StreamBuilder<QuerySnapshot>(
                                       stream: (_vendorSearchQuery.isEmpty)
                                           ? FirebaseFirestore.instance
@@ -1517,6 +1586,7 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
                                                     .split(' ')[0]
                                                 : 'N/A';
 
+                                            // Individual Vendor Application Card Widget
                                             return Padding(
                                               padding:
                                                   EdgeInsets.only(bottom: 12.0),
@@ -1553,7 +1623,7 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
                                                     mainAxisSize:
                                                         MainAxisSize.min,
                                                     children: [
-                                                      // Accept Button
+                                                      // Vendor Accept Button Widget
                                                       TextButton(
                                                         onPressed: () async {
                                                           try {
@@ -1604,7 +1674,8 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
                                                                   Colors.green),
                                                         ),
                                                       ),
-                                                      // Reject Button
+
+                                                      // Vendor Reject Button Widget
                                                       TextButton(
                                                         onPressed: () async {
                                                           final confirm =
@@ -1697,7 +1768,12 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
                                       },
                                     ),
 
-                                    // === Vendor Accounts Section ===
+                                    // Add spacing between sections
+                                    SizedBox(height: 20.0),
+
+                                    // ----------------------------------------
+                                    // VENDOR ACCOUNTS SECTION TITLE WIDGET
+                                    // ----------------------------------------
                                     Padding(
                                       padding: const EdgeInsets.only(
                                           top: 20.0, bottom: 12.0),
@@ -1714,7 +1790,9 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
                                       ),
                                     ),
 
-                                    // Approved Vendors List - Updated to use account_status
+                                    // ----------------------------------------
+                                    // APPROVED VENDOR ACCOUNTS WIDGET
+                                    // ----------------------------------------
                                     StreamBuilder<QuerySnapshot>(
                                       stream: (_vendorSearchQuery.isEmpty)
                                           ? FirebaseFirestore.instance
@@ -1802,6 +1880,7 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
                                                     .split(' ')[0]
                                                 : 'N/A';
 
+                                            // Individual Vendor Account Card Widget
                                             return Padding(
                                               padding: const EdgeInsets.only(
                                                   bottom: 12.0),
@@ -1830,7 +1909,7 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
                                                         MainAxisAlignment
                                                             .spaceBetween,
                                                     children: [
-                                                      // Left: Vendor Info
+                                                      // Vendor Info Section
                                                       Expanded(
                                                         child: Column(
                                                           mainAxisAlignment:
@@ -1863,7 +1942,8 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
                                                           ],
                                                         ),
                                                       ),
-                                                      // Right: Suspend Button
+
+                                                      // Vendor Suspend Button Widget
                                                       InkWell(
                                                         onTap: () async {
                                                           final confirm =
@@ -2005,7 +2085,9 @@ class _AccountManagementWidgetState extends State<AccountManagementWidget>
                                       },
                                     ),
 
-                                    // Add some bottom padding
+                                    // ----------------------------------------
+                                    // BOTTOM SPACING WIDGET - Space from bottom nav bar
+                                    // ----------------------------------------
                                     SizedBox(height: 20.0),
                                   ],
                                 ),

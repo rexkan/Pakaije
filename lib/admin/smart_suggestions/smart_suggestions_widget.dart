@@ -23,10 +23,15 @@ class SmartSuggestionsWidget extends StatefulWidget {
 class _SmartSuggestionsWidgetState extends State<SmartSuggestionsWidget> {
   late SmartSuggestionsModel _model;
 
+  // ========================================
+  // SCAFFOLD AND NAVIGATION VARIABLES
+  // ========================================
   final scaffoldKey = GlobalKey<ScaffoldState>();
   int _selectedIndex = 3;
 
-  // Weather data variables
+  // ========================================
+  // WEATHER API VARIABLES
+  // ========================================
   Map<String, dynamic>? weatherData;
   bool isLoadingWeather = true;
   String? weatherError;
@@ -35,7 +40,9 @@ class _SmartSuggestionsWidgetState extends State<SmartSuggestionsWidget> {
   final String apiKey = 'e94a49d026651e92567ebe5d78715d81';
   final String cityName = 'Kuala Lumpur,MY';
 
-  // Additional dropdown controllers for warm and hot weather
+  // ========================================
+  // TEMPERATURE DROPDOWN CONTROLLERS
+  // ========================================
   FormFieldController<String>? dropDownValueController6;
   FormFieldController<String>? dropDownValueController7;
   FormFieldController<String>? dropDownValueController8;
@@ -43,18 +50,24 @@ class _SmartSuggestionsWidgetState extends State<SmartSuggestionsWidget> {
   String? dropDownValue7;
   String? dropDownValue8;
 
-  // Individual switch states for different weather conditions
+  // ========================================
+  // WEATHER CONDITION SWITCH VARIABLES
+  // ========================================
   bool humidityAlertSwitch = false;
   bool rainDetectionSwitch = false;
   bool strongWindSwitch = false;
   bool uvProtectionSwitch = false;
 
-  // NEW: Firebase integration variables
+  // ========================================
+  // FIREBASE INTEGRATION VARIABLES
+  // ========================================
   DocumentReference? settingsDocRef;
   SuggestionSettingsRecord? currentSettings;
   bool isLoadingSettings = true;
 
-  // Saved settings (what users will actually see)
+  // ========================================
+  // SAVED SETTINGS VARIABLES
+  // ========================================
   Map<String, int> savedTemperatureRanges = {
     'coldMin': 10,
     'coldMax': 24,
@@ -88,7 +101,9 @@ class _SmartSuggestionsWidgetState extends State<SmartSuggestionsWidget> {
     WidgetsBinding.instance.addPostFrameCallback((_) => safeSetState(() {}));
   }
 
-  // NEW: Load settings from Firebase using the schema
+  // ========================================
+  // FIREBASE SETTINGS LOADING METHOD
+  // ========================================
   Future<void> _loadSettingsFromFirebase() async {
     try {
       print('🔄 Loading settings from Firebase...');
@@ -148,7 +163,9 @@ class _SmartSuggestionsWidgetState extends State<SmartSuggestionsWidget> {
     }
   }
 
-  // Function to fetch weather data from OpenWeatherMap API
+  // ========================================
+  // WEATHER API FETCH METHOD
+  // ========================================
   Future<void> _fetchWeatherData() async {
     print('🌤️ Starting weather API call...');
 
@@ -184,7 +201,9 @@ class _SmartSuggestionsWidgetState extends State<SmartSuggestionsWidget> {
     }
   }
 
-  // UPDATED: Save settings to Firebase using the schema
+  // ========================================
+  // FIREBASE SETTINGS SAVE METHOD
+  // ========================================
   void _saveSettings() async {
     final currentRanges = _getTemperatureRanges();
 
@@ -246,7 +265,9 @@ class _SmartSuggestionsWidgetState extends State<SmartSuggestionsWidget> {
     }
   }
 
-  // Helper function to get temperature ranges from dropdowns
+  // ========================================
+  // TEMPERATURE RANGES HELPER METHOD
+  // ========================================
   Map<String, int> _getTemperatureRanges() {
     // Cold weather range
     int coldMin =
@@ -270,7 +291,9 @@ class _SmartSuggestionsWidgetState extends State<SmartSuggestionsWidget> {
     };
   }
 
-  // Helper function to generate smart suggestions based on current weather and SAVED settings
+  // ========================================
+  // SMART SUGGESTION GENERATION METHOD
+  // ========================================
   String _generateSmartSuggestion(Map<String, dynamic> weather) {
     final temp = (weather['main']?['temp'] as num?)?.round() ?? 0;
     final humidity = (weather['main']?['humidity'] as num?) ?? 0;
@@ -327,7 +350,9 @@ class _SmartSuggestionsWidgetState extends State<SmartSuggestionsWidget> {
     return suggestions.join('\n\n');
   }
 
-  // Helper function to get the notification message
+  // ========================================
+  // NOTIFICATION MESSAGE HELPER METHOD
+  // ========================================
   String _getNotificationMessage() {
     if (isLoadingSettings) {
       return "🔄 Loading saved settings...";
@@ -337,7 +362,9 @@ class _SmartSuggestionsWidgetState extends State<SmartSuggestionsWidget> {
         : "⚠️ Settings not saved yet - this preview uses default values. Click 'Save Settings' to apply your configuration.";
   }
 
-  // Helper function to get weather icon based on OpenWeatherMap icon code
+  // ========================================
+  // WEATHER ICON HELPER METHOD
+  // ========================================
   IconData _getWeatherIcon(String? iconCode) {
     if (iconCode == null) return Icons.wb_sunny;
 
@@ -364,6 +391,9 @@ class _SmartSuggestionsWidgetState extends State<SmartSuggestionsWidget> {
     }
   }
 
+  // ========================================
+  // BOTTOM NAVIGATION METHOD
+  // ========================================
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
@@ -410,6 +440,10 @@ class _SmartSuggestionsWidgetState extends State<SmartSuggestionsWidget> {
         child: Scaffold(
           key: scaffoldKey,
           backgroundColor: FlutterFlowTheme.of(context).secondaryBackground,
+
+          // ========================================
+          // APP BAR SECTION
+          // ========================================
           appBar: AppBar(
             backgroundColor: FlutterFlowTheme.of(context).underground,
             automaticallyImplyLeading: false,
@@ -431,7 +465,7 @@ class _SmartSuggestionsWidgetState extends State<SmartSuggestionsWidget> {
                   ),
             ),
             actions: [
-              // NEW: Loading indicator when settings are being loaded
+              // Loading indicator when settings are being loaded
               if (isLoadingSettings)
                 Padding(
                   padding: EdgeInsetsDirectional.fromSTEB(0.0, 0.0, 16.0, 0.0),
@@ -452,6 +486,10 @@ class _SmartSuggestionsWidgetState extends State<SmartSuggestionsWidget> {
             centerTitle: false,
             elevation: 0.0,
           ),
+
+          // ========================================
+          // BOTTOM NAVIGATION BAR SECTION
+          // ========================================
           bottomNavigationBar: BottomNavigationBar(
             type: BottomNavigationBarType.fixed,
             backgroundColor: FlutterFlowTheme.of(context).underground,
@@ -482,6 +520,10 @@ class _SmartSuggestionsWidgetState extends State<SmartSuggestionsWidget> {
               ),
             ],
           ),
+
+          // ========================================
+          // MAIN BODY SECTION
+          // ========================================
           body: SafeArea(
             child: Padding(
               padding: EdgeInsetsDirectional.fromSTEB(16.0, 0.0, 16.0, 0.0),
@@ -490,10 +532,13 @@ class _SmartSuggestionsWidgetState extends State<SmartSuggestionsWidget> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Enhanced Current Weather Section
+                    // ========================================
+                    // SECTION 1: CURRENT WEATHER DISPLAY
+                    // ========================================
                     Column(
                       mainAxisSize: MainAxisSize.max,
                       children: [
+                        // Weather Section Title
                         Align(
                           alignment: AlignmentDirectional(-1.0, 0.0),
                           child: Padding(
@@ -523,12 +568,14 @@ class _SmartSuggestionsWidgetState extends State<SmartSuggestionsWidget> {
                             ),
                           ),
                         ),
+
+                        // Weather Information Container
                         Container(
                           width: double.infinity,
                           margin: EdgeInsetsDirectional.fromSTEB(
                               0.0, 16.0, 0.0, 20.0),
                           padding: EdgeInsetsDirectional.fromSTEB(
-                              20.0, 24.0, 20.0, 24.0), // Increased padding
+                              20.0, 24.0, 20.0, 24.0),
                           decoration: BoxDecoration(
                             color: FlutterFlowTheme.of(context).blankCanvas,
                             borderRadius: BorderRadius.circular(12.0),
@@ -540,19 +587,23 @@ class _SmartSuggestionsWidgetState extends State<SmartSuggestionsWidget> {
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              // Main weather info row - Enhanced
+                              // ========================================
+                              // SUB-SECTION 1A: MAIN WEATHER INFO ROW
+                              // ========================================
                               Row(
                                 mainAxisSize: MainAxisSize.max,
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
+                                  // City Name and Description Column
                                   Expanded(
                                     flex: 2,
                                     child: Column(
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
+                                        // City Name Text
                                         Text(
                                           isLoadingWeather
                                               ? 'Loading...'
@@ -562,7 +613,7 @@ class _SmartSuggestionsWidgetState extends State<SmartSuggestionsWidget> {
                                                           ?.toString() ??
                                                       'Unknown',
                                           style: FlutterFlowTheme.of(context)
-                                              .titleLarge // Changed from titleMedium
+                                              .titleLarge
                                               .override(
                                                 font: GoogleFonts.interTight(
                                                   fontWeight:
@@ -587,13 +638,11 @@ class _SmartSuggestionsWidgetState extends State<SmartSuggestionsWidget> {
                                                         .fontStyle,
                                               ),
                                         ),
+                                        // Weather Description Text
                                         Padding(
                                           padding:
                                               EdgeInsetsDirectional.fromSTEB(
-                                                  0.0,
-                                                  8.0,
-                                                  0.0,
-                                                  0.0), // Increased padding
+                                                  0.0, 8.0, 0.0, 0.0),
                                           child: Text(
                                             isLoadingWeather
                                                 ? 'Loading weather...'
@@ -606,7 +655,7 @@ class _SmartSuggestionsWidgetState extends State<SmartSuggestionsWidget> {
                                                             .toUpperCase() ??
                                                         'N/A',
                                             style: FlutterFlowTheme.of(context)
-                                                .bodyLarge // Changed from bodyMedium
+                                                .bodyLarge
                                                 .override(
                                                   font: GoogleFonts.inter(
                                                     fontWeight:
@@ -640,12 +689,14 @@ class _SmartSuggestionsWidgetState extends State<SmartSuggestionsWidget> {
                                       ],
                                     ),
                                   ),
+                                  // Temperature and Weather Icon Column
                                   Expanded(
                                     flex: 1,
                                     child: Column(
                                       crossAxisAlignment:
                                           CrossAxisAlignment.end,
                                       children: [
+                                        // Temperature Text
                                         Text(
                                           isLoadingWeather
                                               ? '--°C'
@@ -653,7 +704,7 @@ class _SmartSuggestionsWidgetState extends State<SmartSuggestionsWidget> {
                                                   ? '--°C'
                                                   : '${(weatherData?['main']?['temp'] as num?)?.round() ?? '--'}°C',
                                           style: FlutterFlowTheme.of(context)
-                                              .headlineLarge // Changed from headlineMedium for bigger temperature
+                                              .headlineLarge
                                               .override(
                                                 font: GoogleFonts.interTight(
                                                   fontWeight:
@@ -678,6 +729,7 @@ class _SmartSuggestionsWidgetState extends State<SmartSuggestionsWidget> {
                                                         .fontStyle,
                                               ),
                                         ),
+                                        // Weather Icon
                                         Padding(
                                           padding:
                                               EdgeInsetsDirectional.fromSTEB(
@@ -692,7 +744,7 @@ class _SmartSuggestionsWidgetState extends State<SmartSuggestionsWidget> {
                                                         ?.toString()),
                                             color: FlutterFlowTheme.of(context)
                                                 .secondaryText,
-                                            size: 56.0, // Increased from 32.0
+                                            size: 56.0,
                                           ),
                                         ),
                                       ],
@@ -700,16 +752,19 @@ class _SmartSuggestionsWidgetState extends State<SmartSuggestionsWidget> {
                                   ),
                                 ],
                               ),
-                              // Enhanced additional weather details
+
+                              // ========================================
+                              // SUB-SECTION 1B: WEATHER DETAILS ROW
+                              // ========================================
                               Padding(
-                                padding: EdgeInsetsDirectional.fromSTEB(0.0,
-                                    24.0, 0.0, 0.0), // Increased top padding
+                                padding: EdgeInsetsDirectional.fromSTEB(
+                                    0.0, 24.0, 0.0, 0.0),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.max,
-                                  mainAxisAlignment: MainAxisAlignment
-                                      .spaceEvenly, // Changed to spaceEvenly for better distribution
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceEvenly,
                                   children: [
-                                    // Humidity
+                                    // Humidity Widget
                                     Expanded(
                                       child: Column(
                                         children: [
@@ -717,15 +772,12 @@ class _SmartSuggestionsWidgetState extends State<SmartSuggestionsWidget> {
                                             Icons.water_drop,
                                             color: FlutterFlowTheme.of(context)
                                                 .secondaryText,
-                                            size: 32.0, // Increased from 20.0
+                                            size: 32.0,
                                           ),
                                           Padding(
                                             padding:
                                                 EdgeInsetsDirectional.fromSTEB(
-                                                    0.0,
-                                                    8.0,
-                                                    0.0,
-                                                    0.0), // Increased padding
+                                                    0.0, 8.0, 0.0, 0.0),
                                             child: Text(
                                               'Humidity',
                                               style:
@@ -773,7 +825,7 @@ class _SmartSuggestionsWidgetState extends State<SmartSuggestionsWidget> {
                                                   : '${weatherData?['main']?['humidity']?.toString() ?? '--'}%',
                                               style: FlutterFlowTheme.of(
                                                       context)
-                                                  .titleSmall // Changed from bodyMedium for larger text
+                                                  .titleSmall
                                                   .override(
                                                     font: GoogleFonts.inter(
                                                       fontWeight:
@@ -803,7 +855,7 @@ class _SmartSuggestionsWidgetState extends State<SmartSuggestionsWidget> {
                                         ],
                                       ),
                                     ),
-                                    // Wind Speed
+                                    // Wind Speed Widget
                                     Expanded(
                                       child: Column(
                                         children: [
@@ -811,7 +863,7 @@ class _SmartSuggestionsWidgetState extends State<SmartSuggestionsWidget> {
                                             Icons.air,
                                             color: FlutterFlowTheme.of(context)
                                                 .secondaryText,
-                                            size: 32.0, // Increased from 20.0
+                                            size: 32.0,
                                           ),
                                           Padding(
                                             padding:
@@ -894,7 +946,7 @@ class _SmartSuggestionsWidgetState extends State<SmartSuggestionsWidget> {
                                         ],
                                       ),
                                     ),
-                                    // Feels Like Temperature
+                                    // Feels Like Temperature Widget
                                     Expanded(
                                       child: Column(
                                         children: [
@@ -902,7 +954,7 @@ class _SmartSuggestionsWidgetState extends State<SmartSuggestionsWidget> {
                                             Icons.thermostat,
                                             color: FlutterFlowTheme.of(context)
                                                 .secondaryText,
-                                            size: 32.0, // Increased from 20.0
+                                            size: 32.0,
                                           ),
                                           Padding(
                                             padding:
@@ -993,10 +1045,14 @@ class _SmartSuggestionsWidgetState extends State<SmartSuggestionsWidget> {
                         ),
                       ],
                     ),
-                    // Enhanced Smart Suggestions Settings
+
+                    // ========================================
+                    // SECTION 2: SMART SUGGESTIONS SETTINGS
+                    // ========================================
                     Column(
                       mainAxisSize: MainAxisSize.max,
                       children: [
+                        // Settings Section Title
                         Align(
                           alignment: AlignmentDirectional(-1.0, 0.0),
                           child: Padding(
@@ -1026,6 +1082,7 @@ class _SmartSuggestionsWidgetState extends State<SmartSuggestionsWidget> {
                             ),
                           ),
                         ),
+                        // Settings Section Subtitle
                         Align(
                           alignment: AlignmentDirectional(-1.0, 0.0),
                           child: Padding(
@@ -1058,7 +1115,9 @@ class _SmartSuggestionsWidgetState extends State<SmartSuggestionsWidget> {
                           ),
                         ),
 
-                        // Temperature Rules Section
+                        // ========================================
+                        // SUB-SECTION 2A: TEMPERATURE RULES
+                        // ========================================
                         Container(
                           width: double.infinity,
                           margin: EdgeInsetsDirectional.fromSTEB(
@@ -1076,6 +1135,7 @@ class _SmartSuggestionsWidgetState extends State<SmartSuggestionsWidget> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
+                              // Temperature Categories Header
                               Row(
                                 children: [
                                   Icon(
@@ -1109,7 +1169,7 @@ class _SmartSuggestionsWidgetState extends State<SmartSuggestionsWidget> {
                                 ],
                               ),
 
-                              // Cold Weather Settings
+                              // Cold Weather Settings Widget
                               Padding(
                                 padding: EdgeInsetsDirectional.fromSTEB(
                                     0.0, 16.0, 0.0, 12.0),
@@ -1126,11 +1186,13 @@ class _SmartSuggestionsWidgetState extends State<SmartSuggestionsWidget> {
                                             fontWeight: FontWeight.w600,
                                           ),
                                     ),
+                                    // Cold Weather Dropdown Row
                                     Padding(
                                       padding: EdgeInsetsDirectional.fromSTEB(
                                           0.0, 8.0, 0.0, 8.0),
                                       child: Row(
                                         children: [
+                                          // Cold Min Temperature Dropdown
                                           Expanded(
                                             child: FlutterFlowDropDown<String>(
                                               controller: _model
@@ -1189,6 +1251,7 @@ class _SmartSuggestionsWidgetState extends State<SmartSuggestionsWidget> {
                                                     FlutterFlowTheme.of(context)
                                                         .bodyMedium),
                                           ),
+                                          // Cold Max Temperature Dropdown
                                           Expanded(
                                             child: FlutterFlowDropDown<String>(
                                               controller: _model
@@ -1241,6 +1304,7 @@ class _SmartSuggestionsWidgetState extends State<SmartSuggestionsWidget> {
                                         ],
                                       ),
                                     ),
+                                    // Cold Weather Suggestion Description
                                     Text(
                                       'Suggestions: Jacket, long sleeves, closed shoes, warm layers',
                                       style: FlutterFlowTheme.of(context)
@@ -1256,7 +1320,7 @@ class _SmartSuggestionsWidgetState extends State<SmartSuggestionsWidget> {
                                 ),
                               ),
 
-                              // Warm Weather Settings
+                              // Warm Weather Settings Widget
                               Padding(
                                 padding: EdgeInsetsDirectional.fromSTEB(
                                     0.0, 0.0, 0.0, 12.0),
@@ -1273,11 +1337,13 @@ class _SmartSuggestionsWidgetState extends State<SmartSuggestionsWidget> {
                                             fontWeight: FontWeight.w600,
                                           ),
                                     ),
+                                    // Warm Weather Dropdown Row
                                     Padding(
                                       padding: EdgeInsetsDirectional.fromSTEB(
                                           0.0, 8.0, 0.0, 8.0),
                                       child: Row(
                                         children: [
+                                          // Warm Min Temperature Dropdown
                                           Expanded(
                                             child: FlutterFlowDropDown<String>(
                                               controller:
@@ -1336,6 +1402,7 @@ class _SmartSuggestionsWidgetState extends State<SmartSuggestionsWidget> {
                                                     FlutterFlowTheme.of(context)
                                                         .bodyMedium),
                                           ),
+                                          // Warm Max Temperature Dropdown
                                           Expanded(
                                             child: FlutterFlowDropDown<String>(
                                               controller:
@@ -1388,6 +1455,7 @@ class _SmartSuggestionsWidgetState extends State<SmartSuggestionsWidget> {
                                         ],
                                       ),
                                     ),
+                                    // Warm Weather Suggestion Description
                                     Text(
                                       'Suggestions: Light clothing, comfortable wear, breathable fabrics',
                                       style: FlutterFlowTheme.of(context)
@@ -1403,7 +1471,7 @@ class _SmartSuggestionsWidgetState extends State<SmartSuggestionsWidget> {
                                 ),
                               ),
 
-                              // Hot Weather Settings
+                              // Hot Weather Settings Widget
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
@@ -1417,11 +1485,13 @@ class _SmartSuggestionsWidgetState extends State<SmartSuggestionsWidget> {
                                           fontWeight: FontWeight.w600,
                                         ),
                                   ),
+                                  // Hot Weather Dropdown Row
                                   Padding(
                                     padding: EdgeInsetsDirectional.fromSTEB(
                                         0.0, 8.0, 0.0, 8.0),
                                     child: Row(
                                       children: [
+                                        // Hot Temperature Threshold Dropdown
                                         Expanded(
                                           child: FlutterFlowDropDown<String>(
                                             controller:
@@ -1488,6 +1558,7 @@ class _SmartSuggestionsWidgetState extends State<SmartSuggestionsWidget> {
                                       ],
                                     ),
                                   ),
+                                  // Hot Weather Suggestion Description
                                   Text(
                                     'Suggestions: Light colors, UV protection, sunglasses, hat, sunscreen',
                                     style: FlutterFlowTheme.of(context)
@@ -1505,7 +1576,9 @@ class _SmartSuggestionsWidgetState extends State<SmartSuggestionsWidget> {
                           ),
                         ),
 
-                        // Humidity Rules Section
+                        // ========================================
+                        // SUB-SECTION 2B: HUMIDITY RULES
+                        // ========================================
                         Container(
                           width: double.infinity,
                           margin: EdgeInsetsDirectional.fromSTEB(
@@ -1523,6 +1596,7 @@ class _SmartSuggestionsWidgetState extends State<SmartSuggestionsWidget> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
+                              // Humidity Rules Header
                               Row(
                                 children: [
                                   Icon(
@@ -1546,6 +1620,7 @@ class _SmartSuggestionsWidgetState extends State<SmartSuggestionsWidget> {
                                   ),
                                 ],
                               ),
+                              // High Humidity Alert Switch Widget
                               Padding(
                                 padding: EdgeInsetsDirectional.fromSTEB(
                                     0.0, 12.0, 0.0, 8.0),
@@ -1581,6 +1656,7 @@ class _SmartSuggestionsWidgetState extends State<SmartSuggestionsWidget> {
                                   ],
                                 ),
                               ),
+                              // Humidity Suggestion Description
                               Text(
                                 'Suggestions: Moisture-wicking fabrics, avoid heavy materials, stay hydrated',
                                 style: FlutterFlowTheme.of(context)
@@ -1596,7 +1672,9 @@ class _SmartSuggestionsWidgetState extends State<SmartSuggestionsWidget> {
                           ),
                         ),
 
-                        // Weather Condition Rules Section
+                        // ========================================
+                        // SUB-SECTION 2C: WEATHER CONDITIONS RULES
+                        // ========================================
                         Container(
                           width: double.infinity,
                           margin: EdgeInsetsDirectional.fromSTEB(
@@ -1614,6 +1692,7 @@ class _SmartSuggestionsWidgetState extends State<SmartSuggestionsWidget> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
+                              // Weather Conditions Header
                               Row(
                                 children: [
                                   Icon(
@@ -1638,7 +1717,7 @@ class _SmartSuggestionsWidgetState extends State<SmartSuggestionsWidget> {
                                 ],
                               ),
 
-                              // Rain Detection
+                              // Rain Detection Switch Widget
                               Padding(
                                 padding: EdgeInsetsDirectional.fromSTEB(
                                     0.0, 16.0, 0.0, 12.0),
@@ -1699,7 +1778,7 @@ class _SmartSuggestionsWidgetState extends State<SmartSuggestionsWidget> {
                                 ),
                               ),
 
-                              // Strong Wind
+                              // Strong Wind Switch Widget
                               Padding(
                                 padding: EdgeInsetsDirectional.fromSTEB(
                                     0.0, 0.0, 0.0, 12.0),
@@ -1760,7 +1839,7 @@ class _SmartSuggestionsWidgetState extends State<SmartSuggestionsWidget> {
                                 ),
                               ),
 
-                              // UV Protection
+                              // UV Protection Switch Widget
                               Row(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
@@ -1819,7 +1898,9 @@ class _SmartSuggestionsWidgetState extends State<SmartSuggestionsWidget> {
                           ),
                         ),
 
-                        // Save Settings Button
+                        // ========================================
+                        // SECTION 3: SAVE SETTINGS BUTTON
+                        // ========================================
                         Container(
                           width: double.infinity,
                           margin: EdgeInsetsDirectional.fromSTEB(
@@ -1841,6 +1922,7 @@ class _SmartSuggestionsWidgetState extends State<SmartSuggestionsWidget> {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
+                                // Save Button Icon
                                 Icon(
                                   isLoadingSettings
                                       ? Icons.hourglass_empty
@@ -1848,6 +1930,7 @@ class _SmartSuggestionsWidgetState extends State<SmartSuggestionsWidget> {
                                   size: 20.0,
                                   color: Colors.white,
                                 ),
+                                // Save Button Text
                                 Padding(
                                   padding: EdgeInsetsDirectional.fromSTEB(
                                       8.0, 0.0, 0.0, 0.0),
@@ -1870,11 +1953,13 @@ class _SmartSuggestionsWidgetState extends State<SmartSuggestionsWidget> {
                           ),
                         ),
 
-                        // Smart Suggestion Preview
+                        // ========================================
+                        // SECTION 4: SMART SUGGESTION PREVIEW
+                        // ========================================
                         Container(
                           width: double.infinity,
                           margin: EdgeInsetsDirectional.fromSTEB(0.0, 0.0, 0.0,
-                              100.0), // Increased bottom margin for bottom nav bar
+                              100.0), // Extra margin for bottom nav bar
                           padding: EdgeInsetsDirectional.fromSTEB(
                               16.0, 16.0, 16.0, 16.0),
                           decoration: BoxDecoration(
@@ -1888,8 +1973,10 @@ class _SmartSuggestionsWidgetState extends State<SmartSuggestionsWidget> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
+                              // Preview Section Header
                               Row(
                                 children: [
+                                  // Preview Status Icon
                                   Icon(
                                     settingsAreSaved
                                         ? Icons.check_circle
@@ -1903,6 +1990,7 @@ class _SmartSuggestionsWidgetState extends State<SmartSuggestionsWidget> {
                                             : Color(0xFF1976D2),
                                     size: 24.0,
                                   ),
+                                  // Preview Section Title
                                   Padding(
                                     padding: EdgeInsetsDirectional.fromSTEB(
                                         8.0, 0.0, 0.0, 0.0),
@@ -1928,6 +2016,7 @@ class _SmartSuggestionsWidgetState extends State<SmartSuggestionsWidget> {
                                   ),
                                 ],
                               ),
+                              // Preview Content Container
                               Padding(
                                 padding: EdgeInsetsDirectional.fromSTEB(
                                     0.0, 12.0, 0.0, 0.0),
@@ -1943,7 +2032,7 @@ class _SmartSuggestionsWidgetState extends State<SmartSuggestionsWidget> {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      // Main suggestion text (larger)
+                                      // Main Suggestion Text Widget
                                       Text(
                                         isLoadingWeather || weatherError != null
                                             ? 'Loading current conditions...'
@@ -1961,7 +2050,7 @@ class _SmartSuggestionsWidgetState extends State<SmartSuggestionsWidget> {
                                             ),
                                       ),
 
-                                      // Notification text (smaller)
+                                      // Notification Message Widget
                                       if (weatherData != null &&
                                           !isLoadingWeather &&
                                           weatherError == null)
@@ -1976,8 +2065,7 @@ class _SmartSuggestionsWidgetState extends State<SmartSuggestionsWidget> {
                                                 .override(
                                                   font: GoogleFonts.inter(),
                                                   letterSpacing: 0.0,
-                                                  fontSize:
-                                                      12.0, // Smaller font size
+                                                  fontSize: 12.0,
                                                   color: isLoadingSettings
                                                       ? Colors.orange.shade700
                                                       : settingsAreSaved

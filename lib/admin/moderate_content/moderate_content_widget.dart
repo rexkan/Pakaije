@@ -1,3 +1,6 @@
+// ============================================================================
+// IMPORTS SECTION
+// ============================================================================
 import '/flutter_flow/flutter_flow_animations.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
@@ -9,7 +12,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'moderate_content_model.dart';
 export 'moderate_content_model.dart';
 
-// Data models for the collections
+// ============================================================================
+// DATA MODELS SECTION
+// ============================================================================
+
+// Data model for content reports from Firestore
 class ContentReport {
   final String reportId;
   final String itemId;
@@ -40,6 +47,7 @@ class ContentReport {
   }
 }
 
+// Data model for branded items from Firestore
 class BrandedItem {
   final String itemId;
   final String name;
@@ -79,6 +87,7 @@ class BrandedItem {
   }
 }
 
+// Combined data model for reported items
 class ReportedItemData {
   final ContentReport report;
   final BrandedItem? item;
@@ -86,6 +95,11 @@ class ReportedItemData {
   ReportedItemData({required this.report, this.item});
 }
 
+// ============================================================================
+// MAIN WIDGET CLASS SECTION
+// ============================================================================
+
+// Main stateful widget for content moderation page
 class ModerateContentWidget extends StatefulWidget {
   const ModerateContentWidget({super.key});
 
@@ -96,25 +110,38 @@ class ModerateContentWidget extends StatefulWidget {
   State<ModerateContentWidget> createState() => _ModerateContentWidgetState();
 }
 
+// ============================================================================
+// STATE CLASS SECTION
+// ============================================================================
+
 class _ModerateContentWidgetState extends State<ModerateContentWidget>
     with TickerProviderStateMixin {
+  // ========================================================================
+  // VARIABLES AND CONTROLLERS SECTION
+  // ========================================================================
+
   late ModerateContentModel _model;
-
   final scaffoldKey = GlobalKey<ScaffoldState>();
-  int _selectedIndex = 2;
+  int _selectedIndex = 2; // Bottom navigation selected index
 
+  // Animation configuration
   final animationsMap = <String, AnimationInfo>{};
 
-  // Backend data
+  // Backend data variables
   List<ReportedItemData> reportedItems = [];
   bool isLoading = true;
   String? errorMessage;
+
+  // ========================================================================
+  // INITIALIZATION SECTION
+  // ========================================================================
 
   @override
   void initState() {
     super.initState();
     _model = createModel(context, () => ModerateContentModel());
 
+    // Setup page animations
     animationsMap.addAll({
       'textOnPageLoadAnimation1': AnimationInfo(
         trigger: AnimationTrigger.onPageLoad,
@@ -155,6 +182,7 @@ class _ModerateContentWidgetState extends State<ModerateContentWidget>
         ],
       ),
     });
+
     setupAnimations(
       animationsMap.values.where((anim) =>
           anim.trigger == AnimationTrigger.onActionTrigger ||
@@ -162,11 +190,15 @@ class _ModerateContentWidgetState extends State<ModerateContentWidget>
       this,
     );
 
-    // Load reported content data
+    // Load reported content data from Firestore
     _loadReportedContent();
   }
 
-  // Load reported content from Firestore
+  // ========================================================================
+  // BACKEND FUNCTIONS SECTION
+  // ========================================================================
+
+  // Load reported content from Firestore database
   Future<void> _loadReportedContent() async {
     try {
       setState(() {
@@ -176,6 +208,7 @@ class _ModerateContentWidgetState extends State<ModerateContentWidget>
 
       print('🔄 Loading reported content...');
 
+      // Query pending reports from Firestore
       QuerySnapshot reportsSnapshot = await FirebaseFirestore.instance
           .collection('content_reports')
           .where('status', isEqualTo: 'pending')
@@ -186,17 +219,17 @@ class _ModerateContentWidgetState extends State<ModerateContentWidget>
 
       List<ReportedItemData> tempReportedItems = [];
 
+      // Process each report and get associated item data
       for (DocumentSnapshot reportDoc in reportsSnapshot.docs) {
         try {
           ContentReport report = ContentReport.fromFirestore(reportDoc);
           print(
               '📋 Processing report: ${report.reportId} for item: ${report.itemId}');
 
-          // FIXED: Query by item_id field instead of using document ID
+          // Query branded items collection for reported item
           String itemId = report.itemId.trim();
           print('🔍 Looking for branded item with item_id: "$itemId"');
 
-          // Query the collection by item_id field
           QuerySnapshot itemQuery = await FirebaseFirestore.instance
               .collection('branded_items')
               .where('item_id', isEqualTo: itemId)
@@ -204,14 +237,13 @@ class _ModerateContentWidgetState extends State<ModerateContentWidget>
 
           BrandedItem? item;
           if (itemQuery.docs.isNotEmpty) {
-            // Take the first matching document
             DocumentSnapshot itemDoc = itemQuery.docs.first;
             item = BrandedItem.fromFirestore(itemDoc);
             print('✅ Found item: ${item.name} with image: ${item.imageUrl}');
           } else {
             print('❌ Item not found for item_id: "$itemId"');
 
-            // Debug: Let's see what item_ids actually exist
+            // Debug logging for troubleshooting
             QuerySnapshot allItems = await FirebaseFirestore.instance
                 .collection('branded_items')
                 .get();
@@ -249,7 +281,7 @@ class _ModerateContentWidgetState extends State<ModerateContentWidget>
     }
   }
 
-  // Handle report actions
+  // Handle moderation actions (approve/decline reports)
   Future<void> _handleReportAction(String reportId, String action) async {
     try {
       print('🔄 Handling action: $action for report: $reportId');
@@ -267,7 +299,7 @@ class _ModerateContentWidgetState extends State<ModerateContentWidget>
           return;
       }
 
-      // Find the report document by report_id field
+      // Find and update report document in Firestore
       QuerySnapshot reportQuery = await FirebaseFirestore.instance
           .collection('content_reports')
           .where('report_id', isEqualTo: reportId)
@@ -277,7 +309,6 @@ class _ModerateContentWidgetState extends State<ModerateContentWidget>
         throw Exception('Report not found with ID: $reportId');
       }
 
-      // Update the report status
       DocumentSnapshot reportDoc = reportQuery.docs.first;
       await reportDoc.reference.update({
         'status': newStatus,
@@ -294,7 +325,6 @@ class _ModerateContentWidgetState extends State<ModerateContentWidget>
         );
 
         if (reportData.item != null) {
-          // FIXED: Query by item_id field to find the item to update
           QuerySnapshot itemQuery = await FirebaseFirestore.instance
               .collection('branded_items')
               .where('item_id', isEqualTo: reportData.item!.itemId.trim())
@@ -313,7 +343,7 @@ class _ModerateContentWidgetState extends State<ModerateContentWidget>
         }
       }
 
-      // Show success message
+      // Show success notification
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -326,7 +356,7 @@ class _ModerateContentWidgetState extends State<ModerateContentWidget>
         ),
       );
 
-      // Reload the content
+      // Reload the content after action
       await _loadReportedContent();
     } catch (e) {
       print('❌ Error handling report action: $e');
@@ -340,7 +370,11 @@ class _ModerateContentWidgetState extends State<ModerateContentWidget>
     }
   }
 
-  // Navigation handler for bottom nav bar
+  // ========================================================================
+  // NAVIGATION FUNCTIONS SECTION
+  // ========================================================================
+
+  // Bottom navigation bar handler
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
@@ -365,13 +399,21 @@ class _ModerateContentWidgetState extends State<ModerateContentWidget>
     }
   }
 
+  // ========================================================================
+  // CLEANUP SECTION
+  // ========================================================================
+
   @override
   void dispose() {
     _model.dispose();
     super.dispose();
   }
 
-  // Build individual report item widget
+  // ========================================================================
+  // UI HELPER FUNCTIONS SECTION
+  // ========================================================================
+
+  // Build individual report item card widget
   Widget _buildReportItem(ReportedItemData reportData) {
     return Container(
       width: double.infinity,
@@ -392,10 +434,15 @@ class _ModerateContentWidgetState extends State<ModerateContentWidget>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // ============================================================
+            // REPORT ITEM HEADER ROW SECTION
+            // ============================================================
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Item image
+                // ========================================================
+                // ITEM IMAGE WIDGET
+                // ========================================================
                 ClipRRect(
                   borderRadius: BorderRadius.circular(5.0),
                   child: reportData.item != null
@@ -427,14 +474,19 @@ class _ModerateContentWidgetState extends State<ModerateContentWidget>
                           ),
                         ),
                 ),
+
                 SizedBox(width: 16.0),
 
-                // Item details
+                // ========================================================
+                // ITEM DETAILS COLUMN WIDGET
+                // ========================================================
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Report reason
+                      // ================================================
+                      // REPORT REASON BADGE WIDGET
+                      // ================================================
                       Container(
                         padding:
                             EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -453,9 +505,12 @@ class _ModerateContentWidgetState extends State<ModerateContentWidget>
                           ),
                         ),
                       ),
+
                       SizedBox(height: 8),
 
-                      // Item name
+                      // ================================================
+                      // ITEM NAME WIDGET
+                      // ================================================
                       Text(
                         reportData.item?.name ?? 'Unknown Item',
                         style:
@@ -465,9 +520,12 @@ class _ModerateContentWidgetState extends State<ModerateContentWidget>
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
+
                       SizedBox(height: 4),
 
-                      // Item details
+                      // ================================================
+                      // ITEM DETAILS WIDGET
+                      // ================================================
                       if (reportData.item != null) ...[
                         Text(
                           'Category: ${reportData.item!.category}',
@@ -485,7 +543,9 @@ class _ModerateContentWidgetState extends State<ModerateContentWidget>
 
                       SizedBox(height: 8),
 
-                      // Report timestamp
+                      // ================================================
+                      // REPORT TIMESTAMP WIDGET
+                      // ================================================
                       Text(
                         'Reported: ${_formatDate(reportData.report.timestamp)}',
                         style: FlutterFlowTheme.of(context).labelSmall.override(
@@ -500,10 +560,15 @@ class _ModerateContentWidgetState extends State<ModerateContentWidget>
 
             SizedBox(height: 16),
 
-            // Action buttons
+            // ============================================================
+            // ACTION BUTTONS ROW SECTION
+            // ============================================================
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
+                // ========================================================
+                // DELETE ITEM BUTTON WIDGET
+                // ========================================================
                 Expanded(
                   child: FFButtonWidget(
                     onPressed: () => _handleReportAction(
@@ -523,7 +588,12 @@ class _ModerateContentWidgetState extends State<ModerateContentWidget>
                     ),
                   ),
                 ),
+
                 SizedBox(width: 12),
+
+                // ========================================================
+                // DECLINE REPORT BUTTON WIDGET
+                // ========================================================
                 Expanded(
                   child: FFButtonWidget(
                     onPressed: () => _handleReportAction(
@@ -551,10 +621,14 @@ class _ModerateContentWidgetState extends State<ModerateContentWidget>
     );
   }
 
-  // Format date helper
+  // Date formatting helper function
   String _formatDate(DateTime date) {
     return '${date.day}/${date.month}/${date.year} ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
   }
+
+  // ========================================================================
+  // MAIN BUILD METHOD SECTION
+  // ========================================================================
 
   @override
   Widget build(BuildContext context) {
@@ -566,6 +640,10 @@ class _ModerateContentWidgetState extends State<ModerateContentWidget>
       child: Scaffold(
         key: scaffoldKey,
         backgroundColor: FlutterFlowTheme.of(context).secondaryBackground,
+
+        // ================================================================
+        // APP BAR SECTION
+        // ================================================================
         appBar: AppBar(
           backgroundColor: FlutterFlowTheme.of(context).underground,
           automaticallyImplyLeading: false,
@@ -578,6 +656,9 @@ class _ModerateContentWidgetState extends State<ModerateContentWidget>
                 ),
           ),
           actions: [
+            // ============================================================
+            // REFRESH BUTTON WIDGET
+            // ============================================================
             IconButton(
               icon: Icon(Icons.refresh, color: Colors.white),
               onPressed: _loadReportedContent,
@@ -586,6 +667,10 @@ class _ModerateContentWidgetState extends State<ModerateContentWidget>
           centerTitle: false,
           elevation: 2.0,
         ),
+
+        // ================================================================
+        // BOTTOM NAVIGATION BAR SECTION
+        // ================================================================
         bottomNavigationBar: BottomNavigationBar(
           type: BottomNavigationBarType.fixed,
           backgroundColor: FlutterFlowTheme.of(context).underground,
@@ -605,6 +690,10 @@ class _ModerateContentWidgetState extends State<ModerateContentWidget>
                 icon: Icon(Icons.analytics), label: "Reports"),
           ],
         ),
+
+        // ================================================================
+        // MAIN BODY SECTION
+        // ================================================================
         body: SafeArea(
           top: true,
           child: Padding(
@@ -612,7 +701,9 @@ class _ModerateContentWidgetState extends State<ModerateContentWidget>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header
+                // ============================================================
+                // PAGE HEADER SECTION
+                // ============================================================
                 Padding(
                   padding: EdgeInsetsDirectional.fromSTEB(0.0, 16.0, 0.0, 0.0),
                   child: Text(
@@ -623,6 +714,10 @@ class _ModerateContentWidgetState extends State<ModerateContentWidget>
                   ).animateOnPageLoad(
                       animationsMap['textOnPageLoadAnimation1']!),
                 ),
+
+                // ============================================================
+                // SUBTITLE SECTION
+                // ============================================================
                 Padding(
                   padding: EdgeInsetsDirectional.fromSTEB(0.0, 4.0, 0.0, 16.0),
                   child: Text(
@@ -634,10 +729,15 @@ class _ModerateContentWidgetState extends State<ModerateContentWidget>
                       animationsMap['textOnPageLoadAnimation2']!),
                 ),
 
-                // Content
+                // ============================================================
+                // MAIN CONTENT SECTION
+                // ============================================================
                 Expanded(
                   child: isLoading
-                      ? Center(
+                      ? // ================================================
+                      // LOADING STATE WIDGET
+                      // ================================================
+                      Center(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
@@ -650,7 +750,10 @@ class _ModerateContentWidgetState extends State<ModerateContentWidget>
                           ),
                         )
                       : errorMessage != null
-                          ? Center(
+                          ? // ============================================
+                          // ERROR STATE WIDGET
+                          // ============================================
+                          Center(
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
@@ -672,7 +775,10 @@ class _ModerateContentWidgetState extends State<ModerateContentWidget>
                               ),
                             )
                           : reportedItems.isEmpty
-                              ? Center(
+                              ? // ========================================
+                              // EMPTY STATE WIDGET
+                              // ========================================
+                              Center(
                                   child: Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
@@ -693,7 +799,10 @@ class _ModerateContentWidgetState extends State<ModerateContentWidget>
                                     ],
                                   ),
                                 )
-                              : RefreshIndicator(
+                              : // ========================================
+                              // CONTENT LIST WIDGET
+                              // ========================================
+                              RefreshIndicator(
                                   onRefresh: _loadReportedContent,
                                   child: ListView.builder(
                                     itemCount: reportedItems.length,
