@@ -1,3 +1,6 @@
+// ========================================
+// IMPORTS SECTION
+// ========================================
 import '/flutter_flow/flutter_flow_drop_down.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
@@ -15,6 +18,9 @@ export 'my_wardrode_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:convert';
 
+// ========================================
+// MAIN WIDGET CLASS DEFINITION
+// ========================================
 class MyWardrodeWidget extends StatefulWidget {
   const MyWardrodeWidget({super.key});
 
@@ -25,7 +31,13 @@ class MyWardrodeWidget extends StatefulWidget {
   State<MyWardrodeWidget> createState() => _MyWardrodeWidgetState();
 }
 
+// ========================================
+// WIDGET STATE CLASS
+// ========================================
 class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
+  // ========================================
+  // STATE VARIABLES SECTION
+  // ========================================
   late MyWardrodeModel _model;
 
   // Add a refresh key to force stream rebuild
@@ -40,6 +52,9 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
   bool _showOutfits = false; // Toggle between wardrobe items and outfits
   StreamSubscription<QuerySnapshot>? _outfitsStreamSubscription;
 
+  // ========================================
+  // WIDGET LIFECYCLE METHODS
+  // ========================================
   @override
   void initState() {
     super.initState();
@@ -59,6 +74,10 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
     super.dispose();
   }
 
+  // ========================================
+  // UTILITY METHODS SECTION
+  // ========================================
+  
   // Add method to force refresh
   void _forceRefresh() {
     setState(() {
@@ -86,7 +105,9 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
         .snapshots();
   }
 
-  // Build wardrobe items view
+  // ========================================
+  // WARDROBE VIEW BUILDER WIDGET
+  // ========================================
   Widget _buildWardrobeView() {
     return StreamBuilder<List<WardrobeItemsRecord>>(
       key: ValueKey(_refreshKey),
@@ -101,6 +122,7 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
         print('Refresh Key: $_refreshKey');
         print('Current User ID: $currentUserUid');
 
+        // ERROR STATE UI
         if (snapshot.hasError) {
           print('Firestore error: ${snapshot.error}');
           return Center(
@@ -142,6 +164,7 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
           );
         }
 
+        // LOADING STATE UI
         if (!snapshot.hasData &&
             snapshot.connectionState == ConnectionState.waiting) {
           return Center(
@@ -177,6 +200,7 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
           }).toList();
         }
 
+        // EMPTY STATE UI
         if (filteredItems.isEmpty) {
           return Center(
             child: Column(
@@ -226,6 +250,7 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
           );
         }
 
+        // WARDROBE ITEMS GRID VIEW
         return RefreshIndicator(
           onRefresh: () async {
             _forceRefresh();
@@ -262,6 +287,7 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
                     borderRadius: BorderRadius.circular(8.0),
                     child: Stack(
                       children: [
+                        // ITEM IMAGE
                         Image.network(wardrobeItem.imageUrl,
                             width: double.infinity,
                             height: double.infinity,
@@ -296,6 +322,8 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
                             ),
                           );
                         }),
+                        
+                        // FAVORITE BADGE
                         if (wardrobeItem.isFavourite)
                           Positioned(
                               top: 5.0,
@@ -308,6 +336,8 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
                                   padding: EdgeInsets.all(4.0),
                                   child: Icon(Icons.favorite,
                                       color: Colors.red, size: 16.0))),
+                        
+                        // CATEGORY BADGE
                         Positioned(
                             top: 5.0,
                             left: 5.0,
@@ -328,6 +358,8 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
                                             color: Colors.white,
                                             fontSize: 8.0,
                                             fontWeight: FontWeight.bold)))),
+                        
+                        // ITEM NAME OVERLAY
                         Positioned(
                             bottom: 0.0,
                             left: 0.0,
@@ -366,12 +398,16 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
     );
   }
 
-  // Build outfits view
+  // ========================================
+  // OUTFITS VIEW BUILDER WIDGET
+  // ========================================
   Widget _buildOutfitsView() {
     return StreamBuilder<QuerySnapshot>(
       key: ValueKey('outfits_$_refreshKey'),
       stream: _getOutfitsStream(),
       builder: (context, snapshot) {
+        
+        // ERROR STATE UI FOR OUTFITS
         if (snapshot.hasError) {
           return Center(
             child: Column(
@@ -397,6 +433,7 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
           );
         }
 
+        // LOADING STATE UI FOR OUTFITS
         if (!snapshot.hasData &&
             snapshot.connectionState == ConnectionState.waiting) {
           return Center(
@@ -418,6 +455,7 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
 
         List<QueryDocumentSnapshot> outfitDocs = snapshot.data?.docs ?? [];
 
+        // EMPTY STATE UI FOR OUTFITS
         if (outfitDocs.isEmpty) {
           return Center(
             child: Column(
@@ -456,6 +494,7 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
           );
         }
 
+        // OUTFITS LIST VIEW
         return RefreshIndicator(
           onRefresh: () async {
             _forceRefresh();
@@ -468,6 +507,7 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
               final outfitDoc = outfitDocs[index];
               final outfitData = outfitDoc.data() as Map<String, dynamic>;
 
+              // OUTFIT CARD CONTAINER
               return Container(
                 margin: EdgeInsets.only(bottom: 16.0),
                 padding: EdgeInsets.all(16.0),
@@ -484,9 +524,11 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // OUTFIT HEADER ROW
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
+                        // OUTFIT NAME
                         Expanded(
                           child: Text(outfitData['name'] ?? 'Unnamed Outfit',
                               style: FlutterFlowTheme.of(context)
@@ -496,6 +538,8 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
                                           GoogleFonts.inter().fontFamily,
                                       fontWeight: FontWeight.w600)),
                         ),
+                        
+                        // OUTFIT OPTIONS MENU
                         PopupMenuButton<String>(
                           onSelected: (value) {
                             if (value == 'delete') {
@@ -515,25 +559,37 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
                         ),
                       ],
                     ),
+                    
                     SizedBox(height: 8.0),
+                    
+                    // OUTFIT DATE
                     Text(_formatDate(outfitData['created_time']),
                         style: FlutterFlowTheme.of(context).bodySmall.override(
                             fontFamily: GoogleFonts.inter().fontFamily,
                             color: FlutterFlowTheme.of(context).secondaryText)),
+                    
                     SizedBox(height: 12.0),
+                    
+                    // OUTFIT ITEMS AND TRY ON BUTTON ROW
                     Row(
                       children: [
+                        // TOP ITEM PREVIEW
                         _buildOutfitItemPreview(
                             outfitData['top_item_id'], 'Top'),
                         SizedBox(width: 8.0),
+                        
+                        // BOTTOM ITEM PREVIEW
                         _buildOutfitItemPreview(
                             outfitData['bottom_item_id'], 'Bottom'),
                         SizedBox(width: 8.0),
+                        
+                        // SHOES ITEM PREVIEW
                         _buildOutfitItemPreview(
                             outfitData['shoes_item_id'], 'Shoes'),
+                        
                         Spacer(),
-                        // In your MyWardrodeWidget, update the "Try On" button in _buildOutfitsView()
-
+                        
+                        // TRY ON BUTTON
                         FFButtonWidget(
                           onPressed: () {
                             try {
@@ -653,6 +709,10 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
     );
   }
 
+  // ========================================
+  // HELPER METHODS SECTION
+  // ========================================
+  
   // Helper method to build outfit item preview
   Widget _buildOutfitItemPreview(String? itemId, String type) {
     if (itemId == null) {
@@ -726,6 +786,10 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
     }
   }
 
+  // ========================================
+  // DIALOG AND DELETION METHODS
+  // ========================================
+  
   // Method to delete outfit
   Future<void> _deleteOutfit(String outfitId, String outfitName) async {
     try {
@@ -816,7 +880,6 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
           );
         },
       );
-
       if (confirmDelete == true) {
         // Delete the item from Firestore
         await item.reference.delete();
@@ -832,7 +895,6 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
             duration: Duration(seconds: 2),
           ),
         );
-
         print('Item deleted: ${item.reference.id}');
       }
     } catch (e) {
@@ -847,6 +909,9 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
     }
   }
 
+  // ========================================
+  // MAIN BUILD METHOD - UI STRUCTURE
+  // ========================================
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -857,9 +922,15 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
       child: Scaffold(
         key: scaffoldKey,
         backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
+        
+        // ========================================
+        // APP BAR SECTION
+        // ========================================
         appBar: AppBar(
           backgroundColor: FlutterFlowTheme.of(context).underground,
           automaticallyImplyLeading: false,
+          
+          // BACK BUTTON
           leading: FlutterFlowIconButton(
             borderColor: Colors.transparent,
             borderRadius: 30.0,
@@ -874,6 +945,8 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
               context.pop();
             },
           ),
+          
+          // APP BAR TITLE
           title: Text(
             FFLocalizations.of(context).getText(
               'cc9n9pk0' /* My Wardrode */,
@@ -886,8 +959,10 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
                   fontWeight: FontWeight.w500,
                 ),
           ),
+          
+          // APP BAR ACTIONS
           actions: [
-            // Add refresh button in app bar
+            // REFRESH BUTTON
             FlutterFlowIconButton(
               borderColor: Colors.transparent,
               borderRadius: 20.0,
@@ -906,6 +981,10 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
           centerTitle: true,
           elevation: 2.0,
         ),
+        
+        // ========================================
+        // MAIN BODY SECTION
+        // ========================================
         body: SafeArea(
           top: true,
           child: Column(
@@ -915,15 +994,21 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
                   child: Column(
                     mainAxisSize: MainAxisSize.max,
                     children: [
+                      
+                      // ========================================
+                      // HEADER SECTION WITH TITLE AND ADD BUTTON
+                      // ========================================
                       Padding(
                         padding: EdgeInsetsDirectional.fromSTEB(
                             30.0, 30.0, 30.0, 0.0),
                         child: Column(
                           children: [
+                            // TITLE AND ADD BUTTON ROW
                             Row(
                               mainAxisSize: MainAxisSize.max,
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
+                                // SECTION TITLE
                                 Text(
                                   _showOutfits
                                       ? 'Your Saved Outfits'
@@ -941,6 +1026,8 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
                                         fontWeight: FontWeight.bold,
                                       ),
                                 ),
+                                
+                                // ADD ITEM/CREATE OUTFIT BUTTON
                                 Align(
                                   alignment: AlignmentDirectional(1.0, 0.0),
                                   child: FFButtonWidget(
@@ -983,8 +1070,12 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
                                 ),
                               ],
                             ),
+                            
                             SizedBox(height: 15.0),
-                            // Toggle buttons between Wardrobe Items and Outfits
+                            
+                            // ========================================
+                            // TOGGLE BUTTONS SECTION (WARDROBE VS OUTFITS)
+                            // ========================================
                             Container(
                               height: 40.0,
                               decoration: BoxDecoration(
@@ -995,6 +1086,7 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
                               ),
                               child: Row(
                                 children: [
+                                  // WARDROBE ITEMS TOGGLE
                                   Expanded(
                                     child: GestureDetector(
                                       onTap: () {
@@ -1034,6 +1126,8 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
                                       ),
                                     ),
                                   ),
+                                  
+                                  // SAVED OUTFITS TOGGLE
                                   Expanded(
                                     child: GestureDetector(
                                       onTap: () {
@@ -1079,6 +1173,10 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
                           ],
                         ),
                       ),
+                      
+                      // ========================================
+                      // DIVIDER SECTION
+                      // ========================================
                       SizedBox(
                         width: 330.0,
                         child: Divider(
@@ -1087,6 +1185,10 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
                           color: FlutterFlowTheme.of(context).alternate,
                         ),
                       ),
+                      
+                      // ========================================
+                      // FILTER DROPDOWN SECTION (ONLY FOR WARDROBE ITEMS)
+                      // ========================================
                       if (!_showOutfits) // Only show sort dropdown for wardrobe items
                         Padding(
                           padding: EdgeInsetsDirectional.fromSTEB(
@@ -1095,6 +1197,7 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
                             mainAxisSize: MainAxisSize.max,
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [
+                              // SORT BY LABEL
                               Padding(
                                 padding: EdgeInsetsDirectional.fromSTEB(
                                     0.0, 0.0, 5.0, 0.0),
@@ -1114,6 +1217,8 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
                                       ),
                                 ),
                               ),
+                              
+                              // CATEGORY FILTER DROPDOWN
                               Align(
                                 alignment: AlignmentDirectional(1.0, 0.0),
                                 child: FlutterFlowDropDown<String>(
@@ -1170,14 +1275,18 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
                             ],
                           ),
                         ),
+                      
+                      // ========================================
+                      // MAIN CONTENT CONTAINER (GRID/LIST VIEW)
+                      // ========================================
                       Container(
                         height: 590.0, // Fixed height for the grid
                         child: Padding(
                           padding: EdgeInsetsDirectional.fromSTEB(
                               15.0, 0.0, 15.0, 0.0),
                           child: _showOutfits
-                              ? _buildOutfitsView()
-                              : _buildWardrobeView(),
+                              ? _buildOutfitsView()      // OUTFITS LIST VIEW
+                              : _buildWardrobeView(),    // WARDROBE GRID VIEW
                         ),
                       ),
                     ],
@@ -1187,7 +1296,10 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
             ],
           ),
         ),
-        // Modern Bottom Navigation Bar
+        
+        // ========================================
+        // BOTTOM NAVIGATION BAR SECTION
+        // ========================================
         bottomNavigationBar: Container(
           decoration: BoxDecoration(
             color: FlutterFlowTheme.of(context).underground,
@@ -1205,6 +1317,7 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
+                  // HOME NAVIGATION ITEM
                   _buildNavItem(
                     context: context,
                     icon: Icons.home_rounded,
@@ -1213,6 +1326,8 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
                     isActive: false,
                     onTap: () => context.pushNamed('HomePage'),
                   ),
+                  
+                  // WARDROBE NAVIGATION ITEM (CURRENT PAGE)
                   _buildNavItem(
                     context: context,
                     icon: Icons.checkroom_rounded,
@@ -1224,6 +1339,8 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
                       _forceRefresh();
                     },
                   ),
+                  
+                  // MATCH NAVIGATION ITEM
                   _buildNavItem(
                     context: context,
                     icon: Icons.style_rounded,
@@ -1232,6 +1349,8 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
                     isActive: false,
                     onTap: () => context.pushNamed('OutfitMatch'),
                   ),
+                  
+                  // SHOP NAVIGATION ITEM
                   _buildNavItem(
                     context: context,
                     icon: Icons.shopping_bag_rounded,
@@ -1240,6 +1359,8 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
                     isActive: false,
                     onTap: () => context.pushNamed('BuyClothes'),
                   ),
+                  
+                  // CALENDAR NAVIGATION ITEM
                   _buildNavItem(
                     context: context,
                     icon: Icons.calendar_month_rounded,
@@ -1248,6 +1369,8 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
                     isActive: false,
                     onTap: () => context.pushNamed('OutfitPlanner2'),
                   ),
+                  
+                  // PROFILE NAVIGATION ITEM
                   _buildNavItem(
                     context: context,
                     icon: Icons.person_rounded,
@@ -1265,6 +1388,9 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
     );
   }
 
+  // ========================================
+  // NAVIGATION ITEM BUILDER WIDGET
+  // ========================================
   Widget _buildNavItem({
     required BuildContext context,
     required IconData icon,
@@ -1285,6 +1411,7 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            // NAVIGATION ICON
             Icon(
               icon,
               size: 24.0,
@@ -1292,7 +1419,10 @@ class _MyWardrodeWidgetState extends State<MyWardrodeWidget> {
                   ? FlutterFlowTheme.of(context).waxFlower
                   : FlutterFlowTheme.of(context).info,
             ),
+            
             SizedBox(height: 4.0),
+            
+            // NAVIGATION LABEL
             Text(
               label,
               style: FlutterFlowTheme.of(context).bodySmall.override(

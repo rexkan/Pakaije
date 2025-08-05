@@ -13,6 +13,9 @@ import 'buy_clothes_model.dart';
 export 'buy_clothes_model.dart';
 import '/auth/firebase_auth/auth_util.dart';
 
+// ============================================================================
+// MAIN WIDGET CLASS - BuyClothesWidget
+// ============================================================================
 class BuyClothesWidget extends StatefulWidget {
   const BuyClothesWidget({super.key});
 
@@ -23,8 +26,15 @@ class BuyClothesWidget extends StatefulWidget {
   State<BuyClothesWidget> createState() => _BuyClothesWidgetState();
 }
 
+// ============================================================================
+// STATE CLASS - Contains all state management and UI logic
+// ============================================================================
 class _BuyClothesWidgetState extends State<BuyClothesWidget>
     with TickerProviderStateMixin {
+  
+  // ----------------------------------------------------------------------------
+  // STATE VARIABLES SECTION
+  // ----------------------------------------------------------------------------
   late BuyClothesModel _model;
   final scaffoldKey = GlobalKey<ScaffoldState>();
   late AnimationController _animationController;
@@ -42,6 +52,9 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
     'Shoes',
   ];
 
+  // ----------------------------------------------------------------------------
+  // INITIALIZATION SECTION
+  // ----------------------------------------------------------------------------
   @override
   void initState() {
     super.initState();
@@ -56,6 +69,9 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
     _animationController.forward();
   }
 
+  // ----------------------------------------------------------------------------
+  // CLEANUP SECTION
+  // ----------------------------------------------------------------------------
   @override
   void dispose() {
     _animationController.dispose();
@@ -63,6 +79,9 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
     super.dispose();
   }
 
+  // ============================================================================
+  // MAIN BUILD METHOD - Contains the overall page structure
+  // ============================================================================
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -73,7 +92,15 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
       child: Scaffold(
         key: scaffoldKey,
         backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
+        
+        // ----------------------------------------------------------------------------
+        // APP BAR SECTION
+        // ----------------------------------------------------------------------------
         appBar: _buildAppBar(),
+        
+        // ----------------------------------------------------------------------------
+        // MAIN BODY SECTION
+        // ----------------------------------------------------------------------------
         body: SafeArea(
           child: Column(
             children: [
@@ -82,8 +109,13 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
                   opacity: _fadeAnimation,
                   child: Column(
                     children: [
+                      // Search and Filter Section
                       _buildSearchAndFilters(),
+                      
+                      // View Toggle Section (Grid/List Toggle)
                       _buildViewToggle(),
+                      
+                      // Main Content Section (Firebase Data Display)
                       Expanded(
                         child: _buildFirebaseContent(),
                       ),
@@ -94,7 +126,10 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
             ],
           ),
         ),
-        // Modern Bottom Navigation Bar
+        
+        // ----------------------------------------------------------------------------
+        // BOTTOM NAVIGATION BAR SECTION
+        // ----------------------------------------------------------------------------
         bottomNavigationBar: Container(
           decoration: BoxDecoration(
             color: FlutterFlowTheme.of(context).underground,
@@ -112,6 +147,7 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
+                  // Home Navigation Item
                   _buildNavItem(
                     context: context,
                     icon: Icons.home_rounded,
@@ -119,6 +155,8 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
                     isActive: false,
                     onTap: () => context.pushNamed(HomePageWidget.routeName),
                   ),
+                  
+                  // Wardrobe Navigation Item
                   _buildNavItem(
                     context: context,
                     icon: Icons.checkroom_rounded,
@@ -126,6 +164,8 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
                     isActive: false,
                     onTap: () => context.pushNamed(MyWardrodeWidget.routeName),
                   ),
+                  
+                  // Match Navigation Item
                   _buildNavItem(
                     context: context,
                     icon: Icons.style_rounded,
@@ -133,6 +173,8 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
                     isActive: false,
                     onTap: () => context.pushNamed(OutfitMatchWidget.routeName),
                   ),
+                  
+                  // Shop Navigation Item (Current Active Page)
                   _buildNavItem(
                     context: context,
                     icon: Icons.shopping_bag_rounded,
@@ -142,6 +184,8 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
                       // Already on shop page
                     },
                   ),
+                  
+                  // Calendar Navigation Item
                   _buildNavItem(
                     context: context,
                     icon: Icons.calendar_month_rounded,
@@ -150,6 +194,8 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
                     onTap: () =>
                         context.pushNamed(OutfitPlanner2Widget.routeName),
                   ),
+                  
+                  // Profile Navigation Item
                   _buildNavItem(
                     context: context,
                     icon: Icons.person_rounded,
@@ -166,6 +212,9 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
     );
   }
 
+  // ============================================================================
+  // FIREBASE CONTENT SECTION - Handles data fetching and display
+  // ============================================================================
   Widget _buildFirebaseContent() {
     return StreamBuilder<List<BrandedItemsRecord>>(
       stream: queryBrandedItemsRecord(
@@ -181,7 +230,10 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
         },
       ),
       builder: (context, snapshot) {
-        // Handle loading state
+        
+        // ----------------------------------------------------------------------------
+        // LOADING STATE WIDGET
+        // ----------------------------------------------------------------------------
         if (!snapshot.hasData) {
           return Center(
             child: Column(
@@ -207,7 +259,9 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
 
         List<BrandedItemsRecord> allItems = snapshot.data!;
 
-        // Use FutureBuilder to filter out removed items asynchronously
+        // ----------------------------------------------------------------------------
+        // FILTERED ITEMS FUTURE BUILDER
+        // ----------------------------------------------------------------------------
         return FutureBuilder<List<BrandedItemsRecord>>(
           future: _filterRemovedItems(allItems),
           builder: (context, filteredSnapshot) {
@@ -223,12 +277,12 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
 
             List<BrandedItemsRecord> brandedItems = filteredSnapshot.data!;
 
-            // Handle empty state
+            // Empty State Check
             if (brandedItems.isEmpty) {
               return _buildEmptyState();
             }
 
-            // Build content based on view type
+            // Build content based on view type (Grid or List)
             return _isGridView
                 ? _buildFirebaseGrid(brandedItems)
                 : _buildFirebaseList(brandedItems);
@@ -238,7 +292,13 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
     );
   }
 
-  // Helper method to async filter removed items
+  // ============================================================================
+  // HELPER METHODS SECTION
+  // ============================================================================
+  
+  // ----------------------------------------------------------------------------
+  // FILTER REMOVED ITEMS METHOD - Async filtering of unavailable items
+  // ----------------------------------------------------------------------------
   Future<List<BrandedItemsRecord>> _filterRemovedItems(
       List<BrandedItemsRecord> items) async {
     List<BrandedItemsRecord> filteredItems = [];
@@ -281,6 +341,9 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
     return filteredItems;
   }
 
+  // ============================================================================
+  // GRID VIEW SECTION - Displays items in grid format
+  // ============================================================================
   Widget _buildFirebaseGrid(List<BrandedItemsRecord> items) {
     return GridView.builder(
       padding: const EdgeInsets.all(16.0),
@@ -309,6 +372,9 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
     );
   }
 
+  // ============================================================================
+  // LIST VIEW SECTION - Displays items in list format
+  // ============================================================================
   Widget _buildFirebaseList(List<BrandedItemsRecord> items) {
     return ListView.builder(
       padding: const EdgeInsets.all(16.0),
@@ -331,6 +397,9 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
     );
   }
 
+  // ============================================================================
+  // PRODUCT CARD WIDGET SECTION - Grid view item card
+  // ============================================================================
   Widget _buildEnhancedProductCard(BrandedItemsRecord item) {
     return GestureDetector(
       onTap: () {
@@ -365,7 +434,10 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Image Container
+            
+            // ----------------------------------------------------------------------------
+            // PRODUCT IMAGE SECTION
+            // ----------------------------------------------------------------------------
             Expanded(
               flex: 4,
               child: Container(
@@ -428,14 +500,17 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
               ),
             ),
 
-            // Content Section
+            // ----------------------------------------------------------------------------
+            // PRODUCT INFORMATION SECTION
+            // ----------------------------------------------------------------------------
             Container(
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Name
+                  
+                  // Product Name
                   Text(
                     item.name,
                     style: FlutterFlowTheme.of(context).bodyLarge.override(
@@ -449,7 +524,7 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
                   ),
                   const SizedBox(height: 8.0),
 
-                  // Price
+                  // Product Price
                   Text(
                     '\$${item.price.toStringAsFixed(2)}',
                     style: FlutterFlowTheme.of(context).headlineSmall.override(
@@ -463,7 +538,7 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
 
                   const SizedBox(height: 8.0),
 
-                  // Category
+                  // Product Category
                   Text(
                     item.category,
                     style: FlutterFlowTheme.of(context).bodySmall.override(
@@ -481,6 +556,9 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
     );
   }
 
+  // ============================================================================
+  // LIST CARD WIDGET SECTION - List view item card
+  // ============================================================================
   Widget _buildFirebaseListCard(BrandedItemsRecord item) {
     return GestureDetector(
       onTap: () {
@@ -516,7 +594,10 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
           padding: const EdgeInsets.all(12.0),
           child: Row(
             children: [
-              // Image
+              
+              // ----------------------------------------------------------------------------
+              // LIST ITEM IMAGE SECTION
+              // ----------------------------------------------------------------------------
               Container(
                 width: 100.0,
                 height: 100.0,
@@ -573,11 +654,14 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
 
               const SizedBox(width: 16.0),
 
-              // Content
+              // ----------------------------------------------------------------------------
+              // LIST ITEM CONTENT SECTION
+              // ----------------------------------------------------------------------------
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Item Name
                     Text(
                       item.name,
                       style: FlutterFlowTheme.of(context).bodyLarge.override(
@@ -589,6 +673,8 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 8.0),
+                    
+                    // Item Category
                     Text(
                       item.category,
                       style: FlutterFlowTheme.of(context).bodySmall.override(
@@ -600,7 +686,9 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
                 ),
               ),
 
-              // Price
+              // ----------------------------------------------------------------------------
+              // LIST ITEM PRICE SECTION
+              // ----------------------------------------------------------------------------
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -624,6 +712,9 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
     );
   }
 
+  // ============================================================================
+  // NAVIGATION ITEM WIDGET SECTION - Bottom navigation bar items
+  // ============================================================================
   Widget _buildNavItem({
     required BuildContext context,
     required IconData icon,
@@ -644,6 +735,8 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            
+            // Navigation Icon
             Icon(
               icon,
               size: 24.0,
@@ -652,6 +745,8 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
                   : FlutterFlowTheme.of(context).info,
             ),
             SizedBox(height: 4.0),
+            
+            // Navigation Label
             Text(
               label,
               style: FlutterFlowTheme.of(context).bodySmall.override(
@@ -671,10 +766,15 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
     );
   }
 
+  // ============================================================================
+  // APP BAR WIDGET SECTION - Top app bar with title and back button
+  // ============================================================================
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
       backgroundColor: FlutterFlowTheme.of(context).underground,
       automaticallyImplyLeading: false,
+      
+      // Back Button
       leading: FlutterFlowIconButton(
         borderColor: Colors.transparent,
         borderRadius: 30.0,
@@ -689,6 +789,8 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
           context.pop();
         },
       ),
+      
+      // App Bar Title
       title: Text(
         FFLocalizations.of(context).getText(
           'w55wjj9s' /* Trending Items */,
@@ -707,6 +809,9 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
     );
   }
 
+  // ============================================================================
+  // SEARCH AND FILTERS WIDGET SECTION - Category filter chips
+  // ============================================================================
   Widget _buildSearchAndFilters() {
     return Container(
       padding: const EdgeInsets.all(16.0),
@@ -722,7 +827,10 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
       ),
       child: Column(
         children: [
-          // Category Filter
+          
+          // ----------------------------------------------------------------------------
+          // CATEGORY FILTER SECTION
+          // ----------------------------------------------------------------------------
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
@@ -736,6 +844,9 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
     );
   }
 
+  // ============================================================================
+  // CATEGORY CHIP WIDGET SECTION - Individual filter chip
+  // ============================================================================
   Widget _buildCategoryChip(String category) {
     final isSelected = _selectedCategory == category;
     return Padding(
@@ -796,6 +907,9 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
     );
   }
 
+  // ============================================================================
+  // VIEW TOGGLE WIDGET SECTION - Grid/List view switcher
+  // ============================================================================
   Widget _buildViewToggle() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
@@ -811,7 +925,10 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          // View Toggle
+          
+          // ----------------------------------------------------------------------------
+          // VIEW TOGGLE BUTTONS SECTION
+          // ----------------------------------------------------------------------------
           Container(
             decoration: BoxDecoration(
               color: FlutterFlowTheme.of(context).alternate,
@@ -819,6 +936,8 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
             ),
             child: Row(
               children: [
+                
+                // Grid View Toggle Button
                 GestureDetector(
                   onTap: () {
                     setState(() {
@@ -842,6 +961,8 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
                     ),
                   ),
                 ),
+                
+                // List View Toggle Button
                 GestureDetector(
                   onTap: () {
                     setState(() {
@@ -873,11 +994,18 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
     );
   }
 
+  // ============================================================================
+  // EMPTY STATE WIDGET SECTION - Displayed when no items are found
+  // ============================================================================
   Widget _buildEmptyState() {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          
+          // ----------------------------------------------------------------------------
+          // EMPTY STATE ICON SECTION
+          // ----------------------------------------------------------------------------
           Container(
             padding: const EdgeInsets.all(24.0),
             decoration: BoxDecoration(
@@ -891,6 +1019,10 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
             ),
           ),
           const SizedBox(height: 24.0),
+          
+          // ----------------------------------------------------------------------------
+          // EMPTY STATE TITLE SECTION
+          // ----------------------------------------------------------------------------
           Text(
             'No items found',
             style: FlutterFlowTheme.of(context).headlineSmall.override(
@@ -900,6 +1032,10 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
                 ),
           ),
           const SizedBox(height: 8.0),
+          
+          // ----------------------------------------------------------------------------
+          // EMPTY STATE SUBTITLE SECTION
+          // ----------------------------------------------------------------------------
           Text(
             'Try adjusting your filters',
             style: FlutterFlowTheme.of(context).bodyMedium.override(
@@ -908,6 +1044,10 @@ class _BuyClothesWidgetState extends State<BuyClothesWidget>
                 ),
           ),
           const SizedBox(height: 24.0),
+          
+          // ----------------------------------------------------------------------------
+          // CLEAR FILTERS BUTTON SECTION
+          // ----------------------------------------------------------------------------
           ElevatedButton(
             onPressed: () {
               setState(() {
