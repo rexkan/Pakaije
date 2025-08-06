@@ -12,6 +12,15 @@ export 'setting_buy_links_model.dart';
 import '/backend/backend.dart';
 import '/auth/firebase_auth/auth_util.dart';
 
+// ================================================================================
+// SECTION 1: MAIN WIDGET CLASS DECLARATION
+// ================================================================================
+// 🔴 CORE COMPONENT - This is the main widget class structure
+// PURPOSE: Defines the main StatefulWidget for the buy links management page
+// REMOVAL IMPACT: Cannot remove - this is the core widget structure
+// COMPONENTS: StatefulWidget class, route names, and state creation
+// ================================================================================
+
 class SettingBuyLinksWidget extends StatefulWidget {
   const SettingBuyLinksWidget({super.key});
 
@@ -22,12 +31,19 @@ class SettingBuyLinksWidget extends StatefulWidget {
   State<SettingBuyLinksWidget> createState() => _SettingBuyLinksWidgetState();
 }
 
+// ================================================================================
+// SECTION 2: STATE CLASS AND INITIALIZATION
+// ================================================================================
+// 🔴 CORE COMPONENT - Contains essential state management and animations
+// PURPOSE: Manages page state, animations, and widget lifecycle
+// REMOVAL IMPACT: Cannot remove - required for page functionality
+// COMPONENTS: State class, model initialization, animations setup, dispose method
+// ================================================================================
+
 class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
     with TickerProviderStateMixin {
   late SettingBuyLinksModel _model;
-
   final scaffoldKey = GlobalKey<ScaffoldState>();
-
   final animationsMap = <String, AnimationInfo>{};
 
   @override
@@ -35,6 +51,7 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
     super.initState();
     _model = createModel(context, () => SettingBuyLinksModel());
 
+    // Page Load Animations Setup
     animationsMap.addAll({
       'containerOnPageLoadAnimation1': AnimationInfo(
         trigger: AnimationTrigger.onPageLoad,
@@ -108,12 +125,21 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
     super.dispose();
   }
 
-  // Show delete confirmation dialog
+// ================================================================================
+// SECTION 3: DELETE CONFIRMATION DIALOG
+// ================================================================================
+// 🟡 MEDIUM COMPLEXITY - Modal dialog for confirming product deletion
+// PURPOSE: Shows warning dialog before deleting a product
+// REMOVAL IMPACT: Can be removed - will disable delete confirmation safety
+// COMPONENTS: AlertDialog with warning icon, product name, confirmation text, action buttons
+// ================================================================================
+
   void _showDeleteConfirmation(BrandedItemsRecord product) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
+          // Dialog Header with Warning Icon
           title: Row(
             children: [
               Icon(
@@ -135,6 +161,8 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
               ),
             ],
           ),
+
+          // Dialog Content with Warning Message
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -158,9 +186,12 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
               ),
             ],
           ),
+
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16.0),
           ),
+
+          // Dialog Action Buttons
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
@@ -215,10 +246,18 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
     );
   }
 
-  // Delete product from Firebase
+// ================================================================================
+// SECTION 4: DELETE PRODUCT METHOD
+// ================================================================================
+// 🟡 MEDIUM COMPLEXITY - Firebase deletion logic with loading states
+// PURPOSE: Handles the actual deletion of products from Firebase with UI feedback
+// REMOVAL IMPACT: Required if delete functionality is kept
+// COMPONENTS: Loading dialog, Firebase delete operation, success/error snackbars
+// ================================================================================
+
   Future<void> _deleteProduct(BrandedItemsRecord product) async {
     try {
-      // Show loading indicator
+      // Show Loading Indicator
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -253,13 +292,13 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
         },
       );
 
-      // Delete the product from Firebase
+      // Delete from Firebase
       await product.reference.delete();
 
       // Close loading dialog
       Navigator.of(context).pop();
 
-      // Show success message
+      // Success Feedback
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Row(
@@ -287,10 +326,10 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
         ),
       );
     } catch (e) {
-      // Close loading dialog if it's open
+      // Close loading dialog if open
       Navigator.of(context).pop();
 
-      // Show error message
+      // Error Feedback
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Row(
@@ -320,6 +359,15 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
     }
   }
 
+// ================================================================================
+// SECTION 5: MAIN BUILD METHOD
+// ================================================================================
+// 🔴 CORE COMPONENT - Main page layout structure
+// PURPOSE: Builds the main scaffold and page structure
+// REMOVAL IMPACT: Cannot remove - this is the core page structure
+// COMPONENTS: Scaffold with AppBar, Body sections, and Bottom Navigation
+// ================================================================================
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -330,6 +378,15 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
       child: Scaffold(
         key: scaffoldKey,
         backgroundColor: FlutterFlowTheme.of(context).secondaryBackground,
+
+        // ========================================================================
+        // SUB-SECTION 5A: APP BAR
+        // ========================================================================
+        // 🟡 MEDIUM COMPLEXITY - Top navigation bar with back button and title
+        // PURPOSE: Provides page title and back navigation
+        // REMOVAL IMPACT: Can be simplified but header is recommended
+        // ========================================================================
+
         appBar: AppBar(
           backgroundColor: FlutterFlowTheme.of(context).underground,
           automaticallyImplyLeading: false,
@@ -358,6 +415,15 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
           centerTitle: false,
           elevation: 2.0,
         ),
+
+        // ========================================================================
+        // SUB-SECTION 5B: BODY LAYOUT
+        // ========================================================================
+        // 🔴 CORE COMPONENT - Main content area layout
+        // PURPOSE: Contains all page content in scrollable format
+        // REMOVAL IMPACT: Cannot remove - essential for content display
+        // ========================================================================
+
         body: SafeArea(
           top: true,
           child: Column(
@@ -368,241 +434,13 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Product Lists',
-                        style: FlutterFlowTheme.of(context)
-                            .headlineMedium
-                            .override(
-                              fontFamily: GoogleFonts.interTight().fontFamily,
-                              fontSize: 24.0,
-                              letterSpacing: 0.0,
-                              fontWeight: FontWeight.w600,
-                            ),
-                      ),
-                      SizedBox(height: 8.0),
-                      Text(
-                        'Update buy links for your products to redirect customers to your store',
-                        style: FlutterFlowTheme.of(context).bodyMedium.override(
-                              fontFamily: GoogleFonts.inter().fontFamily,
-                              color: FlutterFlowTheme.of(context).secondaryText,
-                              letterSpacing: 0.0,
-                            ),
-                      ),
+                      // Page Header Section
+                      _buildPageHeader(),
 
                       SizedBox(height: 24.0),
 
-                      // Products List
-// Replace the ENTIRE StreamBuilder section in setting_buy_links_widget.dart
-// Find this section starting around line 320:
-
-// Products List
-                      LayoutBuilder(
-                        builder: (context, constraints) {
-                          int crossAxisCount =
-                              constraints.maxWidth > 600 ? 2 : 1;
-
-                          return StreamBuilder<List<BrandedItemsRecord>>(
-                            stream: queryBrandedItemsRecord(
-                              queryBuilder: (brandedItemsRecord) =>
-                                  brandedItemsRecord.where('vendor_id',
-                                      isEqualTo: currentUserUid),
-                            ),
-                            builder: (context, snapshot) {
-                              // Loading state
-                              if (!snapshot.hasData) {
-                                return Center(
-                                  child: SizedBox(
-                                    width: 50.0,
-                                    height: 50.0,
-                                    child: CircularProgressIndicator(
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                        FlutterFlowTheme.of(context).primary,
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              }
-
-                              // Enhanced client-side filtering with debugging
-                              List<BrandedItemsRecord> allProducts =
-                                  snapshot.data ?? [];
-
-                              // Debug: Print all products to see what's coming from Firebase
-                              print(
-                                  'Total products from Firebase: ${allProducts.length}');
-                              for (var product in allProducts) {
-                                print(
-                                    'Product: ${product.name}, Status: ${product.status}, VendorID: ${product.vendorId}');
-                              }
-
-                              List<BrandedItemsRecord> products =
-                                  allProducts.where((product) {
-                                bool hasValidStatus =
-                                    product.status != 'removed_for_violation' &&
-                                        product.status != 'deleted';
-                                bool notRemoved = product.removedAt == null;
-                                bool belongsToUser =
-                                    product.vendorId == currentUserUid;
-
-                                return hasValidStatus &&
-                                    notRemoved &&
-                                    belongsToUser;
-                              }).toList();
-
-                              // Sort by date manually with null safety
-                              products.sort((a, b) {
-                                DateTime dateA = a.dateAdded ?? DateTime.now();
-                                DateTime dateB = b.dateAdded ?? DateTime.now();
-                                return dateB.compareTo(dateA);
-                              });
-
-                              print(
-                                  'Filtered products count: ${products.length}');
-
-                              // Empty state
-                              if (products.isEmpty) {
-                                return Container(
-                                  width: double.infinity,
-                                  padding: EdgeInsets.symmetric(vertical: 60.0),
-                                  decoration: BoxDecoration(
-                                    color: FlutterFlowTheme.of(context)
-                                        .secondaryBackground,
-                                    borderRadius: BorderRadius.circular(16.0),
-                                    border: Border.all(
-                                      color: FlutterFlowTheme.of(context)
-                                          .alternate,
-                                      width: 2.0,
-                                    ),
-                                  ),
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(
-                                        Icons.link_off,
-                                        size: 80.0,
-                                        color: FlutterFlowTheme.of(context)
-                                            .secondaryText,
-                                      ),
-                                      SizedBox(height: 24.0),
-                                      Text(
-                                        'No active products found',
-                                        style: FlutterFlowTheme.of(context)
-                                            .headlineSmall
-                                            .override(
-                                              fontFamily: 'Inter Tight',
-                                              color:
-                                                  FlutterFlowTheme.of(context)
-                                                      .secondaryText,
-                                              letterSpacing: 0.0,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                      ),
-                                      SizedBox(height: 12.0),
-                                      Text(
-                                        'Add products to manage their buy links',
-                                        style: FlutterFlowTheme.of(context)
-                                            .bodyMedium
-                                            .override(
-                                              fontFamily: 'Inter',
-                                              color:
-                                                  FlutterFlowTheme.of(context)
-                                                      .secondaryText,
-                                              letterSpacing: 0.0,
-                                            ),
-                                        textAlign: TextAlign.center,
-                                      ),
-                                      // Debug info for troubleshooting
-                                      if (allProducts.isNotEmpty) ...[
-                                        SizedBox(height: 16.0),
-                                        Text(
-                                          'Debug: Found ${allProducts.length} total products but ${products.length} match filters',
-                                          style: FlutterFlowTheme.of(context)
-                                              .bodySmall
-                                              .override(
-                                                fontFamily: 'Inter',
-                                                color: Colors.orange,
-                                                letterSpacing: 0.0,
-                                              ),
-                                          textAlign: TextAlign.center,
-                                        ),
-                                        Text(
-                                          'Current User ID: ${currentUserUid ?? "null"}',
-                                          style: FlutterFlowTheme.of(context)
-                                              .bodySmall
-                                              .override(
-                                                fontFamily: 'Inter',
-                                                color: Colors.orange,
-                                                letterSpacing: 0.0,
-                                              ),
-                                          textAlign: TextAlign.center,
-                                        ),
-                                      ],
-                                      SizedBox(height: 32.0),
-                                      FFButtonWidget(
-                                        onPressed: () => context.pushNamed(
-                                            AddProductWidget.routeName),
-                                        text: 'Add Your First Product',
-                                        icon: Icon(
-                                          Icons.add_circle_outline,
-                                          size: 20.0,
-                                        ),
-                                        options: FFButtonOptions(
-                                          height: 48.0,
-                                          padding:
-                                              EdgeInsetsDirectional.fromSTEB(
-                                                  24.0, 0.0, 24.0, 0.0),
-                                          iconPadding:
-                                              EdgeInsetsDirectional.fromSTEB(
-                                                  0.0, 0.0, 8.0, 0.0),
-                                          color: FlutterFlowTheme.of(context)
-                                              .primary,
-                                          textStyle:
-                                              FlutterFlowTheme.of(context)
-                                                  .titleSmall
-                                                  .override(
-                                                    fontFamily: 'Inter Tight',
-                                                    color: Colors.white,
-                                                    letterSpacing: 0.0,
-                                                    fontWeight: FontWeight.w600,
-                                                  ),
-                                          elevation: 2.0,
-                                          borderRadius:
-                                              BorderRadius.circular(24.0),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              }
-
-                              // Products grid - This ensures we always return a Widget
-                              return GridView.builder(
-                                shrinkWrap: true,
-                                physics: NeverScrollableScrollPhysics(),
-                                gridDelegate:
-                                    SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: crossAxisCount,
-                                  crossAxisSpacing: 16.0,
-                                  mainAxisSpacing: 16.0,
-                                  childAspectRatio:
-                                      crossAxisCount == 2 ? 0.9 : 0.8,
-                                ),
-                                itemCount: products.length,
-                                itemBuilder: (context, index) {
-                                  final product = products[index];
-                                  return _buildProductCard(
-                                    product.name,
-                                    product.productUrl,
-                                    animationsMap[
-                                        'containerOnPageLoadAnimation${(index % 3) + 1}']!,
-                                    product: product,
-                                  );
-                                },
-                              );
-                            },
-                          );
-                        },
-                      ),
+                      // Products List Section
+                      _buildProductsList(),
 
                       SizedBox(height: 80.0), // Space for bottom navigation
                     ],
@@ -610,7 +448,7 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
                 ),
               ),
 
-              // Bottom Navigation
+              // Bottom Navigation Section
               _buildBottomNavigation(),
             ],
           ),
@@ -618,6 +456,254 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
       ),
     );
   }
+
+// ================================================================================
+// SECTION 6: PAGE HEADER SECTION
+// ================================================================================
+// 🟢 EASY TO REMOVE - Page title and description text
+// PURPOSE: Displays page title and instruction text for users
+// REMOVAL IMPACT: Can be completely removed - just removes descriptive text
+// COMPONENTS: Title text, description text
+// ================================================================================
+
+  Widget _buildPageHeader() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Product Lists',
+          style: FlutterFlowTheme.of(context).headlineMedium.override(
+                fontFamily: GoogleFonts.interTight().fontFamily,
+                fontSize: 24.0,
+                letterSpacing: 0.0,
+                fontWeight: FontWeight.w600,
+              ),
+        ),
+        SizedBox(height: 8.0),
+        Text(
+          'Update buy links for your products to redirect customers to your store',
+          style: FlutterFlowTheme.of(context).bodyMedium.override(
+                fontFamily: GoogleFonts.inter().fontFamily,
+                color: FlutterFlowTheme.of(context).secondaryText,
+                letterSpacing: 0.0,
+              ),
+        ),
+      ],
+    );
+  }
+
+// ================================================================================
+// SECTION 7: PRODUCTS LIST SECTION
+// ================================================================================
+// 🔴 CORE COMPONENT - Main functionality displaying products from Firebase
+// PURPOSE: Shows list of products with buy link management capabilities
+// REMOVAL IMPACT: Major impact - this is the main functionality
+// COMPONENTS: StreamBuilder, Firebase query, product grid, empty state, loading state
+// ================================================================================
+
+  Widget _buildProductsList() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        int crossAxisCount = constraints.maxWidth > 600 ? 2 : 1;
+
+        return StreamBuilder<List<BrandedItemsRecord>>(
+          stream: queryBrandedItemsRecord(
+            queryBuilder: (brandedItemsRecord) => brandedItemsRecord
+                .where('vendor_id', isEqualTo: currentUserUid),
+          ),
+          builder: (context, snapshot) {
+            // Loading State
+            if (!snapshot.hasData) {
+              return Center(
+                child: SizedBox(
+                  width: 50.0,
+                  height: 50.0,
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      FlutterFlowTheme.of(context).primary,
+                    ),
+                  ),
+                ),
+              );
+            }
+
+            // Enhanced Client-side Filtering with Debugging
+            List<BrandedItemsRecord> allProducts = snapshot.data ?? [];
+
+            // Debug: Print all products to see what's coming from Firebase
+            print('Total products from Firebase: ${allProducts.length}');
+            for (var product in allProducts) {
+              print(
+                  'Product: ${product.name}, Status: ${product.status}, VendorID: ${product.vendorId}');
+            }
+
+            List<BrandedItemsRecord> products = allProducts.where((product) {
+              bool hasValidStatus = product.status != 'removed_for_violation' &&
+                  product.status != 'deleted';
+              bool notRemoved = product.removedAt == null;
+              bool belongsToUser = product.vendorId == currentUserUid;
+
+              return hasValidStatus && notRemoved && belongsToUser;
+            }).toList();
+
+            // Sort by date manually with null safety
+            products.sort((a, b) {
+              DateTime dateA = a.dateAdded ?? DateTime.now();
+              DateTime dateB = b.dateAdded ?? DateTime.now();
+              return dateB.compareTo(dateA);
+            });
+
+            print('Filtered products count: ${products.length}');
+
+            // Empty State
+            if (products.isEmpty) {
+              return _buildEmptyState(allProducts);
+            }
+
+            // Products Grid
+            return GridView.builder(
+              shrinkWrap: true,
+              physics: NeverScrollableScrollPhysics(),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: crossAxisCount,
+                crossAxisSpacing: 16.0,
+                mainAxisSpacing: 16.0,
+                childAspectRatio: crossAxisCount == 2 ? 0.9 : 0.8,
+              ),
+              itemCount: products.length,
+              itemBuilder: (context, index) {
+                final product = products[index];
+                return _buildProductCard(
+                  product.name,
+                  product.productUrl,
+                  animationsMap[
+                      'containerOnPageLoadAnimation${(index % 3) + 1}']!,
+                  product: product,
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+
+// ================================================================================
+// SECTION 8: EMPTY STATE WIDGET
+// ================================================================================
+// 🟢 EASY TO REMOVE - Empty state display when no products exist
+// PURPOSE: Shows helpful message and action button when no products are found
+// REMOVAL IMPACT: Can be removed - will show blank space instead of helpful message
+// COMPONENTS: Container with icon, text, debug info, and "Add Product" button
+// ================================================================================
+
+  Widget _buildEmptyState(List<BrandedItemsRecord> allProducts) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.symmetric(vertical: 60.0),
+      decoration: BoxDecoration(
+        color: FlutterFlowTheme.of(context).secondaryBackground,
+        borderRadius: BorderRadius.circular(16.0),
+        border: Border.all(
+          color: FlutterFlowTheme.of(context).alternate,
+          width: 2.0,
+        ),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // Empty State Icon
+          Icon(
+            Icons.link_off,
+            size: 80.0,
+            color: FlutterFlowTheme.of(context).secondaryText,
+          ),
+          SizedBox(height: 24.0),
+
+          // Empty State Title
+          Text(
+            'No active products found',
+            style: FlutterFlowTheme.of(context).headlineSmall.override(
+                  fontFamily: 'Inter Tight',
+                  color: FlutterFlowTheme.of(context).secondaryText,
+                  letterSpacing: 0.0,
+                  fontWeight: FontWeight.w600,
+                ),
+          ),
+          SizedBox(height: 12.0),
+
+          // Empty State Description
+          Text(
+            'Add products to manage their buy links',
+            style: FlutterFlowTheme.of(context).bodyMedium.override(
+                  fontFamily: 'Inter',
+                  color: FlutterFlowTheme.of(context).secondaryText,
+                  letterSpacing: 0.0,
+                ),
+            textAlign: TextAlign.center,
+          ),
+
+          // Debug Information (for troubleshooting)
+          if (allProducts.isNotEmpty) ...[
+            SizedBox(height: 16.0),
+            Text(
+              'Debug: Found ${allProducts.length} total products but 0 match filters',
+              style: FlutterFlowTheme.of(context).bodySmall.override(
+                    fontFamily: 'Inter',
+                    color: Colors.orange,
+                    letterSpacing: 0.0,
+                  ),
+              textAlign: TextAlign.center,
+            ),
+            Text(
+              'Current User ID: ${currentUserUid ?? "null"}',
+              style: FlutterFlowTheme.of(context).bodySmall.override(
+                    fontFamily: 'Inter',
+                    color: Colors.orange,
+                    letterSpacing: 0.0,
+                  ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+
+          SizedBox(height: 32.0),
+
+          // Add Product Button
+          FFButtonWidget(
+            onPressed: () => context.pushNamed(AddProductWidget.routeName),
+            text: 'Add Your First Product',
+            icon: Icon(
+              Icons.add_circle_outline,
+              size: 20.0,
+            ),
+            options: FFButtonOptions(
+              height: 48.0,
+              padding: EdgeInsetsDirectional.fromSTEB(24.0, 0.0, 24.0, 0.0),
+              iconPadding: EdgeInsetsDirectional.fromSTEB(0.0, 0.0, 8.0, 0.0),
+              color: FlutterFlowTheme.of(context).primary,
+              textStyle: FlutterFlowTheme.of(context).titleSmall.override(
+                    fontFamily: 'Inter Tight',
+                    color: Colors.white,
+                    letterSpacing: 0.0,
+                    fontWeight: FontWeight.w600,
+                  ),
+              elevation: 2.0,
+              borderRadius: BorderRadius.circular(24.0),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+// ================================================================================
+// SECTION 9: PRODUCT CARD WIDGET
+// ================================================================================
+// 🔴 CORE COMPONENT - Individual product display card with management options
+// PURPOSE: Displays individual product information and buy link management
+// REMOVAL IMPACT: Major impact - essential for product management
+// COMPONENTS: Card container, product image, info display, delete button, update link button
+// ================================================================================
 
   Widget _buildProductCard(
     String productName,
@@ -663,6 +749,7 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
+
                 // Delete Button
                 GestureDetector(
                   onTap: () {
@@ -694,7 +781,7 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
 
             SizedBox(height: 16.0),
 
-            // Product Image
+            // Product Image Section
             Expanded(
               flex: 3,
               child: Container(
@@ -734,13 +821,14 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
 
             SizedBox(height: 12.0),
 
-            // Product Info
+            // Product Information Section
             Expanded(
               flex: 4,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  // Product Category
                   if (product != null)
                     Text(
                       product.category,
@@ -777,6 +865,7 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
 
                   SizedBox(height: 6.0),
 
+                  // Current Link Label
                   Text(
                     'Current Link:',
                     style: FlutterFlowTheme.of(context).bodySmall.override(
@@ -789,6 +878,7 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
 
                   SizedBox(height: 2.0),
 
+                  // Current Link Display
                   Flexible(
                     child: Container(
                       width: double.infinity,
@@ -858,6 +948,15 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
     ).animateOnPageLoad(animation);
   }
 
+// ================================================================================
+// SECTION 10: UPDATE LINK DIALOG
+// ================================================================================
+// 🟡 MEDIUM COMPLEXITY - Modal dialog for updating product buy links
+// PURPOSE: Provides interface to modify product buy links
+// REMOVAL IMPACT: Can be removed - will disable link update functionality
+// COMPONENTS: AlertDialog with form field, validation, Firebase update logic
+// ================================================================================
+
   void _showUpdateLinkDialog(
       String productName, String currentLink, BrandedItemsRecord? product) {
     final TextEditingController dialogController =
@@ -867,6 +966,7 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
+          // Dialog Header
           title: Row(
             children: [
               Icon(
@@ -887,10 +987,13 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
               ),
             ],
           ),
+
+          // Dialog Content with Update Form
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Product Name Display
               Text(
                 'Product: $productName',
                 style: FlutterFlowTheme.of(context).bodyLarge.override(
@@ -900,6 +1003,8 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
                     ),
               ),
               SizedBox(height: 8.0),
+
+              // Instructions
               Text(
                 'Enter the new buy link for this product:',
                 style: FlutterFlowTheme.of(context).bodyMedium.override(
@@ -909,6 +1014,8 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
                     ),
               ),
               SizedBox(height: 16.0),
+
+              // Link Input Field
               TextFormField(
                 controller: dialogController,
                 decoration: InputDecoration(
@@ -949,9 +1056,12 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
               ),
             ],
           ),
+
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12.0),
           ),
+
+          // Dialog Action Buttons
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
@@ -970,7 +1080,7 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
             ),
             ElevatedButton(
               onPressed: () async {
-                // Handle update logic with the actual product
+                // Handle Update Logic with Firebase
                 if (product != null) {
                   try {
                     await product.reference.update({
@@ -978,6 +1088,8 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
                     });
 
                     Navigator.of(context).pop();
+
+                    // Success Feedback
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Row(
@@ -1006,6 +1118,8 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
                     );
                   } catch (e) {
                     Navigator.of(context).pop();
+
+                    // Error Feedback
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Row(
@@ -1035,6 +1149,8 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
                   }
                 } else {
                   Navigator.of(context).pop();
+
+                  // Product Not Found Error
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Row(
@@ -1096,6 +1212,15 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
     );
   }
 
+// ================================================================================
+// SECTION 11: BOTTOM NAVIGATION WIDGET
+// ================================================================================
+// 🟢 EASY TO REMOVE - Complete bottom navigation bar
+// PURPOSE: Provides navigation between different vendor dashboard sections
+// REMOVAL IMPACT: Can be completely removed - page will work without navigation
+// COMPONENTS: Container with navigation items, icons, labels, and navigation logic
+// ================================================================================
+
   Widget _buildBottomNavigation() {
     return Container(
       width: double.infinity,
@@ -1113,19 +1238,37 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
+          // Profile Navigation Item
           _buildNavItem(Icons.person, 'Profile', false,
               () => context.pushNamed(VendorDashboardWidget.routeName)),
+
+          // Discount Code Navigation Item
           _buildNavItem(Icons.discount_outlined, 'Code', false,
               () => context.pushNamed(ManageDiscountCodesWidget.routeName)),
+
+          // Virtual Try-On Navigation Item
           _buildNavItem(Icons.tv_rounded, 'Virtual', false,
               () => context.pushNamed(VirtualTryOnSettingWidget.routeName)),
+
+          // Buy Links Navigation Item (Current Page)
           _buildNavItem(Icons.settings_sharp, 'Link', true, () => {}),
+
+          // Add Product Navigation Item
           _buildNavItem(Icons.add, 'Add', false,
               () => context.pushNamed(AddProductWidget.routeName)),
         ],
       ),
     );
   }
+
+// ================================================================================
+// SECTION 12: NAVIGATION ITEM HELPER WIDGET
+// ================================================================================
+// 🟢 EASY TO REMOVE - Individual navigation button component
+// PURPOSE: Creates individual navigation items for the bottom navigation
+// REMOVAL IMPACT: Required if bottom navigation is kept
+// COMPONENTS: GestureDetector with icon, label, and active state styling
+// ================================================================================
 
   Widget _buildNavItem(
       IconData icon, String label, bool isActive, VoidCallback onTap) {
@@ -1134,6 +1277,7 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          // Navigation Icon
           Icon(
             icon,
             color:
@@ -1141,6 +1285,8 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
             size: 24.0,
           ),
           SizedBox(height: 4.0),
+
+          // Navigation Label
           Text(
             label,
             style: FlutterFlowTheme.of(context).bodySmall.override(
@@ -1158,3 +1304,45 @@ class _SettingBuyLinksWidgetState extends State<SettingBuyLinksWidget>
     );
   }
 }
+
+// ================================================================================
+// END OF SETTING BUY LINKS WIDGET
+// ================================================================================
+
+/*
+===============================================================================
+PRESENTATION REMOVAL GUIDE FOR YOUR LECTURER DEMO
+===============================================================================
+
+🟢 EASIEST TO REMOVE (Independent components):
+1. SECTION 11: Bottom Navigation Widget (Lines ~700-750) - Complete navigation bar
+2. SECTION 12: Navigation Item Helper Widget (Lines ~750-800) - Individual nav buttons
+3. SECTION 6: Page Header Section (Lines ~320-350) - Title and description text
+4. SECTION 8: Empty State Widget (Lines ~420-520) - No products message and button
+5. Animations in SECTION 2 (Lines ~40-110) - All page load animations
+
+🟡 MEDIUM COMPLEXITY (Feature removal):
+6. SECTION 3: Delete Confirmation Dialog (Lines ~110-200) - Safety confirmation
+7. SECTION 4: Delete Product Method (Lines ~200-300) - Actual deletion logic
+8. SECTION 10: Update Link Dialog (Lines ~580-700) - Link modification functionality
+9. Debug Information in SECTION 7 (Lines ~360-420) - Console logs and debug text
+
+🔴 CORE COMPONENTS (Keep for basic functionality):
+- SECTION 1: Main Widget Class - Essential structure
+- SECTION 2: State Class - Required controllers and state (keep basic parts)
+- SECTION 5: Main Build Method - Core page layout
+- SECTION 7: Products List Section - Main functionality
+- SECTION 9: Product Card Widget - Individual product display
+
+PRESENTATION STRATEGY:
+1. Start by removing SECTION 11 & 12 (Bottom Navigation) - Clean removal
+2. Remove SECTION 6 (Page Header) - Simplifies the top
+3. Remove SECTION 8 (Empty State) - Will show blank instead of helpful message
+4. Remove SECTION 10 (Update Link Dialog) to disable link editing
+5. Remove SECTION 3 & 4 (Delete functionality) to simplify product management
+6. Remove animations from SECTION 2 to reduce complexity
+
+Each section is clearly marked with numbered headers and difficulty indicators!
+The core functionality (loading and displaying products) will remain intact.
+===============================================================================
+*/
