@@ -17,9 +17,7 @@ import 'package:intl/intl.dart';
 import '/backend/backend.dart'; // Firebase backend integration
 import '/auth/firebase_auth/auth_util.dart'; // Add this import for logout functionality
 
-// ============================================================================
 // MAIN HOME PAGE WIDGET CLASS
-// ============================================================================
 class HomePageWidget extends StatefulWidget {
   const HomePageWidget({super.key});
 
@@ -30,16 +28,10 @@ class HomePageWidget extends StatefulWidget {
   State<HomePageWidget> createState() => _HomePageWidgetState();
 }
 
-// ============================================================================
 // HOME PAGE STATE CLASS - Contains all the logic and UI building
-// ============================================================================
 class _HomePageWidgetState extends State<HomePageWidget> {
   late HomePageModel _model;
 
-  // ============================================================================
-  // STATE VARIABLES SECTION
-  // ============================================================================
-  
   // Basic UI Variables
   final scaffoldKey = GlobalKey<ScaffoldState>();
   String? temperature;
@@ -56,9 +48,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
   List<BrandedItemsRecord> trendingItems = [];
   bool isLoadingTrendingItems = true;
 
-  // ============================================================================
   // INITIALIZATION SECTION - Called when widget is first created
-  // ============================================================================
   @override
   void initState() {
     super.initState();
@@ -78,27 +68,21 @@ class _HomePageWidgetState extends State<HomePageWidget> {
     _loadTrendingItems();
   }
 
-  // ============================================================================
-  // DATA LOADING FUNCTIONS SECTION
-  // ============================================================================
-
-  // TRENDING ITEMS DATA FUNCTION - Load trending items from Firebase
+  // TRENDING ITEMS DATA FUNCTION
   Future<void> _loadTrendingItems() async {
     try {
       print('🔄 Loading trending items...');
 
-      // Query branded items with status filtering to exclude deleted products
       final trendingItemsQuery = await queryBrandedItemsRecordOnce(
         queryBuilder: (query) => query
-            // ADDED: Filter out deleted products
+            //Filter out deleted products
             .where('status', isNotEqualTo: 'removed_for_violation')
             .orderBy('date_added', descending: true)
             .limit(6),
       );
 
-      // ADDED: Additional client-side filtering as safety net
       final filteredItems = trendingItemsQuery.where((item) {
-        // Filter out products that are deleted or have removal timestamp
+        // Filter out products that deleted
         return item.status != 'removed_for_violation' && item.removedAt == null;
       }).toList();
 
@@ -123,7 +107,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
     }
   }
 
-  // PRODUCT NAVIGATION FUNCTION - Navigate to product details page
+  // PRODUCT NAVIGATION FUNCTION
   void _navigateToProductDetails(BrandedItemsRecord item) {
     try {
       print('Navigating to product details for: ${item.name}');
@@ -143,7 +127,6 @@ class _HomePageWidgetState extends State<HomePageWidget> {
         'weatherSuitability': item.weatherSuitability.join(','),
       };
 
-      // Navigate using query parameters
       context.pushNamed(
         ProductDetailsPageWidget.routeName,
         queryParameters: queryParams,
@@ -166,7 +149,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
     }
   }
 
-  // SUGGESTION SETTINGS FUNCTION - Load suggestion settings from Firebase
+  // SUGGESTION SETTINGS FUNCTION
   Future<void> _loadSuggestionSettings() async {
     try {
       print('🔄 Loading suggestion settings...');
@@ -195,7 +178,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
     }
   }
 
-  // WEATHER API FUNCTION - Get temperature and generate smart suggestions
+  // WEATHER API FUNCTION
   Future<void> getTemperature() async {
     final city = 'Kuala Lumpur';
     final apiKey = 'e94a49d026651e92567ebe5d78715d81';
@@ -239,7 +222,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
     }
   }
 
-  // SMART SUGGESTION ALGORITHM - Generate smart suggestions based on weather
+  // SMART SUGGESTION ALGORITHM
   String _generateSmartSuggestion(Map<String, dynamic> weather) {
     if (suggestionSettings == null) {
       final temp = (weather['main']?['temp'] as num?)?.round() ?? 0;
@@ -305,11 +288,8 @@ class _HomePageWidgetState extends State<HomePageWidget> {
     return suggestions.join('\n\n');
   }
 
-  // ============================================================================
   // AUTHENTICATION FUNCTIONS SECTION
-  // ============================================================================
-
-  // LOGOUT CONFIRMATION DIALOG - Show logout confirmation dialog
+  // LOGOUT CONFIRMATION DIALOG
   Future<void> _showLogoutConfirmation() async {
     final shouldLogout = await showDialog<bool>(
       context: context,
@@ -336,11 +316,9 @@ class _HomePageWidgetState extends State<HomePageWidget> {
     }
   }
 
-  // LOGOUT EXECUTION - Perform logout matching admin dashboard
+  // LOGOUT EXECUTION
   Future<void> _performLogout() async {
     try {
-      // Add your logout logic here
-      // For example:
       await authManager.signOut();
       context.pushReplacementNamed(LoginPageWidget.routeName);
       print('User logged out');
@@ -358,18 +336,14 @@ class _HomePageWidgetState extends State<HomePageWidget> {
     }
   }
 
-  // ============================================================================
   // CLEANUP SECTION
-  // ============================================================================
   @override
   void dispose() {
     _model.dispose();
     super.dispose();
   }
 
-  // ============================================================================
-  // MAIN UI BUILD METHOD - This builds the entire page layout
-  // ============================================================================
+  // MAIN UI BUILD METHOD
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -380,14 +354,12 @@ class _HomePageWidgetState extends State<HomePageWidget> {
       child: Scaffold(
         key: scaffoldKey,
         backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
-        
-        // ============================================================================
-        // APP BAR SECTION - Top navigation bar with title and logout button
-        // ============================================================================
+
+        // APP BAR SECTION
         appBar: AppBar(
           backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
           automaticallyImplyLeading: false,
-          
+
           // APP BAR TITLE
           title: Padding(
             padding: EdgeInsetsDirectional.fromSTEB(5.0, 0.0, 0.0, 0.0),
@@ -410,8 +382,8 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                   ),
             ),
           ),
-          
-          // APP BAR ACTIONS - Logout button
+
+          // APP BAR ACTIONS (Logout)
           actions: [
             Padding(
               padding: EdgeInsetsDirectional.fromSTEB(0.0, 0.0, 12.0, 0.0),
@@ -432,10 +404,8 @@ class _HomePageWidgetState extends State<HomePageWidget> {
           centerTitle: false,
           elevation: 0.0,
         ),
-        
-        // ============================================================================
-        // MAIN BODY SECTION - Contains all the page content
-        // ============================================================================
+
+        //MAIN BODY SECTION all content
         body: SafeArea(
           top: true,
           child: Column(
@@ -446,10 +416,6 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                     mainAxisSize: MainAxisSize.max,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      
-                      // ================================================================
-                      // WELCOME CARD SECTION - Main welcome card with date, temperature, and outfit suggestions
-                      // ================================================================
                       Padding(
                         padding: EdgeInsetsDirectional.fromSTEB(
                             16.0, 12.0, 16.0, 0.0),
@@ -477,8 +443,6 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                               mainAxisSize: MainAxisSize.max,
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                
-                                // WELCOME TEXT SECTION
                                 Text(
                                   FFLocalizations.of(context).getText(
                                     'ljy2dica' /* Welcome back, */,
@@ -507,8 +471,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                             .fontStyle,
                                       ),
                                 ),
-                                
-                                // SUBTITLE TEXT
+
                                 Text(
                                   FFLocalizations.of(context).getText(
                                     '7ylrldap' /* hope you enjoy the virtual wardrobe */,
@@ -537,21 +500,19 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                             .fontStyle,
                                       ),
                                 ),
-                                
-                                // DIVIDER
+
                                 Divider(
                                   height: 24.0,
                                   thickness: 2.0,
                                   color: FlutterFlowTheme.of(context)
                                       .primaryBackground,
                                 ),
-                                
-                                // DATE AND TEMPERATURE ROW SECTION
+
+                                // DATE AND TEMPERATURE ROW
                                 Row(
                                   mainAxisSize: MainAxisSize.max,
                                   mainAxisAlignment: MainAxisAlignment.start,
                                   children: [
-                                    
                                     // DATE DISPLAY WIDGET
                                     Expanded(
                                       child: Column(
@@ -622,7 +583,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                         ],
                                       ),
                                     ),
-                                    
+
                                     // TEMPERATURE DISPLAY WIDGET
                                     Expanded(
                                       child: Column(
@@ -665,7 +626,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                           .fontStyle,
                                                 ),
                                           ),
-                                          
+
                                           // TEMPERATURE VALUE WITH ICON
                                           Row(
                                             mainAxisSize: MainAxisSize.max,
@@ -724,9 +685,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                   ],
                                 ),
 
-                                // ============================================================
-                                // OUTFIT SUGGESTION SECTION - AI-powered weather-based outfit recommendations
-                                // ============================================================
+                                // OUTFIT SUGGESTION SECTION
                                 Padding(
                                   padding: EdgeInsetsDirectional.fromSTEB(
                                       0.0, 12.0, 0.0, 0.0),
@@ -734,7 +693,6 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      
                                       // OUTFIT SUGGEST TITLE
                                       Text(
                                         FFLocalizations.of(context).getText(
@@ -803,7 +761,6 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                             crossAxisAlignment:
                                                 CrossAxisAlignment.start,
                                             children: [
-                                              
                                               // SUGGESTION HEADER WITH ICON
                                               Row(
                                                 children: [
@@ -973,7 +930,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                                           FontWeight
                                                                               .w600,
                                                                     ),
-                                                                ),
+                                                              ),
                                                             ),
                                                           ],
                                                         ),
@@ -994,9 +951,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                         ),
                       ),
 
-                      // ================================================================
                       // QUICK ACTION SECTION - Action buttons for main app features
-                      // ================================================================
                       Padding(
                         padding: EdgeInsetsDirectional.fromSTEB(
                             16.0, 12.0, 0.0, 0.0),
@@ -1013,7 +968,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                               ),
                         ),
                       ),
-                      
+
                       // ACTION BUTTONS ROW WIDGET
                       Padding(
                         padding: EdgeInsetsDirectional.fromSTEB(
@@ -1022,7 +977,6 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                           mainAxisSize: MainAxisSize.max,
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            
                             // ADD ITEM BUTTON WIDGET
                             FFButtonWidget(
                               onPressed: () async {
@@ -1050,7 +1004,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                 borderRadius: BorderRadius.circular(8.0),
                               ),
                             ),
-                            
+
                             // MATCH OUTFIT BUTTON WIDGET
                             FFButtonWidget(
                               onPressed: () async {
@@ -1082,11 +1036,8 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                         ),
                       ),
 
-                      // ================================================================
-                      // TRENDING ITEMS SECTION - Display popular/trending clothing items from Firebase
-                      // ================================================================
-                      
-                      // TRENDING ITEMS HEADER WITH LOADING INDICATOR
+                      // TRENDING ITEMS SECTION firestore
+                      // TRENDING ITEMS HEADER
                       Padding(
                         padding: EdgeInsetsDirectional.fromSTEB(
                             16.0, 12.0, 0.0, 0.0),
@@ -1167,7 +1118,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                             ),
                           ),
                         )
-                      
+
                       // TRENDING ITEMS EMPTY STATE WIDGET
                       else if (trendingItems.isEmpty)
                         Padding(
@@ -1211,7 +1162,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                             ),
                           ),
                         )
-                      
+
                       // TRENDING ITEMS LIST WIDGET - Dynamic list of trending items
                       else
                         ListView.builder(
@@ -1236,9 +1187,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
           ),
         ),
 
-        // ================================================================
         // BOTTOM NAVIGATION BAR SECTION - Main app navigation with 6 tabs
-        // ================================================================
         bottomNavigationBar: Container(
           decoration: BoxDecoration(
             color: FlutterFlowTheme.of(context).underground,
@@ -1256,7 +1205,6 @@ class _HomePageWidgetState extends State<HomePageWidget> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  
                   // HOME TAB - Currently active tab
                   _buildNavItem(
                     context: context,
@@ -1268,7 +1216,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                       // Already on home page
                     },
                   ),
-                  
+
                   // WARDROBE TAB - User's clothing collection
                   _buildNavItem(
                     context: context,
@@ -1278,7 +1226,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                     isActive: false,
                     onTap: () => context.pushNamed(MyWardrodeWidget.routeName),
                   ),
-                  
+
                   // MATCH TAB - Outfit matching feature
                   _buildNavItem(
                     context: context,
@@ -1288,7 +1236,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                     isActive: false,
                     onTap: () => context.pushNamed(OutfitMatchWidget.routeName),
                   ),
-                  
+
                   // SHOP TAB - Browse and buy clothes
                   _buildNavItem(
                     context: context,
@@ -1298,7 +1246,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                     isActive: false,
                     onTap: () => context.pushNamed(BuyClothesWidget.routeName),
                   ),
-                  
+
                   // CALENDAR TAB - Outfit planning calendar
                   _buildNavItem(
                     context: context,
@@ -1309,7 +1257,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                     onTap: () =>
                         context.pushNamed(OutfitPlanner2Widget.routeName),
                   ),
-                  
+
                   // PROFILE TAB - User profile and settings
                   _buildNavItem(
                     context: context,
@@ -1328,11 +1276,9 @@ class _HomePageWidgetState extends State<HomePageWidget> {
     );
   }
 
-  // ============================================================================
   // HELPER WIDGET FUNCTIONS SECTION - Reusable UI components
-  // ============================================================================
 
-  // TRENDING ITEM CARD WIDGET - Individual item card in the trending list
+  // TRENDING ITEM CARD WIDGET
   Widget _buildTrendingItemCard(BrandedItemsRecord item, int index) {
     return Padding(
       padding: EdgeInsetsDirectional.fromSTEB(
@@ -1358,7 +1304,6 @@ class _HomePageWidgetState extends State<HomePageWidget> {
             child: Row(
               mainAxisSize: MainAxisSize.max,
               children: [
-                
                 // PRODUCT IMAGE WIDGET
                 Padding(
                   padding: EdgeInsetsDirectional.fromSTEB(0.0, 1.0, 1.0, 1.0),
@@ -1422,7 +1367,6 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        
                         // PRODUCT NAME
                         Text(
                           item.name.isNotEmpty ? item.name : 'Untitled Item',
