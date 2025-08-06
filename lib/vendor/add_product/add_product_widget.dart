@@ -16,6 +16,15 @@ import 'package:firebase_storage/firebase_storage.dart';
 import '/backend/backend.dart';
 import '/auth/firebase_auth/auth_util.dart';
 
+// ================================================================================
+// SECTION 1: MAIN WIDGET CLASS DECLARATION
+// ================================================================================
+// 🔴 CORE COMPONENT - This is the main widget class structure
+// PURPOSE: Defines the main StatefulWidget for the add product page
+// REMOVAL IMPACT: Cannot remove - this is the core widget structure
+// COMPONENTS: StatefulWidget class, route names, and state creation
+// ================================================================================
+
 class AddProductWidget extends StatefulWidget {
   const AddProductWidget({super.key});
 
@@ -26,9 +35,17 @@ class AddProductWidget extends StatefulWidget {
   State<AddProductWidget> createState() => _AddProductWidgetState();
 }
 
+// ================================================================================
+// SECTION 2: STATE CLASS AND INITIALIZATION
+// ================================================================================
+// 🔴 CORE COMPONENT - Contains essential state management and form controllers
+// PURPOSE: Manages page state, form controllers, and widget lifecycle
+// REMOVAL IMPACT: Cannot remove - required for page functionality
+// COMPONENTS: State class, text controllers, focus nodes, form field controllers
+// ================================================================================
+
 class _AddProductWidgetState extends State<AddProductWidget> {
   late AddProductModel _model;
-
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
@@ -36,18 +53,13 @@ class _AddProductWidgetState extends State<AddProductWidget> {
     super.initState();
     _model = createModel(context, () => AddProductModel());
 
-    // Initialize existing text controllers
+    // Initialize Text Controllers and Focus Nodes
     _model.itemNameTextController ??= TextEditingController();
     _model.itemNameFocusNode ??= FocusNode();
 
-    // Initialize ItemId text controllers
     _model.itemIdTextController ??= TextEditingController();
     _model.itemIdFocusNode ??= FocusNode();
 
-    // Initialize category dropdown
-    _model.categoryDropDownValueController = FormFieldController<String>(null);
-
-    // Initialize other text controllers
     _model.priceTextController ??= TextEditingController();
     _model.priceFocusNode ??= FocusNode();
 
@@ -56,6 +68,9 @@ class _AddProductWidgetState extends State<AddProductWidget> {
 
     _model.descriptionTextController ??= TextEditingController();
     _model.descriptionFocusNode ??= FocusNode();
+
+    // Initialize Form Field Controllers
+    _model.categoryDropDownValueController = FormFieldController<String>(null);
   }
 
   @override
@@ -63,6 +78,60 @@ class _AddProductWidgetState extends State<AddProductWidget> {
     _model.dispose();
     super.dispose();
   }
+
+// ================================================================================
+// SECTION 3: IMAGE SELECTION HELPER METHOD
+// ================================================================================
+// 🟡 MEDIUM COMPLEXITY - Image selection and upload handling
+// PURPOSE: Handles image selection from device gallery/camera with validation
+// REMOVAL IMPACT: Can be removed - will disable image upload functionality
+// COMPONENTS: Media selection, file validation, upload state management
+// ================================================================================
+
+  Future<void> _selectImage() async {
+    final selectedMedia = await selectMediaWithSourceBottomSheet(
+      context: context,
+      allowPhoto: true,
+      allowVideo: false,
+    );
+
+    if (selectedMedia != null &&
+        selectedMedia
+            .every((m) => validateFileFormat(m.storagePath, context))) {
+      setState(() => _model.isDataUploading = true);
+
+      var selectedUploadedFiles = <FFUploadedFile>[];
+
+      try {
+        selectedUploadedFiles = selectedMedia
+            .map((m) => FFUploadedFile(
+                  name: m.storagePath.split('/').last,
+                  bytes: m.bytes,
+                  height: m.dimensions?.height,
+                  width: m.dimensions?.width,
+                  blurHash: m.blurHash,
+                ))
+            .toList();
+      } finally {
+        _model.isDataUploading = false;
+      }
+
+      if (selectedUploadedFiles.isNotEmpty) {
+        setState(() {
+          _model.uploadedLocalFile = selectedUploadedFiles.first;
+        });
+      }
+    }
+  }
+
+// ================================================================================
+// SECTION 4: MAIN BUILD METHOD
+// ================================================================================
+// 🔴 CORE COMPONENT - Main page layout structure
+// PURPOSE: Builds the main scaffold and page structure
+// REMOVAL IMPACT: Cannot remove - this is the core page structure
+// COMPONENTS: Scaffold with AppBar, Form sections, and Bottom Navigation
+// ================================================================================
 
   @override
   Widget build(BuildContext context) {
@@ -74,6 +143,15 @@ class _AddProductWidgetState extends State<AddProductWidget> {
       child: Scaffold(
         key: scaffoldKey,
         backgroundColor: FlutterFlowTheme.of(context).secondaryBackground,
+
+        // ========================================================================
+        // SUB-SECTION 4A: APP BAR
+        // ========================================================================
+        // 🟡 MEDIUM COMPLEXITY - Top navigation bar with back button and title
+        // PURPOSE: Provides page title and back navigation
+        // REMOVAL IMPACT: Can be simplified but header is recommended
+        // ========================================================================
+
         appBar: AppBar(
           backgroundColor: FlutterFlowTheme.of(context).underground,
           automaticallyImplyLeading: false,
@@ -102,6 +180,15 @@ class _AddProductWidgetState extends State<AddProductWidget> {
           centerTitle: false,
           elevation: 2.0,
         ),
+
+        // ========================================================================
+        // SUB-SECTION 4B: BODY LAYOUT
+        // ========================================================================
+        // 🔴 CORE COMPONENT - Main content area layout with form
+        // PURPOSE: Contains all form sections in scrollable format
+        // REMOVAL IMPACT: Cannot remove - essential for content display
+        // ========================================================================
+
         body: SafeArea(
           top: true,
           child: Column(
@@ -124,17 +211,17 @@ class _AddProductWidgetState extends State<AddProductWidget> {
 
                         SizedBox(height: 24.0),
 
-                        // Color Selection
+                        // Color Selection Section
                         _buildColorSection(),
 
                         SizedBox(height: 24.0),
 
-                        // Occasion Tags
+                        // Occasion Tags Section
                         _buildOccasionTagsSection(),
 
                         SizedBox(height: 32.0),
 
-                        // Save Button
+                        // Save Button Section
                         _buildSaveButton(),
 
                         SizedBox(height: 80.0), // Space for bottom navigation
@@ -144,7 +231,7 @@ class _AddProductWidgetState extends State<AddProductWidget> {
                 ),
               ),
 
-              // Bottom Navigation
+              // Bottom Navigation Section
               _buildBottomNavigation(),
             ],
           ),
@@ -153,10 +240,20 @@ class _AddProductWidgetState extends State<AddProductWidget> {
     );
   }
 
+// ================================================================================
+// SECTION 5: IMAGE UPLOAD SECTION
+// ================================================================================
+// 🟡 MEDIUM COMPLEXITY - Image upload interface with preview and controls
+// PURPOSE: Provides image upload, preview, edit, and remove functionality
+// REMOVAL IMPACT: Can be removed - will disable image upload feature
+// COMPONENTS: Upload area, image preview, loading overlay, edit/remove buttons
+// ================================================================================
+
   Widget _buildImageUploadSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Section Header
         Text(
           'Product Image',
           style: FlutterFlowTheme.of(context).headlineSmall.override(
@@ -166,6 +263,8 @@ class _AddProductWidgetState extends State<AddProductWidget> {
               ),
         ),
         SizedBox(height: 16.0),
+
+        // Image Upload Card
         _buildSingleImageUploadCard(),
       ],
     );
@@ -185,7 +284,7 @@ class _AddProductWidgetState extends State<AddProductWidget> {
       ),
       child: Stack(
         children: [
-          // Image Display
+          // Image Display Area
           ClipRRect(
             borderRadius: BorderRadius.circular(14.0),
             child: _model.uploadedLocalFile != null &&
@@ -267,7 +366,7 @@ class _AddProductWidgetState extends State<AddProductWidget> {
               ),
             ),
 
-          // Edit/Add Button
+          // Edit Button (when image is selected)
           if (_model.uploadedLocalFile != null &&
               _model.uploadedLocalFile.bytes?.isNotEmpty == true)
             Positioned(
@@ -285,7 +384,7 @@ class _AddProductWidgetState extends State<AddProductWidget> {
               ),
             ),
 
-          // Remove Button
+          // Remove Button (when image is selected)
           if (_model.uploadedLocalFile != null &&
               _model.uploadedLocalFile.bytes?.isNotEmpty == true)
             Positioned(
@@ -310,7 +409,7 @@ class _AddProductWidgetState extends State<AddProductWidget> {
               ),
             ),
 
-          // Tap Area for Image Selection
+          // Tap Area for Image Selection (when no image)
           if (_model.uploadedLocalFile == null ||
               _model.uploadedLocalFile.bytes?.isEmpty == true)
             Positioned.fill(
@@ -328,47 +427,20 @@ class _AddProductWidgetState extends State<AddProductWidget> {
     );
   }
 
-// Helper method for image selection
-  Future<void> _selectImage() async {
-    final selectedMedia = await selectMediaWithSourceBottomSheet(
-      context: context,
-      allowPhoto: true,
-      allowVideo: false,
-    );
-
-    if (selectedMedia != null &&
-        selectedMedia
-            .every((m) => validateFileFormat(m.storagePath, context))) {
-      setState(() => _model.isDataUploading = true);
-
-      var selectedUploadedFiles = <FFUploadedFile>[];
-
-      try {
-        selectedUploadedFiles = selectedMedia
-            .map((m) => FFUploadedFile(
-                  name: m.storagePath.split('/').last,
-                  bytes: m.bytes,
-                  height: m.dimensions?.height,
-                  width: m.dimensions?.width,
-                  blurHash: m.blurHash,
-                ))
-            .toList();
-      } finally {
-        _model.isDataUploading = false;
-      }
-
-      if (selectedUploadedFiles.isNotEmpty) {
-        setState(() {
-          _model.uploadedLocalFile = selectedUploadedFiles.first;
-        });
-      }
-    }
-  }
+// ================================================================================
+// SECTION 6: PRODUCT DETAILS SECTION
+// ================================================================================
+// 🔴 CORE COMPONENT - Main product information form fields
+// PURPOSE: Provides essential product information input fields
+// REMOVAL IMPACT: Major impact - core product data entry functionality
+// COMPONENTS: Product name, item ID, category, price, buy link, description fields
+// ================================================================================
 
   Widget _buildProductDetailsSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Section Header
         Text(
           'Product Details',
           style: FlutterFlowTheme.of(context).headlineSmall.override(
@@ -379,10 +451,7 @@ class _AddProductWidgetState extends State<AddProductWidget> {
         ),
         SizedBox(height: 16.0),
 
-        // Add this TextFormField in _buildProductDetailsSection()
-// right after the "Product Details" header and before the Item ID field
-
-// Product Name Field
+        // Product Name Field (Required)
         TextFormField(
           controller: _model.itemNameTextController,
           focusNode: _model.itemNameFocusNode,
@@ -450,7 +519,7 @@ class _AddProductWidgetState extends State<AddProductWidget> {
 
         SizedBox(height: 16.0),
 
-// Item ID Field
+        // Item ID Field (Required)
         TextFormField(
           controller: _model.itemIdTextController,
           focusNode: _model.itemIdFocusNode,
@@ -518,7 +587,7 @@ class _AddProductWidgetState extends State<AddProductWidget> {
 
         SizedBox(height: 16.0),
 
-        // Category Field
+        // Category Dropdown Field (Required)
         Container(
           width: double.infinity,
           child: DropdownButtonFormField<String>(
@@ -608,7 +677,7 @@ class _AddProductWidgetState extends State<AddProductWidget> {
 
         SizedBox(height: 16.0),
 
-        // Price Field
+        // Price Field (Required)
         TextFormField(
           controller: _model.priceTextController,
           focusNode: _model.priceFocusNode,
@@ -676,7 +745,7 @@ class _AddProductWidgetState extends State<AddProductWidget> {
 
         SizedBox(height: 16.0),
 
-        // Buy Link Field
+        // Buy Link Field (Optional)
         TextFormField(
           controller: _model.buyLinkTextController,
           focusNode: _model.buyLinkFocusNode,
@@ -734,7 +803,7 @@ class _AddProductWidgetState extends State<AddProductWidget> {
 
         SizedBox(height: 16.0),
 
-        // Description Field
+        // Description Field (Optional)
         TextFormField(
           controller: _model.descriptionTextController,
           focusNode: _model.descriptionFocusNode,
@@ -795,10 +864,20 @@ class _AddProductWidgetState extends State<AddProductWidget> {
     );
   }
 
+// ================================================================================
+// SECTION 7: COLOR SELECTION SECTION
+// ================================================================================
+// 🟢 EASY TO REMOVE - Color choice chips for product color selection
+// PURPOSE: Provides color selection interface using choice chips
+// REMOVAL IMPACT: Can be removed - will disable color selection feature
+// COMPONENTS: Section header, FlutterFlowChoiceChips with color options
+// ================================================================================
+
   Widget _buildColorSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Section Header
         Text(
           'Color',
           style: FlutterFlowTheme.of(context).headlineSmall.override(
@@ -808,6 +887,8 @@ class _AddProductWidgetState extends State<AddProductWidget> {
               ),
         ),
         SizedBox(height: 12.0),
+
+        // Color Choice Chips
         FlutterFlowChoiceChips(
           options: [
             ChipData('Black'),
@@ -860,10 +941,20 @@ class _AddProductWidgetState extends State<AddProductWidget> {
     );
   }
 
+// ================================================================================
+// SECTION 8: OCCASION TAGS SECTION
+// ================================================================================
+// 🟢 EASY TO REMOVE - Occasion choice chips for product categorization
+// PURPOSE: Provides occasion/style tag selection interface using choice chips
+// REMOVAL IMPACT: Can be removed - will disable occasion tag selection feature
+// COMPONENTS: Section header, FlutterFlowChoiceChips with occasion options
+// ================================================================================
+
   Widget _buildOccasionTagsSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Section Header
         Text(
           'Occasion Tags',
           style: FlutterFlowTheme.of(context).headlineSmall.override(
@@ -873,6 +964,8 @@ class _AddProductWidgetState extends State<AddProductWidget> {
               ),
         ),
         SizedBox(height: 12.0),
+
+        // Occasion Choice Chips
         FlutterFlowChoiceChips(
           options: [
             ChipData('Casual'),
@@ -925,17 +1018,27 @@ class _AddProductWidgetState extends State<AddProductWidget> {
     );
   }
 
+// ================================================================================
+// SECTION 9: SAVE BUTTON SECTION
+// ================================================================================
+// 🔴 CORE COMPONENT - Product save functionality with Firebase integration
+// PURPOSE: Handles form validation, image upload, and product creation in Firebase
+// REMOVAL IMPACT: Cannot remove - essential for product creation functionality
+// COMPONENTS: Form validation, Firebase Storage upload, Firestore document creation
+// ================================================================================
+
   Widget _buildSaveButton() {
     return SizedBox(
       width: double.infinity,
       child: FFButtonWidget(
         onPressed: () async {
+          // Form Validation
           if (_model.formKey.currentState == null ||
               !_model.formKey.currentState!.validate()) {
             return;
           }
 
-          // Show loading
+          // Show Loading Dialog
           showDialog(
             context: context,
             barrierDismissible: false,
@@ -945,10 +1048,9 @@ class _AddProductWidgetState extends State<AddProductWidget> {
           try {
             String? imageUrl;
 
-            // Upload image if selected
+            // Upload Image to Firebase Storage (if selected)
             if (_model.uploadedLocalFile != null &&
                 _model.uploadedLocalFile.bytes?.isNotEmpty == true) {
-              // Upload to Firebase Storage
               final storageRef = FirebaseStorage.instance.ref().child(
                   'product_images/${DateTime.now().millisecondsSinceEpoch}.jpg');
 
@@ -957,7 +1059,7 @@ class _AddProductWidgetState extends State<AddProductWidget> {
               imageUrl = await uploadTask.ref.getDownloadURL();
             }
 
-            // Create the product in Firestore
+            // Create Product Document in Firestore
             await BrandedItemsRecord.collection
                 .add(createBrandedItemsRecordData(
               vendorId: currentUserUid,
@@ -972,7 +1074,7 @@ class _AddProductWidgetState extends State<AddProductWidget> {
               dateAdded: getCurrentTimestamp,
             ))
                 .then((docRef) async {
-              // Update with style tags and weather suitability if needed
+              // Update with Additional Metadata
               await docRef.update({
                 'style_tags': [_model.choiceChipsValue2 ?? 'Casual'],
                 'weather_suitability': [],
@@ -981,6 +1083,7 @@ class _AddProductWidgetState extends State<AddProductWidget> {
 
             Navigator.pop(context); // Close loading dialog
 
+            // Success Feedback
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text('Product saved successfully!'),
@@ -988,9 +1091,11 @@ class _AddProductWidgetState extends State<AddProductWidget> {
               ),
             );
 
-            context.pop(); // Go back to previous screen
+            context.pop(); // Navigate back to previous screen
           } catch (e) {
             Navigator.pop(context); // Close loading dialog
+
+            // Error Feedback
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text('Error: ${e.toString()}'),
@@ -1022,6 +1127,15 @@ class _AddProductWidgetState extends State<AddProductWidget> {
     );
   }
 
+// ================================================================================
+// SECTION 10: BOTTOM NAVIGATION WIDGET
+// ================================================================================
+// 🟢 EASY TO REMOVE - Complete bottom navigation bar
+// PURPOSE: Provides navigation between different vendor dashboard sections
+// REMOVAL IMPACT: Can be completely removed - page will work without navigation
+// COMPONENTS: Container with navigation items, icons, labels, and navigation logic
+// ================================================================================
+
   Widget _buildBottomNavigation() {
     return Container(
       width: double.infinity,
@@ -1039,19 +1153,37 @@ class _AddProductWidgetState extends State<AddProductWidget> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
+          // Profile Navigation Item
           _buildNavItem(Icons.person, 'Profile', false,
               () => context.pushNamed('VendorDashboard')),
+
+          // Discount Codes Navigation Item
           _buildNavItem(Icons.discount_outlined, 'Code', false,
               () => context.pushNamed('ManageDiscountCodes')),
+
+          // Virtual Try-On Navigation Item
           _buildNavItem(Icons.tv_rounded, 'Virtual', false,
               () => context.pushNamed('VirtualTryOnSetting')),
+
+          // Buy Links Navigation Item
           _buildNavItem(Icons.settings_sharp, 'Link', false,
               () => context.pushNamed('SettingBuyLinks')),
+
+          // Add Product Navigation Item (Current Page)
           _buildNavItem(Icons.add, 'Add', true, () => {}),
         ],
       ),
     );
   }
+
+// ================================================================================
+// SECTION 11: NAVIGATION ITEM HELPER WIDGET
+// ================================================================================
+// 🟢 EASY TO REMOVE - Individual navigation button component
+// PURPOSE: Creates individual navigation items for the bottom navigation
+// REMOVAL IMPACT: Required if bottom navigation is kept
+// COMPONENTS: GestureDetector with icon, label, and active state styling
+// ================================================================================
 
   Widget _buildNavItem(
       IconData icon, String label, bool isActive, VoidCallback onTap) {
@@ -1060,6 +1192,7 @@ class _AddProductWidgetState extends State<AddProductWidget> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          // Navigation Icon
           Icon(
             icon,
             color:
@@ -1067,6 +1200,8 @@ class _AddProductWidgetState extends State<AddProductWidget> {
             size: 24.0,
           ),
           SizedBox(height: 4.0),
+
+          // Navigation Label
           Text(
             label,
             style: FlutterFlowTheme.of(context).bodySmall.override(
@@ -1084,3 +1219,59 @@ class _AddProductWidgetState extends State<AddProductWidget> {
     );
   }
 }
+
+// ================================================================================
+// END OF ADD PRODUCT WIDGET
+// ================================================================================
+
+/*
+===============================================================================
+PRESENTATION REMOVAL GUIDE FOR YOUR LECTURER DEMO
+===============================================================================
+
+🟢 EASIEST TO REMOVE (Independent components):
+1. SECTION 10 & 11: Bottom Navigation (Lines ~700-800) - Complete navigation system
+2. SECTION 7: Color Selection Section (Lines ~500-580) - Color choice chips
+3. SECTION 8: Occasion Tags Section (Lines ~580-660) - Occasion choice chips
+4. SECTION 5: Image Upload Section (Lines ~200-350) - Complete image upload functionality
+5. Optional Fields in SECTION 6: Buy Link and Description fields
+
+🟡 MEDIUM COMPLEXITY (Feature removal):
+6. SECTION 3: Image Selection Method (Lines ~60-120) - Image selection logic
+7. Image Upload Logic in SECTION 9 (Firebase Storage upload)
+8. Form Validation in SECTION 6 (Individual field validators)
+9. Loading States and Error Handling in SECTION 9
+
+🔴 CORE COMPONENTS (Keep for basic functionality):
+- SECTION 1: Main Widget Class - Essential structure
+- SECTION 2: State Class - Required controllers and state
+- SECTION 4: Main Build Method - Core page layout
+- SECTION 6: Product Details Section - Essential form fields (name, ID, category, price)
+- SECTION 9: Save Button Section - Core save functionality (simplified version)
+
+PRESENTATION STRATEGY:
+1. Start by removing SECTION 10 & 11 (Bottom Navigation) - Clean removal
+2. Remove SECTION 7 & 8 (Color and Occasion sections) - Simplifies form
+3. Remove SECTION 5 (Image Upload) - Removes complex upload interface
+4. Remove SECTION 3 (Image Selection Method) - Cleanup unused methods
+5. Simplify SECTION 6 by removing optional fields (buy link, description)
+6. Simplify SECTION 9 by removing image upload logic and keeping basic save
+
+UNIQUE FEATURES TO HIGHLIGHT:
+- Comprehensive form validation
+- Image upload with preview and controls
+- Choice chips for selection interfaces
+- Firebase Storage integration
+- Real-time form validation
+- Professional loading states and error handling
+
+CORE FUNCTIONALITY RETAINED:
+- Product name, ID, category, price input
+- Basic form validation
+- Simple Firebase document creation
+- Success/error feedback
+
+The Add Product page demonstrates a complete CRUD operation with file uploads!
+Each section is clearly marked with numbered headers and difficulty indicators.
+===============================================================================
+*/
