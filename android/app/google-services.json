@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1024515856953",
+    "project_id": "pakaije-89pzxl",
+    "storage_bucket": "pakaije-89pzxl.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1024515856953:android:d1571625239407bce10be8",
+        "android_client_info": {
+          "package_name": "com.mycompany.pakaije"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB99uLwAIat3up0FzdQ09i_hZ4eHxWkBAs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,8 @@
+# Flutter build folders
+build/
+.dart_tool/
+.packages
+*.apk
+*.ipa
+*.so
+*.dill
